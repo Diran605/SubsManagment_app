@@ -18,6 +18,8 @@ const sourceData = props.subscription || props.renewing || {};
 const form = useForm({
     business_id: sourceData.business_id || props.defaultBusinessId || '',
     service_id: sourceData.service_id || '',
+    package_id: sourceData.package_id || '',
+    modules: sourceData.modules?.map((m: any) => m.id) || [],
     mode: sourceData.mode || '',
     amount: sourceData.amount || '',
     start_date: sourceData.start_date || '',
@@ -25,18 +27,53 @@ const form = useForm({
     notes: sourceData.notes || '',
 });
 
+const selectedService = computed(() => {
+    return props.services.find((s) => s.id === form.service_id);
+});
+
+const availablePackages = computed(() => {
+    return selectedService.value?.packages || [];
+});
+
+const availableModules = computed(() => {
+    return selectedService.value?.modules || [];
+});
+
 // Auto-suggest base price when service or mode changes
-watch([() => form.service_id, () => form.mode], ([newServiceId, newMode]) => {
-    if (newServiceId && newMode && !isEditing && !isRenewing) {
-        // don't override on edit/renew unless they change it manually
-        const service = props.services.find((s) => s.id === newServiceId);
-        if (service && service.pricing) {
-            const pricing = service.pricing.find(
-                (p: any) => p.mode === newMode,
-            );
-            if (pricing) {
-                form.amount = pricing.base_price;
+watch([() => form.service_id, () => form.mode, () => form.package_id], ([newServiceId, newMode, newPackageId]) => {
+    if (newServiceId && !isEditing && !isRenewing) {
+        let basePrice = 0;
+        
+        if (newPackageId) {
+             const pkg = availablePackages.value.find((p: any) => p.id === newPackageId);
+             if (pkg && pkg.reference_price) {
+                 basePrice = parseFloat(pkg.reference_price);
+             }
+        } else if (newMode) {
+            const service = props.services.find((s) => s.id === newServiceId);
+            if (service && service.pricing) {
+                const pricing = service.pricing.find(
+                    (p: any) => p.mode === newMode,
+                );
+                if (pricing) {
+                    basePrice = parseFloat(pricing.base_price);
+                }
             }
+        }
+        
+        if (basePrice > 0) {
+             form.amount = basePrice.toString();
+        }
+    }
+});
+
+watch(() => form.package_id, (newPackageId) => {
+    if (newPackageId) {
+        const pkg = availablePackages.value.find((p: any) => p.id === newPackageId);
+        if (pkg && pkg.modules) {
+            // Auto-select modules from package
+            const moduleIds = pkg.modules.map((m: any) => m.id);
+            form.modules = [...new Set([...form.modules, ...moduleIds])];
         }
     }
 });
@@ -181,6 +218,42 @@ const title = computed(() => {
                         >
                             {{ form.errors.amount }}
                         </p>
+                    </div>
+                </div>
+
+                <div v-if="form.service_id && (availablePackages.length > 0 || availableModules.length > 0)" class="rounded-lg border border-gray-100 bg-gray-50 p-4 space-y-4">
+                    <h3 class="text-sm font-semibold text-gray-900">Service Configuration</h3>
+                    
+                    <div v-if="availablePackages.length > 0">
+                        <label class="mb-1 block text-sm font-medium text-gray-700">Select Package (Optional)</label>
+                        <select v-model="form.package_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            <option value="">Custom Configuration</option>
+                            <option v-for="pkg in availablePackages" :key="pkg.id" :value="pkg.id">
+                                {{ pkg.name }} ({{ pkg.reference_price ? pkg.reference_price + ' FCFA' : 'Custom Pricing' }})
+                            </option>
+                        </select>
+                        <p v-if="form.errors.package_id" class="mt-1 text-sm text-red-600">{{ form.errors.package_id }}</p>
+                    </div>
+
+                    <div v-if="availableModules.length > 0">
+                        <label class="mb-2 block text-sm font-medium text-gray-700">Included Modules</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label v-for="mod in availableModules" :key="mod.id" class="flex items-start space-x-3 rounded-lg border border-gray-200 bg-white p-3 hover:bg-gray-50 cursor-pointer">
+                                <div class="flex h-5 items-center">
+                                    <input 
+                                        type="checkbox" 
+                                        :value="mod.id" 
+                                        v-model="form.modules"
+                                        class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                                    />
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-medium text-gray-900">{{ mod.name }}</span>
+                                    <span v-if="mod.description" class="text-xs text-gray-500">{{ mod.description }}</span>
+                                </div>
+                            </label>
+                        </div>
+                        <p v-if="form.errors.modules" class="mt-1 text-sm text-red-600">{{ form.errors.modules }}</p>
                     </div>
                 </div>
 
