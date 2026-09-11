@@ -73,7 +73,7 @@ class SubscriptionController extends Controller
 
         return Inertia::render('Subscriptions/Form', [
             'businesses' => Business::orderBy('name')->get(['id', 'name']),
-            'services' => Service::with('pricing')->orderBy('name')->get(),
+            'services' => Service::with(['pricing', 'modules', 'packages.modules'])->orderBy('name')->get(),
             'defaultBusinessId' => $businessId ? (int) $businessId : null,
         ]);
     }
@@ -88,21 +88,31 @@ class SubscriptionController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'notes' => 'nullable|string',
+            'package_id' => 'nullable|exists:packages,id',
+            'modules' => 'nullable|array',
+            'modules.*' => 'exists:modules,id',
         ]);
 
-        $validated['created_by'] = $request->user()->id;
-        Subscription::create($validated);
+        $subscriptionData = $validated;
+        unset($subscriptionData['modules']);
+        $subscriptionData['created_by'] = $request->user()->id;
+
+        $subscription = Subscription::create($subscriptionData);
+
+        if (isset($validated['modules'])) {
+            $subscription->modules()->sync($validated['modules']);
+        }
 
         return redirect()->route('subscriptions.index')->with('success', 'Subscription recorded successfully.');
     }
 
     public function renewForm(Subscription $subscription)
     {
-        $subscription->load(['business', 'service']);
+        $subscription->load(['business', 'service.modules', 'service.packages.modules', 'modules']);
 
         return Inertia::render('Subscriptions/Form', [
             'businesses' => Business::orderBy('name')->get(['id', 'name']),
-            'services' => Service::with('pricing')->orderBy('name')->get(),
+            'services' => Service::with(['pricing', 'modules', 'packages.modules'])->orderBy('name')->get(),
             'renewing' => $subscription,
         ]);
     }
@@ -114,28 +124,38 @@ class SubscriptionController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'notes' => 'nullable|string',
+            'package_id' => 'nullable|exists:packages,id',
+            'modules' => 'nullable|array',
+            'modules.*' => 'exists:modules,id',
         ]);
 
-        Subscription::create([
+        $newSub = Subscription::create([
             'business_id' => $subscription->business_id,
             'service_id' => $subscription->service_id,
-            'mode' => $subscription->mode, // Mode stays the same usually, or we can allow changing it
+            'mode' => $subscription->mode,
             'amount' => $validated['amount'],
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
             'notes' => $validated['notes'] ?? null,
+            'package_id' => $validated['package_id'] ?? null,
             'renewed_from_id' => $subscription->id,
             'created_by' => $request->user()->id,
         ]);
+
+        if (isset($validated['modules'])) {
+            $newSub->modules()->sync($validated['modules']);
+        }
 
         return redirect()->route('subscriptions.index')->with('success', 'Subscription renewed successfully.');
     }
 
     public function edit(Subscription $subscription)
     {
+        $subscription->load('modules');
+        
         return Inertia::render('Subscriptions/Form', [
             'businesses' => Business::orderBy('name')->get(['id', 'name']),
-            'services' => Service::with('pricing')->orderBy('name')->get(),
+            'services' => Service::with(['pricing', 'modules', 'packages.modules'])->orderBy('name')->get(),
             'subscription' => $subscription,
         ]);
     }
@@ -150,9 +170,21 @@ class SubscriptionController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'notes' => 'nullable|string',
+            'package_id' => 'nullable|exists:packages,id',
+            'modules' => 'nullable|array',
+            'modules.*' => 'exists:modules,id',
         ]);
 
-        $subscription->update($validated);
+        $subscriptionData = $validated;
+        unset($subscriptionData['modules']);
+        
+        $subscription->update($subscriptionData);
+
+        if (isset($validated['modules'])) {
+            $subscription->modules()->sync($validated['modules']);
+        } else {
+            $subscription->modules()->detach();
+        }
 
         return redirect()->route('subscriptions.index')->with('success', 'Subscription updated successfully.');
     }
