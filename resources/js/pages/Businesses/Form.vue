@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { route } from 'ziggy-js';
 import { Head, useForm, Link } from '@inertiajs/vue3';
+import { buttonVariants } from '@/components/ui/button';
 
 const props = defineProps<{
     business?: {
@@ -35,37 +36,37 @@ const submit = () => {
 <template>
     <Head :title="isEditing ? 'Edit Business' : 'Create Business'" />
 
-    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4">
+    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">
+                <h1 class="text-3xl font-bold tracking-tight text-foreground">
                     {{ isEditing ? 'Edit Business' : 'Create Business' }}
                 </h1>
             </div>
             <Link
                 :href="route('businesses.index')"
-                class="text-sm font-medium text-gray-500 hover:text-gray-700"
+                class="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
                 &larr; Back to List
             </Link>
         </div>
 
-        <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
             <form @submit.prevent="submit" class="space-y-4">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700"
+                    <label class="mb-1 block text-sm font-medium text-foreground"
                         >Business Name
-                        <span class="text-red-500">*</span></label
+                        <span class="text-destructive">*</span></label
                     >
                     <input
                         v-model="form.name"
                         type="text"
                         required
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
                     />
                     <p
                         v-if="form.errors.name"
-                        class="mt-1 text-sm text-red-600"
+                        class="mt-1 text-sm text-destructive"
                     >
                         {{ form.errors.name }}
                     </p>
@@ -74,34 +75,34 @@ const submit = () => {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-gray-700"
+                            class="mb-1 block text-sm font-medium text-foreground"
                             >Contact Person</label
                         >
                         <input
                             v-model="form.contact_person"
                             type="text"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
                         />
                         <p
                             v-if="form.errors.contact_person"
-                            class="mt-1 text-sm text-red-600"
+                            class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.contact_person }}
                         </p>
                     </div>
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-gray-700"
+                            class="mb-1 block text-sm font-medium text-foreground"
                             >Phone</label
                         >
                         <input
                             v-model="form.phone"
                             type="text"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
                         />
                         <p
                             v-if="form.errors.phone"
-                            class="mt-1 text-sm text-red-600"
+                            class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.phone }}
                         </p>
@@ -109,34 +110,34 @@ const submit = () => {
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700"
+                    <label class="mb-1 block text-sm font-medium text-foreground"
                         >Email</label
                     >
                     <input
                         v-model="form.email"
                         type="email"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
                     />
                     <p
                         v-if="form.errors.email"
-                        class="mt-1 text-sm text-red-600"
+                        class="mt-1 text-sm text-destructive"
                     >
                         {{ form.errors.email }}
                     </p>
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700"
+                    <label class="mb-1 block text-sm font-medium text-foreground"
                         >Address</label
                     >
                     <textarea
                         v-model="form.address"
                         rows="3"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
                     ></textarea>
                     <p
                         v-if="form.errors.address"
-                        class="mt-1 text-sm text-red-600"
+                        class="mt-1 text-sm text-destructive"
                     >
                         {{ form.errors.address }}
                     </p>
@@ -146,7 +147,8 @@ const submit = () => {
                     <button
                         type="submit"
                         :disabled="form.processing"
-                        class="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                        :class="buttonVariants({ variant: 'default' })"
+                        class="disabled:opacity-50"
                     >
                         {{ isEditing ? 'Update Business' : 'Save Business' }}
                     </button>

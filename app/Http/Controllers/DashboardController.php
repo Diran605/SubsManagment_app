@@ -26,12 +26,17 @@ class DashboardController extends Controller
         });
 
         // Computed metrics
-        $activeRevenue = $allSubscriptions->whereIn('status_badge', ['active', 'expiring_soon'])->sum('amount');
+        $totalRevenue = $allSubscriptions->whereIn('status_badge', ['active', 'expiring_soon'])->sum('amount');
         
-        $revenueByMode = $allSubscriptions
+        $revenueByService = $allSubscriptions
             ->whereIn('status_badge', ['active', 'expiring_soon'])
-            ->groupBy('mode')
+            ->groupBy(fn($sub) => $sub->service->name ?? 'Unknown')
             ->map(fn ($group) => $group->sum('amount'));
+            
+        $subscriptionsByService = $allSubscriptions
+            ->whereIn('status_badge', ['active', 'expiring_soon'])
+            ->groupBy(fn($sub) => $sub->service->name ?? 'Unknown')
+            ->map(fn ($group) => $group->count());
 
         $expiringSubscriptions = $allSubscriptions
             ->where('status_badge', 'expiring_soon')
@@ -75,10 +80,11 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'subscriptions' => $paginated,
             'expiringSubscriptions' => $expiringSubscriptions,
-            'totalRevenue' => $activeRevenue,
+            'totalRevenue' => $totalRevenue,
             'totalBusinesses' => Business::count(),
             'totalServices' => Service::count(),
-            'revenueByMode' => $revenueByMode,
+            'revenueByService' => $revenueByService,
+            'subscriptionsByService' => $subscriptionsByService,
             'filters' => [
                 'search' => $search,
                 'status' => $statusFilter,

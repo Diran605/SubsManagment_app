@@ -7,9 +7,22 @@ use App\Models\Service;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class SubscriptionController extends Controller
+class SubscriptionController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view subscriptions', only: ['index', 'show']),
+            new Middleware('permission:create subscriptions', only: ['create', 'store', 'renewForm', 'renew']),
+            new Middleware('permission:edit subscriptions', only: ['edit', 'update']),
+            new Middleware('permission:delete subscriptions', only: ['destroy']),
+            new Middleware('permission:restore subscriptions', only: ['restore']),
+        ];
+    }
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -17,8 +30,18 @@ class SubscriptionController extends Controller
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
 
-        $allSubscriptions = Subscription::with(['business', 'service', 'creator', 'renewals'])->get()->map(function ($sub) {
-            if ($sub->renewals->isNotEmpty()) {
+        $query = Subscription::with(['business', 'service', 'creator', 'renewals']);
+        
+        if ($statusFilter === 'trashed') {
+            $query->onlyTrashed();
+        } elseif ($statusFilter === 'all') {
+            $query->withTrashed();
+        }
+
+        $allSubscriptions = $query->get()->map(function ($sub) {
+            if ($sub->trashed()) {
+                $sub->status_badge = 'trashed';
+            } elseif ($sub->renewals->isNotEmpty()) {
                 $sub->status_badge = 'renewed';
             } else {
                 $sub->status_badge = $sub->status;
@@ -73,7 +96,7 @@ class SubscriptionController extends Controller
 
         return Inertia::render('Subscriptions/Form', [
             'businesses' => Business::orderBy('name')->get(['id', 'name']),
-            'services' => Service::with(['pricing', 'modules', 'packages.modules'])->orderBy('name')->get(),
+            'services' => Service::with(['modules', 'packages.modules'])->orderBy('name')->get(),
             'defaultBusinessId' => $businessId ? (int) $businessId : null,
         ]);
     }
@@ -112,7 +135,7 @@ class SubscriptionController extends Controller
 
         return Inertia::render('Subscriptions/Form', [
             'businesses' => Business::orderBy('name')->get(['id', 'name']),
-            'services' => Service::with(['pricing', 'modules', 'packages.modules'])->orderBy('name')->get(),
+            'services' => Service::with(['modules', 'packages.modules'])->orderBy('name')->get(),
             'renewing' => $subscription,
         ]);
     }
@@ -149,13 +172,28 @@ class SubscriptionController extends Controller
         return redirect()->route('subscriptions.index')->with('success', 'Subscription renewed successfully.');
     }
 
+    public function show($id)
+    {
+        $subscription = Subscription::withTrashed()->with(['business', 'service', 'package', 'modules', 'creator', 'renewals'])->findOrFail($id);
+
+        if ($subscription->trashed()) {
+            $subscription->status_badge = 'trashed';
+        } else {
+            $subscription->status_badge = $subscription->renewals->isNotEmpty() ? 'renewed' : $subscription->status;
+        }
+
+        return Inertia::render('Subscriptions/Show', [
+            'subscription' => $subscription,
+        ]);
+    }
+
     public function edit(Subscription $subscription)
     {
         $subscription->load('modules');
         
         return Inertia::render('Subscriptions/Form', [
             'businesses' => Business::orderBy('name')->get(['id', 'name']),
-            'services' => Service::with(['pricing', 'modules', 'packages.modules'])->orderBy('name')->get(),
+            'services' => Service::with(['modules', 'packages.modules'])->orderBy('name')->get(),
             'subscription' => $subscription,
         ]);
     }
@@ -194,5 +232,13 @@ class SubscriptionController extends Controller
         $subscription->delete();
 
         return redirect()->back()->with('success', 'Subscription deleted successfully.');
+    }
+
+    public function restore($id)
+    {
+        $subscription = Subscription::withTrashed()->findOrFail($id);
+        $subscription->restore();
+
+        return redirect()->back()->with('success', 'Subscription restored successfully.');
     }
 }

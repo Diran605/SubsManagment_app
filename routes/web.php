@@ -16,8 +16,13 @@ use App\Http\Controllers\AuditLogController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit_logs.index');
+    Route::middleware(['permission:view reports'])->group(function () {
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    });
+    
+    Route::middleware(['permission:manage settings'])->group(function () {
+        Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit_logs.index');
+    });
 
     Route::resource('businesses', BusinessController::class);
     Route::resource('services', ServiceController::class);
@@ -32,6 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('subscriptions/{subscription}/renew', [SubscriptionController::class, 'renewForm'])->name('subscriptions.renewForm');
     Route::post('subscriptions/{subscription}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
+    Route::post('subscriptions/{id}/restore', [SubscriptionController::class, 'restore'])->name('subscriptions.restore');
     Route::resource('subscriptions', SubscriptionController::class);
 
     Route::middleware(['role:Admin'])->group(function () {

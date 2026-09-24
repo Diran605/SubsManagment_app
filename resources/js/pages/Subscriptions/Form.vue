@@ -2,6 +2,7 @@
 import { route } from 'ziggy-js';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { computed, watch, onMounted } from 'vue';
+import { buttonVariants } from '@/components/ui/button';
 
 const props = defineProps<{
     subscription?: any;
@@ -44,25 +45,20 @@ watch([() => form.service_id, () => form.mode, () => form.package_id], ([newServ
     if (newServiceId && !isEditing && !isRenewing) {
         let basePrice = 0;
         
-        if (newPackageId) {
+        if (newPackageId && newMode) {
              const pkg = availablePackages.value.find((p: any) => p.id === newPackageId);
-             if (pkg && pkg.reference_price) {
-                 basePrice = parseFloat(pkg.reference_price);
+             if (pkg) {
+                 const priceKey = newMode + '_price'; // online_price, offline_price, hybrid_price
+                 if (pkg[priceKey]) {
+                     basePrice = parseFloat(pkg[priceKey]);
+                 }
              }
-        } else if (newMode) {
-            const service = props.services.find((s) => s.id === newServiceId);
-            if (service && service.pricing) {
-                const pricing = service.pricing.find(
-                    (p: any) => p.mode === newMode,
-                );
-                if (pricing) {
-                    basePrice = parseFloat(pricing.base_price);
-                }
-            }
         }
         
         if (basePrice > 0) {
              form.amount = basePrice.toString();
+        } else {
+             form.amount = '';
         }
     }
 });
@@ -99,33 +95,33 @@ const title = computed(() => {
 <template>
     <Head :title="title" />
 
-    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4">
+    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+                <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ title }}</h1>
             </div>
             <Link
                 :href="'/dashboard'"
-                class="text-sm font-medium text-gray-500 hover:text-gray-700"
+                class="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
                 &larr; Back to Dashboard
             </Link>
         </div>
 
-        <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
             <form @submit.prevent="submit" class="space-y-6">
                 <!-- Select Business & Service -->
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-gray-700"
-                            >Business <span class="text-red-500">*</span></label
+                            class="mb-1 block text-sm font-medium text-foreground"
+                            >Business <span class="text-destructive">*</span></label
                         >
                         <select
                             v-model="form.business_id"
                             required
                             :disabled="isRenewing"
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary disabled:bg-muted disabled:opacity-50 sm:text-sm"
                         >
                             <option value="">Select Business</option>
                             <option
@@ -138,7 +134,7 @@ const title = computed(() => {
                         </select>
                         <p
                             v-if="form.errors.business_id"
-                            class="mt-1 text-sm text-red-600"
+                            class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.business_id }}
                         </p>
@@ -146,14 +142,14 @@ const title = computed(() => {
 
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-gray-700"
-                            >Service <span class="text-red-500">*</span></label
+                            class="mb-1 block text-sm font-medium text-foreground"
+                            >Service <span class="text-destructive">*</span></label
                         >
                         <select
                             v-model="form.service_id"
                             required
                             :disabled="isRenewing"
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary disabled:bg-muted disabled:opacity-50 sm:text-sm"
                         >
                             <option value="">Select Service</option>
                             <option
@@ -166,7 +162,7 @@ const title = computed(() => {
                         </select>
                         <p
                             v-if="form.errors.service_id"
-                            class="mt-1 text-sm text-red-600"
+                            class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.service_id }}
                         </p>
@@ -176,14 +172,14 @@ const title = computed(() => {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-gray-700"
-                            >Mode <span class="text-red-500">*</span></label
+                            class="mb-1 block text-sm font-medium text-foreground"
+                            >Mode <span class="text-destructive">*</span></label
                         >
                         <select
                             v-model="form.mode"
                             required
                             :disabled="isRenewing"
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary disabled:bg-muted disabled:opacity-50 sm:text-sm"
                         >
                             <option value="">Select Mode</option>
                             <option value="online">Online</option>
@@ -192,7 +188,7 @@ const title = computed(() => {
                         </select>
                         <p
                             v-if="form.errors.mode"
-                            class="mt-1 text-sm text-red-600"
+                            class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.mode }}
                         </p>
@@ -200,9 +196,9 @@ const title = computed(() => {
 
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-gray-700"
+                            class="mb-1 block text-sm font-medium text-foreground"
                             >Amount (FCFA)
-                            <span class="text-red-500">*</span></label
+                            <span class="text-destructive">*</span></label
                         >
                         <input
                             v-model="form.amount"
@@ -210,69 +206,69 @@ const title = computed(() => {
                             min="0"
                             step="0.01"
                             required
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
                         />
                         <p
                             v-if="form.errors.amount"
-                            class="mt-1 text-sm text-red-600"
+                            class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.amount }}
                         </p>
                     </div>
                 </div>
 
-                <div v-if="form.service_id && (availablePackages.length > 0 || availableModules.length > 0)" class="rounded-lg border border-gray-100 bg-gray-50 p-4 space-y-4">
-                    <h3 class="text-sm font-semibold text-gray-900">Service Configuration</h3>
+                <div v-if="form.service_id && (availablePackages.length > 0 || availableModules.length > 0)" class="rounded-xl border border-border bg-muted/30 p-4 space-y-4">
+                    <h3 class="text-sm font-semibold text-foreground">Service Configuration</h3>
                     
                     <div v-if="availablePackages.length > 0">
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Select Package (Optional)</label>
-                        <select v-model="form.package_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <label class="mb-1 block text-sm font-medium text-foreground">Select Package (Optional)</label>
+                        <select v-model="form.package_id" class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm">
                             <option value="">Custom Configuration</option>
                             <option v-for="pkg in availablePackages" :key="pkg.id" :value="pkg.id">
-                                {{ pkg.name }} ({{ pkg.reference_price ? pkg.reference_price + ' FCFA' : 'Custom Pricing' }})
+                                {{ pkg.name }} (Select mode to see price)
                             </option>
                         </select>
-                        <p v-if="form.errors.package_id" class="mt-1 text-sm text-red-600">{{ form.errors.package_id }}</p>
+                        <p v-if="form.errors.package_id" class="mt-1 text-sm text-destructive">{{ form.errors.package_id }}</p>
                     </div>
 
                     <div v-if="availableModules.length > 0">
-                        <label class="mb-2 block text-sm font-medium text-gray-700">Included Modules</label>
+                        <label class="mb-2 block text-sm font-medium text-foreground">Included Modules</label>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <label v-for="mod in availableModules" :key="mod.id" class="flex items-start space-x-3 rounded-lg border border-gray-200 bg-white p-3 hover:bg-gray-50 cursor-pointer">
+                            <label v-for="mod in availableModules" :key="mod.id" class="flex items-start space-x-3 rounded-lg border border-border bg-background p-3 hover:bg-muted cursor-pointer transition-colors">
                                 <div class="flex h-5 items-center">
                                     <input 
                                         type="checkbox" 
                                         :value="mod.id" 
                                         v-model="form.modules"
-                                        class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                                        class="h-4 w-4 rounded border-input bg-background text-primary focus:ring-primary" 
                                     />
                                 </div>
                                 <div class="flex flex-col">
-                                    <span class="text-sm font-medium text-gray-900">{{ mod.name }}</span>
-                                    <span v-if="mod.description" class="text-xs text-gray-500">{{ mod.description }}</span>
+                                    <span class="text-sm font-medium text-foreground">{{ mod.name }}</span>
+                                    <span v-if="mod.description" class="text-xs text-muted-foreground">{{ mod.description }}</span>
                                 </div>
                             </label>
                         </div>
-                        <p v-if="form.errors.modules" class="mt-1 text-sm text-red-600">{{ form.errors.modules }}</p>
+                        <p v-if="form.errors.modules" class="mt-1 text-sm text-destructive">{{ form.errors.modules }}</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-gray-700"
+                            class="mb-1 block text-sm font-medium text-foreground"
                             >Start Date
-                            <span class="text-red-500">*</span></label
+                            <span class="text-destructive">*</span></label
                         >
                         <input
                             v-model="form.start_date"
                             type="date"
                             required
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
                         />
                         <p
                             v-if="form.errors.start_date"
-                            class="mt-1 text-sm text-red-600"
+                            class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.start_date }}
                         </p>
@@ -280,18 +276,18 @@ const title = computed(() => {
 
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-gray-700"
-                            >End Date <span class="text-red-500">*</span></label
+                            class="mb-1 block text-sm font-medium text-foreground"
+                            >End Date <span class="text-destructive">*</span></label
                         >
                         <input
                             v-model="form.end_date"
                             type="date"
                             required
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
                         />
                         <p
                             v-if="form.errors.end_date"
-                            class="mt-1 text-sm text-red-600"
+                            class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.end_date }}
                         </p>
@@ -299,17 +295,17 @@ const title = computed(() => {
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700"
+                    <label class="mb-1 block text-sm font-medium text-foreground"
                         >Notes</label
                     >
                     <textarea
                         v-model="form.notes"
                         rows="3"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
                     ></textarea>
                     <p
                         v-if="form.errors.notes"
-                        class="mt-1 text-sm text-red-600"
+                        class="mt-1 text-sm text-destructive"
                     >
                         {{ form.errors.notes }}
                     </p>
@@ -319,7 +315,8 @@ const title = computed(() => {
                     <button
                         type="submit"
                         :disabled="form.processing"
-                        class="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                        :class="buttonVariants({ variant: 'default' })"
+                        class="disabled:opacity-50"
                     >
                         {{
                             isEditing

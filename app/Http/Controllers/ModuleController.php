@@ -5,9 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use App\Models\Module;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class ModuleController extends Controller
+class ModuleController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:create modules', only: ['store']),
+            new Middleware('permission:edit modules', only: ['update']),
+            new Middleware('permission:delete modules', only: ['destroy']),
+        ];
+    }
+
     public function store(Request $request, Service $service)
     {
         $validated = $request->validate([

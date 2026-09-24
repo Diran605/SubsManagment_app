@@ -5,15 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use App\Models\Package;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class PackageController extends Controller
+class PackageController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:create packages', only: ['store']),
+            new Middleware('permission:edit packages', only: ['update']),
+            new Middleware('permission:delete packages', only: ['destroy']),
+        ];
+    }
+
     public function store(Request $request, Service $service)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'reference_price' => 'nullable|numeric|min:0',
+            'online_price' => 'nullable|numeric|min:0',
+            'offline_price' => 'nullable|numeric|min:0',
+            'hybrid_price' => 'nullable|numeric|min:0',
             'modules' => 'array',
             'modules.*' => 'exists:modules,id',
         ]);
@@ -21,7 +34,9 @@ class PackageController extends Controller
         $package = $service->packages()->create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'reference_price' => $validated['reference_price'] ?? null,
+            'online_price' => $validated['online_price'] ?? null,
+            'offline_price' => $validated['offline_price'] ?? null,
+            'hybrid_price' => $validated['hybrid_price'] ?? null,
         ]);
 
         if (isset($validated['modules'])) {
@@ -36,7 +51,9 @@ class PackageController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'reference_price' => 'nullable|numeric|min:0',
+            'online_price' => 'nullable|numeric|min:0',
+            'offline_price' => 'nullable|numeric|min:0',
+            'hybrid_price' => 'nullable|numeric|min:0',
             'modules' => 'array',
             'modules.*' => 'exists:modules,id',
         ]);
@@ -44,7 +61,9 @@ class PackageController extends Controller
         $package->update([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'reference_price' => $validated['reference_price'] ?? null,
+            'online_price' => $validated['online_price'] ?? null,
+            'offline_price' => $validated['offline_price'] ?? null,
+            'hybrid_price' => $validated['hybrid_price'] ?? null,
         ]);
 
         if (isset($validated['modules'])) {

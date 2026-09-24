@@ -19,7 +19,8 @@ defineProps<{
         <div
             class="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-r"
         >
-            <div class="absolute inset-0 bg-zinc-900" />
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-indigo-700 to-violet-800 opacity-95" />
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
             <Link
                 :href="home()"
                 class="relative z-20 flex items-center text-lg font-medium"

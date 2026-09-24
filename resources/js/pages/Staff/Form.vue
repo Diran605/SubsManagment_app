@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { route } from 'ziggy-js';
 import { Head, useForm, Link } from '@inertiajs/vue3';
+import { buttonVariants } from '@/components/ui/button';
 
 const props = defineProps<{
     staff?: any;
@@ -30,54 +31,54 @@ const submit = () => {
 <template>
     <Head :title="isEditing ? 'Edit Staff' : 'Create Staff'" />
 
-    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4">
+    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">
+                <h1 class="text-3xl font-bold tracking-tight text-foreground">
                     {{ isEditing ? 'Edit Staff' : 'Create Staff' }}
                 </h1>
             </div>
             <Link
                 :href="route('staff.index')"
-                class="text-sm font-medium text-gray-500 hover:text-gray-700"
+                class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
                 &larr; Back to List
             </Link>
         </div>
 
-        <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <form @submit.prevent="submit" class="space-y-4">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700"
-                        >Name <span class="text-red-500">*</span></label
+                    <label class="mb-1.5 block text-sm font-medium text-foreground"
+                        >Name <span class="text-destructive">*</span></label
                     >
                     <input
                         v-model="form.name"
                         type="text"
                         required
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-primary"
                     />
                     <p
                         v-if="form.errors.name"
-                        class="mt-1 text-sm text-red-600"
+                        class="mt-1 text-sm text-destructive"
                     >
                         {{ form.errors.name }}
                     </p>
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700"
-                        >Email <span class="text-red-500">*</span></label
+                    <label class="mb-1.5 block text-sm font-medium text-foreground"
+                        >Email <span class="text-destructive">*</span></label
                     >
                     <input
                         v-model="form.email"
                         type="email"
                         required
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-primary"
                     />
                     <p
                         v-if="form.errors.email"
-                        class="mt-1 text-sm text-red-600"
+                        class="mt-1 text-sm text-destructive"
                     >
                         {{ form.errors.email }}
                     </p>
@@ -86,10 +87,10 @@ const submit = () => {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-gray-700"
+                            class="mb-1.5 block text-sm font-medium text-foreground"
                         >
                             Password
-                            <span v-if="!isEditing" class="text-red-500"
+                            <span v-if="!isEditing" class="text-destructive"
                                 >*</span
                             >
                         </label>
@@ -97,25 +98,25 @@ const submit = () => {
                             v-model="form.password"
                             type="password"
                             :required="!isEditing"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-primary"
                         />
                         <p
                             v-if="form.errors.password"
-                            class="mt-1 text-sm text-red-600"
+                            class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.password }}
                         </p>
-                        <p v-if="isEditing" class="mt-1 text-xs text-gray-500">
+                        <p v-if="isEditing" class="mt-1.5 text-xs text-muted-foreground">
                             Leave blank to keep current password
                         </p>
                     </div>
 
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-gray-700"
+                            class="mb-1.5 block text-sm font-medium text-foreground"
                         >
                             Confirm Password
-                            <span v-if="!isEditing" class="text-red-500"
+                            <span v-if="!isEditing" class="text-destructive"
                                 >*</span
                             >
                         </label>
@@ -123,7 +124,7 @@ const submit = () => {
                             v-model="form.password_confirmation"
                             type="password"
                             :required="!isEditing"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-primary"
                         />
                     </div>
                 </div>
@@ -133,27 +134,27 @@ const submit = () => {
                         id="is_active"
                         v-model="form.is_active"
                         type="checkbox"
-                        class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        class="h-4 w-4 rounded border-input bg-background text-primary focus:ring-primary"
                     />
                     <label
                         for="is_active"
-                        class="ml-2 block text-sm text-gray-900"
+                        class="ml-2 block text-sm font-medium text-foreground"
                     >
                         Active Account
                     </label>
                 </div>
 
-                <div v-if="roles && roles.length > 0" class="pt-4 border-t border-gray-100">
-                    <label class="mb-2 block text-sm font-medium text-gray-700">Assign Roles</label>
+                <div v-if="roles && roles.length > 0" class="pt-4 border-t border-border">
+                    <label class="mb-3 block text-sm font-medium text-foreground">Assign Roles</label>
                     <div class="grid grid-cols-2 gap-4">
                         <label v-for="role in roles" :key="role.id" class="flex items-center space-x-2">
                             <input 
                                 type="checkbox"
                                 :value="role.name"
                                 v-model="form.roles"
-                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                class="h-4 w-4 rounded border-input bg-background text-primary focus:ring-primary"
                             />
-                            <span class="text-sm font-medium text-gray-900">{{ role.name }}</span>
+                            <span class="text-sm font-medium text-foreground">{{ role.name }}</span>
                         </label>
                     </div>
                 </div>
@@ -162,7 +163,8 @@ const submit = () => {
                     <button
                         type="submit"
                         :disabled="form.processing"
-                        class="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                        :class="buttonVariants({ variant: 'default' })"
+                        class="disabled:opacity-50"
                     >
                         {{ isEditing ? 'Update Staff' : 'Save Staff' }}
                     </button>

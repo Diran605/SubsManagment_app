@@ -9,7 +9,7 @@ import {
     Briefcase,
     Users,
     BarChart3,
-    Activity
+    Activity,
 } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -39,34 +39,29 @@ const mainNavItems = computed(() => {
             href: route('dashboard'),
             icon: LayoutGrid,
         },
-        {
-            title: 'Businesses',
-            href: route('businesses.index'),
-            icon: Building2,
-        },
-        {
-            title: 'Services',
-            href: route('services.index'),
-            icon: Briefcase,
-        },
-        {
-            title: 'Subscriptions',
-            href: route('subscriptions.index'),
-            icon: BookOpen,
-        },
-        {
-            title: 'Reports',
-            href: route('reports.index'),
-            icon: BarChart3,
-        },
-        {
-            title: 'Audit Logs',
-            href: route('audit_logs.index'),
-            icon: Activity,
-        },
     ];
 
-    if (page.props.auth?.user?.roles?.includes('Admin')) {
+    const perms = page.props.auth?.user?.permissions || [];
+    
+    if (perms.includes('view businesses')) {
+        items.push({ title: 'Businesses', href: route('businesses.index'), icon: Building2 });
+    }
+    if (perms.includes('view services')) {
+        items.push({ title: 'Services', href: route('services.index'), icon: Briefcase });
+    }
+    if (perms.includes('view subscriptions')) {
+        items.push({ title: 'Subscriptions', href: route('subscriptions.index'), icon: BookOpen });
+    }
+    if (perms.includes('view reports')) {
+        items.push({ title: 'Reports', href: route('reports.index'), icon: BarChart3 });
+    }
+    
+    // Audit logs for Admin only or settings manager
+    if (page.props.auth?.user?.roles?.includes('Admin') || perms.includes('manage settings')) {
+        items.push({ title: 'Audit Logs', href: route('audit_logs.index'), icon: Activity });
+    }
+
+    if (perms.includes('manage staff') || page.props.auth?.user?.roles?.includes('Admin')) {
         items.push({
             title: 'Staff Accounts',
             href: route('staff.index'),

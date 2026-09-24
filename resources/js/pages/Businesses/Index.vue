@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { route } from 'ziggy-js';
 import { ref, watch } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { buttonVariants } from '@/components/ui/button';
+
+const page = usePage<any>();
+const canCreate = computed(() => page.props.auth?.user?.permissions?.includes('create businesses'));
+const canEdit = computed(() => page.props.auth?.user?.permissions?.includes('edit businesses'));
+const canDelete = computed(() => page.props.auth?.user?.permissions?.includes('delete businesses'));
 
 const props = defineProps<{
     businesses: any;
@@ -32,94 +39,95 @@ const confirmDelete = (id: number) => {
 <template>
     <Head title="Businesses" />
 
-    <div class="flex h-full flex-col gap-6 p-4">
+    <div class="flex h-full flex-col gap-6 p-4 md:p-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Businesses</h1>
-                <p class="text-sm text-gray-500">
+                <h1 class="text-3xl font-bold tracking-tight text-foreground">Businesses</h1>
+                <p class="mt-1 text-sm text-muted-foreground">
                     Manage your client businesses.
                 </p>
             </div>
             <Link
+                v-if="canCreate"
                 :href="route('businesses.create')"
-                class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                :class="buttonVariants({ variant: 'default' })"
             >
                 Add Business
             </Link>
         </div>
 
         <div
-            class="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm"
+            class="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
         >
             <div
-                class="flex items-center justify-between border-b border-gray-100 bg-white p-4"
+                class="flex items-center justify-between border-b border-border bg-muted/30 p-4"
             >
                 <input
                     type="text"
                     v-model="search"
                     placeholder="Search businesses..."
-                    class="w-full max-w-sm rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    class="w-full max-w-sm rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground focus:border-primary focus:ring-primary focus:outline-none"
                 />
             </div>
 
             <div class="flex-1 overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead
-                        class="border-b border-blue-100 bg-blue-50/50 text-blue-900"
+                        class="border-b border-border bg-orange-500 text-white"
                     >
                         <tr>
-                            <th class="px-4 py-3 font-semibold">Name</th>
-                            <th class="px-4 py-3 font-semibold">
-                                Contact Person
-                            </th>
-                            <th class="px-4 py-3 font-semibold">Phone</th>
-                            <th class="px-4 py-3 font-semibold">Email</th>
-                            <th class="px-4 py-3 text-right font-semibold">
-                                Actions
-                            </th>
+                            <th class="px-4 py-3 font-medium">Name</th>
+                            <th class="px-4 py-3 font-medium">Contact Person</th>
+                            <th class="px-4 py-3 font-medium">Phone</th>
+                            <th class="px-4 py-3 font-medium">Email</th>
+                            <th class="px-4 py-3 text-right font-medium">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-border">
                         <tr
                             v-for="business in props.businesses.data"
                             :key="business.id"
-                            class="border-b border-gray-50 last:border-0 hover:bg-blue-50/30"
+                            class="transition-colors hover:bg-muted/50"
                         >
-                            <td class="px-4 py-3 font-medium text-gray-900">
+                            <td class="px-4 py-3 font-medium text-foreground">
                                 {{ business.name }}
                             </td>
-                            <td class="px-4 py-3 text-gray-600">
+                            <td class="px-4 py-3 text-muted-foreground">
                                 {{ business.contact_person || '-' }}
                             </td>
-                            <td class="px-4 py-3 text-gray-600">
+                            <td class="px-4 py-3 text-muted-foreground">
                                 {{ business.phone || '-' }}
                             </td>
-                            <td class="px-4 py-3 text-gray-600">
+                            <td class="px-4 py-3 text-muted-foreground">
                                 {{ business.email || '-' }}
                             </td>
-                            <td class="space-x-3 px-4 py-3 text-right">
-                                <Link
-                                    :href="route('businesses.show', business.id)"
-                                    class="font-medium text-blue-600 hover:text-blue-800"
-                                    >View</Link
-                                >
-                                <Link
-                                    :href="route('businesses.edit', business.id)"
-                                    class="font-medium text-gray-600 hover:text-gray-800"
-                                    >Edit</Link
-                                >
-                                <button
-                                    @click="confirmDelete(business.id)"
-                                    class="font-medium text-red-600 hover:text-red-800"
-                                >
-                                    Delete
-                                </button>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <Link
+                                        :href="route('businesses.show', business.id)"
+                                        class="inline-flex items-center rounded-md border border-primary bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary hover:text-white transition-colors dark:border-primary dark:text-primary"
+                                        >View</Link
+                                    >
+                                    <Link
+                                        v-if="canEdit"
+                                        :href="route('businesses.edit', business.id)"
+                                        class="inline-flex items-center rounded-md border border-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white transition-colors"
+                                        >Edit</Link
+                                    >
+                                    <button
+                                        v-if="canDelete"
+                                        @click="confirmDelete(business.id)"
+                                        class="inline-flex items-center rounded-md border border-destructive bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive hover:text-white transition-colors"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         <tr v-if="props.businesses.data.length === 0">
                             <td
                                 colspan="5"
-                                class="py-8 text-center text-gray-500"
+                                class="py-8 text-center text-muted-foreground"
                             >
                                 No businesses found.
                             </td>
@@ -130,7 +138,7 @@ const confirmDelete = (id: number) => {
 
             <!-- Pagination -->
             <div
-                class="flex items-center justify-between border-t border-gray-100 p-4"
+                class="flex items-center justify-between border-t border-border bg-card px-4 py-3 sm:px-6"
                 v-if="props.businesses.links.length > 3"
             >
                 <div class="flex gap-1">
@@ -140,11 +148,11 @@ const confirmDelete = (id: number) => {
                         :href="link.url || ''"
                         v-html="link.label"
                         :class="[
-                            'rounded px-3 py-1 text-sm',
+                            'rounded px-3 py-1 text-sm border font-medium',
                             link.active
-                                ? 'bg-blue-600 text-white'
-                                : 'text-gray-600 hover:bg-gray-100',
-                            !link.url ? 'cursor-not-allowed opacity-50' : '',
+                                ? 'z-10 border-primary bg-primary/10 text-primary'
+                                : 'border-input bg-background text-muted-foreground hover:bg-muted',
+                            !link.url ? 'pointer-events-none opacity-50' : '',
                         ]"
                     />
                 </div>

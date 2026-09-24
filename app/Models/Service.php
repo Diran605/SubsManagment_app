@@ -23,10 +23,7 @@ class Service extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function pricing()
-    {
-        return $this->hasMany(ServicePricing::class);
-    }
+
 
     public function subscriptions()
     {

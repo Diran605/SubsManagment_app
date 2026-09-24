@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ref } from 'vue';
+import { route } from 'ziggy-js';
 
 const props = defineProps<{
     roles: Array<{ id: number, name: string, permissions: Array<{ id: number, name: string }> }>;
@@ -16,6 +17,24 @@ const form = useForm({
     name: '',
     permissions: [] as number[],
 });
+
+const resources = [
+    { name: 'Businesses', slug: 'businesses', actions: ['view', 'create', 'edit', 'delete'] },
+    { name: 'Services', slug: 'services', actions: ['view', 'create', 'edit', 'delete'] },
+    { name: 'Packages', slug: 'packages', actions: ['create', 'edit', 'delete'] },
+    { name: 'Modules', slug: 'modules', actions: ['create', 'edit', 'delete'] },
+    { name: 'Subscriptions', slug: 'subscriptions', actions: ['view', 'create', 'edit', 'delete', 'restore'] },
+    { name: 'Reports', slug: 'reports', actions: ['view'] },
+    { name: 'Staff Accounts', slug: 'staff', actions: ['manage'] },
+    { name: 'Roles', slug: 'roles', actions: ['manage'] },
+    { name: 'Settings', slug: 'settings', actions: ['manage'] },
+];
+
+const getPermissionId = (action: string, slug: string) => {
+    const permName = `${action} ${slug}`;
+    const p = props.permissions.find(p => p.name === permName);
+    return p ? p.id : null;
+};
 
 const editingRole = ref<number | null>(null);
 
@@ -69,18 +88,42 @@ const deleteRole = (id: number) => {
                 </div>
                 
                 <div>
-                    <Label class="mb-2 block">Permissions</Label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label v-for="permission in permissions" :key="permission.id" class="flex items-center space-x-2">
-                            <Checkbox 
-                                :checked="form.permissions.includes(permission.id)"
-                                @update:checked="(checked) => {
-                                    if (checked) form.permissions.push(permission.id);
-                                    else form.permissions = form.permissions.filter(p => p !== permission.id);
-                                }"
-                            />
-                            <span class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{{ permission.name }}</span>
-                        </label>
+                    <Label class="mb-2 block">Permissions Matrix</Label>
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="border-b border-border bg-orange-500 text-white">
+                                <tr>
+                                    <th class="px-4 py-3 font-medium">Resource</th>
+                                    <th class="px-4 py-3 font-medium text-center">View</th>
+                                    <th class="px-4 py-3 font-medium text-center">Create</th>
+                                    <th class="px-4 py-3 font-medium text-center">Edit</th>
+                                    <th class="px-4 py-3 font-medium text-center">Delete</th>
+                                    <th class="px-4 py-3 font-medium text-center">Restore</th>
+                                    <th class="px-4 py-3 font-medium text-center">Manage</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr v-for="res in resources" :key="res.slug">
+                                    <td class="px-4 py-3 font-medium text-gray-900">{{ res.name }}</td>
+                                    
+                                    <!-- Dynamic Checkboxes -->
+                                    <td v-for="action in ['view', 'create', 'edit', 'delete', 'restore', 'manage']" :key="action" class="px-4 py-3 text-center">
+                                        <template v-if="res.actions.includes(action) && getPermissionId(action, res.slug)">
+                                            <Checkbox
+                                                :checked="form.permissions.includes(getPermissionId(action, res.slug) as number)"
+                                                @update:checked="(checked) => {
+                                                    const pid = getPermissionId(action, res.slug);
+                                                    if (!pid) return;
+                                                    if (checked) form.permissions.push(pid);
+                                                    else form.permissions = form.permissions.filter(p => p !== pid);
+                                                }"
+                                            />
+                                        </template>
+                                        <span v-else class="text-gray-300">-</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

@@ -9,9 +9,10 @@ import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
-
+import { Shield } from '@lucide/vue';
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { route } from 'ziggy-js';
 
 const page = usePage<any>();
 
@@ -35,6 +36,7 @@ const sidebarNavItems = computed(() => {
         items.push({
             title: 'Roles & Permissions',
             href: route('roles.index'),
+            icon: Shield,
         });
     }
 

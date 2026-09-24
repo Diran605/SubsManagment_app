@@ -5,9 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Business;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class BusinessController extends Controller
+class BusinessController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:view businesses', only: ['index', 'show']),
+            new Middleware('permission:create businesses', only: ['create', 'store']),
+            new Middleware('permission:edit businesses', only: ['edit', 'update']),
+            new Middleware('permission:delete businesses', only: ['destroy']),
+        ];
+    }
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -44,7 +56,7 @@ class BusinessController extends Controller
 
     public function show(Business $business)
     {
-        $business->load(['subscriptions.service', 'creator']);
+        $business->load(['subscriptions.service', 'subscriptions.package', 'subscriptions.modules', 'creator']);
 
         return Inertia::render('Businesses/Show', [
             'business' => $business,
