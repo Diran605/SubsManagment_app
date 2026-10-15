@@ -108,6 +108,7 @@ class SubscriptionController extends Controller implements HasMiddleware
             'service_id' => 'required|exists:services,id',
             'mode' => 'required|in:online,offline,hybrid',
             'amount' => 'required|numeric|min:0',
+            'student_count' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'notes' => 'nullable|string',
@@ -144,6 +145,7 @@ class SubscriptionController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0',
+            'student_count' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'notes' => 'nullable|string',
@@ -157,6 +159,7 @@ class SubscriptionController extends Controller implements HasMiddleware
             'service_id' => $subscription->service_id,
             'mode' => $subscription->mode,
             'amount' => $validated['amount'],
+            'student_count' => $validated['student_count'] ?? null,
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
             'notes' => $validated['notes'] ?? null,
@@ -174,7 +177,17 @@ class SubscriptionController extends Controller implements HasMiddleware
 
     public function show($id)
     {
-        $subscription = Subscription::withTrashed()->with(['business', 'service', 'package', 'modules', 'creator', 'renewals'])->findOrFail($id);
+        $subscription = Subscription::withTrashed()->with([
+            'business',
+            'service',
+            'package',
+            'modules',
+            'creator',
+            'renewals',
+            'collections.recorder' => function($query) {
+                $query->select('id', 'name', 'email');
+            }
+        ])->findOrFail($id);
 
         if ($subscription->trashed()) {
             $subscription->status_badge = 'trashed';
@@ -205,6 +218,7 @@ class SubscriptionController extends Controller implements HasMiddleware
             'service_id' => 'required|exists:services,id',
             'mode' => 'required|in:online,offline,hybrid',
             'amount' => 'required|numeric|min:0',
+            'student_count' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'notes' => 'nullable|string',

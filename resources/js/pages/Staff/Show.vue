@@ -106,7 +106,7 @@ const props = defineProps<{
                         <li v-for="sub in staff.subscriptions" :key="sub.id" class="p-4 flex items-center justify-between transition-colors hover:bg-muted/50">
                             <div>
                                 <span class="text-sm font-medium text-foreground capitalize">{{ sub.mode }}</span>
-                                <span class="ml-2 text-xs text-muted-foreground">from {{ sub.start_date }} to {{ sub.end_date }}</span>
+                                <span class="ml-2 text-xs text-muted-foreground">from {{ new Date(sub.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }} to {{ new Date(sub.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }}</span>
                             </div>
                             <span class="text-sm font-medium text-foreground">{{ Number(sub.amount).toLocaleString('en-US') }} FCFA</span>
                         </li>

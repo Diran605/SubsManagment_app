@@ -24,9 +24,11 @@ class PackageController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'online_price' => 'nullable|numeric|min:0',
-            'offline_price' => 'nullable|numeric|min:0',
-            'hybrid_price' => 'nullable|numeric|min:0',
+            'price' => 'required|numeric|min:0',
+            'pricing_model' => 'nullable|string|in:flat,per_student',
+            'payer_type' => 'nullable|string|in:school,student_momo',
+            'supported_modes' => 'nullable|array',
+            'supported_modes.*' => 'in:online,offline,hybrid',
             'modules' => 'array',
             'modules.*' => 'exists:modules,id',
         ]);
@@ -34,9 +36,10 @@ class PackageController extends Controller implements HasMiddleware
         $package = $service->packages()->create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'online_price' => $validated['online_price'] ?? null,
-            'offline_price' => $validated['offline_price'] ?? null,
-            'hybrid_price' => $validated['hybrid_price'] ?? null,
+            'price' => $validated['price'],
+            'pricing_model' => $validated['pricing_model'] ?? 'flat',
+            'payer_type' => $validated['payer_type'] ?? 'school',
+            'supported_modes' => $validated['supported_modes'] ?? [],
         ]);
 
         if (isset($validated['modules'])) {
@@ -51,9 +54,11 @@ class PackageController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'online_price' => 'nullable|numeric|min:0',
-            'offline_price' => 'nullable|numeric|min:0',
-            'hybrid_price' => 'nullable|numeric|min:0',
+            'price' => 'required|numeric|min:0',
+            'pricing_model' => 'nullable|string|in:flat,per_student',
+            'payer_type' => 'nullable|string|in:school,student_momo',
+            'supported_modes' => 'nullable|array',
+            'supported_modes.*' => 'in:online,offline,hybrid',
             'modules' => 'array',
             'modules.*' => 'exists:modules,id',
         ]);
@@ -61,9 +66,10 @@ class PackageController extends Controller implements HasMiddleware
         $package->update([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'online_price' => $validated['online_price'] ?? null,
-            'offline_price' => $validated['offline_price'] ?? null,
-            'hybrid_price' => $validated['hybrid_price'] ?? null,
+            'price' => $validated['price'],
+            'pricing_model' => $validated['pricing_model'] ?? 'flat',
+            'payer_type' => $validated['payer_type'] ?? 'school',
+            'supported_modes' => $validated['supported_modes'] ?? [],
         ]);
 
         if (isset($validated['modules'])) {

@@ -12,6 +12,7 @@ const isEditing = !!props.service;
 
 const form = useForm({
     name: props.service?.name || '',
+    category: props.service?.category || 'standard',
     description: props.service?.description || '',
 });
 
@@ -64,6 +65,27 @@ const submit = () => {
                             class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.name }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label
+                            class="mb-1 block text-sm font-medium text-foreground"
+                            >Service Category
+                            <span class="text-destructive">*</span></label
+                        >
+                        <select
+                            v-model="form.category"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                        >
+                            <option value="standard">Standard Business SaaS (Flat Rate / Month)</option>
+                            <option value="education">🎓 School / Educational System (Student-Based Tiers & MoMo Collections)</option>
+                        </select>
+                        <p
+                            v-if="form.errors.category"
+                            class="mt-1 text-sm text-destructive"
+                        >
+                            {{ form.errors.category }}
                         </p>
                     </div>
 

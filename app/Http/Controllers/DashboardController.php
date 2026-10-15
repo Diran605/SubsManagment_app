@@ -38,6 +38,14 @@ class DashboardController extends Controller
             ->groupBy(fn($sub) => $sub->service->name ?? 'Unknown')
             ->map(fn ($group) => $group->count());
 
+        $subscriptionsByBusiness = $allSubscriptions
+            ->whereIn('status_badge', ['active', 'expiring_soon'])
+            ->groupBy(fn($sub) => $sub->business->name ?? 'Unknown')
+            ->map(fn ($group) => $group->count())
+            ->sortDesc()
+            ->take(15) // Limit to top 15 so chart isn't too cluttered
+            ->toArray();
+
         $expiringSubscriptions = $allSubscriptions
             ->where('status_badge', 'expiring_soon')
             ->sortBy('end_date')
@@ -85,6 +93,7 @@ class DashboardController extends Controller
             'totalServices' => Service::count(),
             'revenueByService' => $revenueByService,
             'subscriptionsByService' => $subscriptionsByService,
+            'subscriptionsByBusiness' => $subscriptionsByBusiness,
             'filters' => [
                 'search' => $search,
                 'status' => $statusFilter,

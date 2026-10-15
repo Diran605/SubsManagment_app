@@ -9,6 +9,7 @@ const props = defineProps<{
     totalRevenue: number | string;
     revenueByService: Record<string, number>;
     subscriptionsByService: Record<string, number>;
+    subscriptionsByBusiness: Record<string, number>;
     totalBusinesses: number;
     totalServices: number;
     filters: {
@@ -38,10 +39,10 @@ const confirmDelete = (id: number) => {
     }
 };
 
-import { Bar } from 'vue-chartjs';
-import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
+import { Bar, Line } from 'vue-chartjs';
+import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
 
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement);
 
 import { useAppearance } from '@/composables/useAppearance';
 import { watchEffect } from 'vue';
@@ -60,12 +61,40 @@ const getBarChartData = (data: Record<string, number>, dark: boolean) => {
         datasets: [{
             label: 'Active Subscriptions',
             data: Object.values(data),
-            backgroundColor: dark ? '#0ea5e9' : '#4f46e5', 
+            backgroundColor: dark ? '#0ea5e9' : '#0A3094', 
             borderRadius: 4,
             maxBarThickness: 40,
         }]
     };
 };
+
+const getLineChartData = (data: Record<string, number>, dark: boolean) => {
+    return {
+        labels: Object.keys(data),
+        datasets: [{
+            label: 'Subscriptions',
+            data: Object.values(data),
+            backgroundColor: dark ? '#f97316' : '#FF5F00',
+            borderColor: dark ? '#f97316' : '#FF5F00',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false,
+            pointBackgroundColor: dark ? '#f97316' : '#FF5F00',
+        }]
+    };
+};
+
+// Compute a minimum pixel width so each bar/point gets enough room.
+// Each label needs at least 80px; fallback to 100% if chart is narrow enough.
+const barChartMinWidth = computed(() => {
+    const count = Object.keys(props.subscriptionsByService || {}).length;
+    return count > 5 ? `${count * 80}px` : '100%';
+});
+
+const lineChartMinWidth = computed(() => {
+    const count = Object.keys(props.subscriptionsByBusiness || {}).length;
+    return count > 7 ? `${count * 80}px` : '100%';
+});
 
 const barChartOptions = computed(() => ({
     responsive: true,
@@ -80,13 +109,28 @@ const barChartOptions = computed(() => ({
                 drawBorder: false,
             },
             ticks: {
-                font: { size: 12 },
-                maxRotation: 0,
-                minRotation: 0,
+                font: { size: 11 },
+                autoSkip: false,
                 callback: function(value: any) {
                     const label = this.getLabelForValue(value);
-                    if (typeof label === 'string' && label.length > 15) {
-                        return label.substring(0, 15) + '...';
+                    if (typeof label === 'string') {
+                        const words = label.split(' ');
+                        const lines = [];
+                        let currentLine = '';
+                        words.forEach(word => {
+                            if ((currentLine + word).length > 12) {
+                                if (currentLine.trim().length > 0) {
+                                    lines.push(currentLine.trim());
+                                }
+                                currentLine = word + ' ';
+                            } else {
+                                currentLine += word + ' ';
+                            }
+                        });
+                        if (currentLine.trim().length > 0) {
+                            lines.push(currentLine.trim());
+                        }
+                        return lines;
                     }
                     return label;
                 }
@@ -216,9 +260,11 @@ import { buttonVariants } from '@/components/ui/button';
                 <h2 class="mb-4 text-lg font-semibold text-foreground">
                     Active Subscriptions
                 </h2>
-                <div class="mt-4 flex-1 h-48 flex items-center justify-center">
-                    <Bar v-if="Object.keys(props.subscriptionsByService || {}).length" :data="getBarChartData(props.subscriptionsByService, isDark)" :options="barChartOptions" />
-                    <p v-else class="text-sm text-muted-foreground">No data available.</p>
+                <div class="mt-4 overflow-x-auto">
+                    <div class="h-48" :style="{ minWidth: barChartMinWidth }">
+                        <Bar v-if="Object.keys(props.subscriptionsByService || {}).length" :data="getBarChartData(props.subscriptionsByService, isDark)" :options="barChartOptions" />
+                        <p v-else class="text-sm text-muted-foreground">No data available.</p>
+                    </div>
                 </div>
             </div>
 
@@ -261,6 +307,21 @@ import { buttonVariants } from '@/components/ui/button';
                         class="py-4 text-center text-sm text-muted-foreground"
                     >
                         All clear! No subscriptions expiring soon.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscriptions by Business Line Chart -->
+        <div class="grid grid-cols-1 gap-6 mt-6">
+            <div class="rounded-2xl border border-border bg-card shadow-sm flex flex-col">
+                <div class="border-b border-border p-4 bg-muted/20">
+                    <h3 class="font-semibold text-foreground">Subscriptions by Business</h3>
+                </div>
+                <div class="p-4 overflow-x-auto">
+                    <div class="h-80" :style="{ minWidth: lineChartMinWidth }">
+                        <Line v-if="Object.keys(props.subscriptionsByBusiness || {}).length" :data="getLineChartData(props.subscriptionsByBusiness, isDark)" :options="barChartOptions" />
+                        <p v-else class="text-sm text-muted-foreground">No data available.</p>
                     </div>
                 </div>
             </div>

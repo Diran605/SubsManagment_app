@@ -39,11 +39,13 @@ class ServiceController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'category' => 'nullable|string|in:standard,education',
         ]);
 
         $service = Service::create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
+            'category' => $validated['category'] ?? 'standard',
             'created_by' => $request->user()->id,
         ]);
 
@@ -64,11 +66,13 @@ class ServiceController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'category' => 'nullable|string|in:standard,education',
         ]);
 
         $service->update([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
+            'category' => $validated['category'] ?? 'standard',
         ]);
 
         return redirect()->route('services.index')->with('success', 'Service updated successfully.');

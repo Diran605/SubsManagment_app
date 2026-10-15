@@ -41,9 +41,10 @@ const submitModule = () => {
 const packageForm = useForm({
     name: '',
     description: '',
-    online_price: '',
-    offline_price: '',
-    hybrid_price: '',
+    price: '',
+    pricing_model: props.service?.category === 'education' ? 'per_student' : 'flat',
+    payer_type: 'school',
+    supported_modes: [] as string[],
     modules: [],
 });
 
@@ -63,6 +64,28 @@ const deleteModule = (id: number) => {
     }
 };
 
+// ── Module inline editing ──────────────────────────────────────────────
+const editingModuleId = ref<number | null>(null);
+const editModuleForm = useForm({ name: '', description: '' });
+
+const startEditModule = (mod: any) => {
+    editingModuleId.value = mod.id;
+    editModuleForm.name = mod.name;
+    editModuleForm.description = mod.description || '';
+};
+
+const cancelEditModule = () => {
+    editingModuleId.value = null;
+    editModuleForm.reset();
+};
+
+const submitEditModule = (id: number) => {
+    editModuleForm.put(route('modules.update', id), {
+        preserveScroll: true,
+        onSuccess: () => { editingModuleId.value = null; }
+    });
+};
+
 const deletePackageForm = useForm({});
 const deletePackage = (id: number) => {
     if (confirm('Are you sure you want to delete this package?')) {
@@ -70,6 +93,41 @@ const deletePackage = (id: number) => {
             preserveScroll: true
         });
     }
+};
+
+// ── Package inline editing ─────────────────────────────────────────────
+const editingPackageId = ref<number | null>(null);
+const editPackageForm = useForm({
+    name: '',
+    description: '',
+    price: '',
+    pricing_model: 'flat',
+    payer_type: 'school',
+    supported_modes: [] as string[],
+    modules: [] as number[],
+});
+
+const startEditPackage = (pkg: any) => {
+    editingPackageId.value = pkg.id;
+    editPackageForm.name = pkg.name;
+    editPackageForm.description = pkg.description || '';
+    editPackageForm.price = pkg.price ?? '';
+    editPackageForm.pricing_model = pkg.pricing_model || 'flat';
+    editPackageForm.payer_type = pkg.payer_type || 'school';
+    editPackageForm.supported_modes = pkg.supported_modes ?? [];
+    editPackageForm.modules = pkg.modules?.map((m: any) => m.id) ?? [];
+};
+
+const cancelEditPackage = () => {
+    editingPackageId.value = null;
+    editPackageForm.reset();
+};
+
+const submitEditPackage = (id: number) => {
+    editPackageForm.put(route('packages.update', id), {
+        preserveScroll: true,
+        onSuccess: () => { editingPackageId.value = null; }
+    });
 };
 </script>
 
@@ -208,16 +266,30 @@ const deletePackage = (id: number) => {
                     </div>
                     <div class="p-4 flex-1">
                         <ul class="space-y-3">
-                            <li v-for="mod in service.modules" :key="mod.id" class="flex justify-between items-center border-b border-border pb-3 last:border-0 last:pb-0 group">
-                                <div>
-                                    <div class="font-medium text-foreground text-sm">{{ mod.name }}</div>
-                                    <div class="text-xs text-muted-foreground">{{ mod.description || 'No description' }}</div>
+                            <li v-for="mod in service.modules" :key="mod.id" class="border-b border-border pb-3 last:border-0 last:pb-0">
+                                <!-- View mode -->
+                                <div v-if="editingModuleId !== mod.id" class="flex justify-between items-center group">
+                                    <div>
+                                        <div class="font-medium text-foreground text-sm">{{ mod.name }}</div>
+                                        <div class="text-xs text-muted-foreground">{{ mod.description || 'No description' }}</div>
+                                    </div>
+                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button v-if="canEditModules" @click="startEditModule(mod)" class="inline-flex items-center rounded border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary hover:text-white transition-colors">Edit</button>
+                                        <button v-if="canDeleteModules" @click="deleteModule(mod.id)" class="inline-flex items-center rounded border border-destructive/30 bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive hover:text-white transition-colors">Delete</button>
+                                    </div>
                                 </div>
-                                <button v-if="canDeleteModules" @click="deleteModule(mod.id)" class="text-destructive hover:text-destructive/80 opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
+                                <!-- Edit mode -->
+                                <form v-else @submit.prevent="submitEditModule(mod.id)" class="space-y-2 bg-muted/30 rounded-lg p-3">
+                                    <div class="flex gap-2">
+                                        <input v-model="editModuleForm.name" type="text" required placeholder="Module name" class="flex-1 rounded-md border-input bg-background px-3 py-1.5 text-foreground text-sm focus:border-primary focus:ring-primary" />
+                                    </div>
+                                    <input v-model="editModuleForm.description" type="text" placeholder="Description (optional)" class="w-full rounded-md border-input bg-background px-3 py-1.5 text-foreground text-sm focus:border-primary focus:ring-primary" />
+                                    <p v-if="editModuleForm.errors.name" class="text-xs text-destructive">{{ editModuleForm.errors.name }}</p>
+                                    <div class="flex gap-2 justify-end">
+                                        <button type="button" @click="cancelEditModule" class="inline-flex items-center rounded border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
+                                        <button type="submit" :disabled="editModuleForm.processing" class="inline-flex items-center rounded border border-primary bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90 transition-colors">Save</button>
+                                    </div>
+                                </form>
                             </li>
                             <li v-if="!service.modules || service.modules.length === 0" class="text-sm text-muted-foreground text-center py-4">
                                 No modules configured.
@@ -247,38 +319,106 @@ const deletePackage = (id: number) => {
                     </div>
                     <div class="p-4 flex-1">
                         <ul class="space-y-4">
-                            <li v-for="pkg in service.packages" :key="pkg.id" class="border border-border rounded-lg p-3 group relative bg-background/50">
-                                <button v-if="canDeletePackages" @click="deletePackage(pkg.id)" class="absolute top-2 right-2 text-destructive hover:text-destructive/80 opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                                <div class="flex justify-between items-start mb-3 pr-6">
+                            <li v-for="pkg in service.packages" :key="pkg.id" class="border border-border rounded-lg p-3 bg-background/50">
+                                <!-- View mode -->
+                                <div v-if="editingPackageId !== pkg.id" class="group relative">
+                                    <div class="flex justify-between items-start mb-3 pr-2">
+                                        <div>
+                                            <div class="font-medium text-foreground text-sm">{{ pkg.name }}</div>
+                                            <div class="text-xs text-muted-foreground mt-0.5">{{ pkg.description || 'No description' }}</div>
+                                        </div>
+                                        <div class="flex flex-col items-end gap-1 mt-1">
+                                            <span class="inline-flex items-center rounded-md bg-orange-500/10 px-2.5 py-1 text-xs font-semibold text-orange-600 dark:text-orange-400 ring-1 ring-inset ring-orange-500/20">
+                                                {{ pkg.price ? Number(pkg.price).toLocaleString('en-US') + (pkg.pricing_model === 'per_student' ? ' FCFA / student' : ' FCFA / mo') : 'Free' }}
+                                            </span>
+                                            <div class="flex flex-wrap gap-1 mt-1 justify-end">
+                                                <span v-if="pkg.pricing_model === 'per_student'" :class="pkg.payer_type === 'student_momo' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'" class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium border">
+                                                    {{ pkg.payer_type === 'student_momo' ? '📱 Student MoMo' : '🏫 School Pays' }}
+                                                </span>
+                                                <span v-for="mode in pkg.supported_modes" :key="mode" class="inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground uppercase border border-border">
+                                                    {{ mode }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <span class="text-[11px] font-medium text-muted-foreground block mb-1.5 uppercase tracking-wider">Includes</span>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            <span v-for="mod in pkg.modules" :key="mod.id" class="inline-flex items-center rounded-md bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground border border-border">
+                                                {{ mod.name }}
+                                            </span>
+                                            <span v-if="!pkg.modules || pkg.modules.length === 0" class="text-xs text-muted-foreground/60 italic">None</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button v-if="canEditPackages" @click="startEditPackage(pkg)" class="inline-flex items-center rounded border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary hover:text-white transition-colors">Edit</button>
+                                        <button v-if="canDeletePackages" @click="deletePackage(pkg.id)" class="inline-flex items-center rounded border border-destructive/30 bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive hover:text-white transition-colors">Delete</button>
+                                    </div>
+                                </div>
+                                <!-- Edit mode -->
+                                <form v-else @submit.prevent="submitEditPackage(pkg.id)" class="space-y-3">
+                                    <h4 class="text-sm font-medium text-foreground">Edit Package</h4>
                                     <div>
-                                        <div class="font-medium text-foreground text-sm">{{ pkg.name }}</div>
-                                        <div class="text-xs text-muted-foreground mt-0.5">{{ pkg.description || 'No description' }}</div>
+                                        <input v-model="editPackageForm.name" type="text" required placeholder="Package Name" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary" />
+                                        <p v-if="editPackageForm.errors.name" class="mt-1 text-xs text-destructive">{{ editPackageForm.errors.name }}</p>
                                     </div>
-                                    <div class="flex flex-col items-end gap-1.5 mt-1">
-                                        <span class="inline-flex items-center rounded-md bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-500/20">
-                                            Online: {{ pkg.online_price ? Number(pkg.online_price).toLocaleString('en-US') + ' FCFA' : '-' }}
-                                        </span>
-                                        <span class="inline-flex items-center rounded-md bg-zinc-500/10 px-2 py-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400 ring-1 ring-inset ring-zinc-500/20">
-                                            Offline: {{ pkg.offline_price ? Number(pkg.offline_price).toLocaleString('en-US') + ' FCFA' : '-' }}
-                                        </span>
-                                        <span class="inline-flex items-center rounded-md bg-purple-500/10 px-2 py-0.5 text-[10px] font-medium text-purple-600 dark:text-purple-400 ring-1 ring-inset ring-purple-500/20">
-                                            Hybrid: {{ pkg.hybrid_price ? Number(pkg.hybrid_price).toLocaleString('en-US') + ' FCFA' : '-' }}
-                                        </span>
+                                    <input v-model="editPackageForm.description" type="text" placeholder="Description (Optional)" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary" />
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-foreground mb-1">Pricing Model</label>
+                                            <select v-model="editPackageForm.pricing_model" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary">
+                                                <option value="flat">Flat Monthly Fee</option>
+                                                <option value="per_student">Per-Student Annual Fee</option>
+                                            </select>
+                                        </div>
+                                        <div v-if="editPackageForm.pricing_model === 'per_student'">
+                                            <label class="block text-xs font-medium text-foreground mb-1">Payer</label>
+                                            <select v-model="editPackageForm.payer_type" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary">
+                                                <option value="school">School (Institutional Invoice)</option>
+                                                <option value="student_momo">Students (Mobile Money)</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <span class="text-[11px] font-medium text-muted-foreground block mb-1.5 uppercase tracking-wider">Includes</span>
-                                    <div class="flex flex-wrap gap-1.5">
-                                        <span v-for="mod in pkg.modules" :key="mod.id" class="inline-flex items-center rounded-md bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground border border-border">
-                                            {{ mod.name }}
-                                        </span>
-                                        <span v-if="!pkg.modules || pkg.modules.length === 0" class="text-xs text-muted-foreground/60 italic">None</span>
+
+                                    <div>
+                                        <label class="block text-xs font-medium text-foreground mb-1">
+                                            {{ editPackageForm.pricing_model === 'per_student' ? 'Rate per Student (FCFA)' : 'Monthly Price (FCFA)' }}
+                                        </label>
+                                        <input v-model="editPackageForm.price" type="number" step="0.01" required class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary" />
                                     </div>
-                                </div>
+
+                                    <div>
+                                        <label class="block text-xs font-medium text-foreground mb-1.5 mt-2">Supported Modes</label>
+                                        <div class="flex flex-wrap gap-3">
+                                            <label class="flex items-center space-x-2 text-sm cursor-pointer">
+                                                <input type="checkbox" value="online" v-model="editPackageForm.supported_modes" class="rounded border-input bg-background text-primary" />
+                                                <span class="text-foreground">Online</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 text-sm cursor-pointer">
+                                                <input type="checkbox" value="offline" v-model="editPackageForm.supported_modes" class="rounded border-input bg-background text-primary" />
+                                                <span class="text-foreground">Offline</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 text-sm cursor-pointer">
+                                                <input type="checkbox" value="hybrid" v-model="editPackageForm.supported_modes" class="rounded border-input bg-background text-primary" />
+                                                <span class="text-foreground">Hybrid</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div v-if="service.modules && service.modules.length > 0">
+                                        <label class="block text-xs font-medium text-foreground mb-1.5">Modules</label>
+                                        <div class="max-h-32 overflow-y-auto border border-border bg-background rounded-md p-2 space-y-1">
+                                            <label v-for="mod in service.modules" :key="mod.id" class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-muted p-1.5 rounded transition-colors">
+                                                <input type="checkbox" :value="mod.id" v-model="editPackageForm.modules" class="rounded border-input bg-background text-primary" />
+                                                <span class="text-foreground">{{ mod.name }}</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2 justify-end">
+                                        <button type="button" @click="cancelEditPackage" class="inline-flex items-center rounded border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
+                                        <button type="submit" :disabled="editPackageForm.processing" class="inline-flex items-center rounded border border-primary bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 transition-colors">Save Changes</button>
+                                    </div>
+                                </form>
                             </li>
                             <li v-if="!service.packages || service.packages.length === 0" class="text-sm text-muted-foreground text-center py-4">
                                 No packages configured.
@@ -296,18 +436,46 @@ const deletePackage = (id: number) => {
                             <div>
                                 <input v-model="packageForm.description" type="text" placeholder="Description (Optional)" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary" />
                             </div>
-                            <div class="grid grid-cols-3 gap-2">
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-xs text-muted-foreground mb-1">Online (FCFA)</label>
-                                    <input v-model="packageForm.online_price" type="number" step="0.01" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary" />
+                                    <label class="block text-xs font-medium text-foreground mb-1">Pricing Model</label>
+                                    <select v-model="packageForm.pricing_model" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary">
+                                        <option value="flat">Flat Monthly Fee</option>
+                                        <option value="per_student">Per-Student Annual Fee</option>
+                                    </select>
                                 </div>
-                                <div>
-                                    <label class="block text-xs text-muted-foreground mb-1">Offline (FCFA)</label>
-                                    <input v-model="packageForm.offline_price" type="number" step="0.01" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary" />
+                                <div v-if="packageForm.pricing_model === 'per_student'">
+                                    <label class="block text-xs font-medium text-foreground mb-1">Payer</label>
+                                    <select v-model="packageForm.payer_type" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary">
+                                        <option value="school">School (Institutional Invoice)</option>
+                                        <option value="student_momo">Students (Mobile Money)</option>
+                                    </select>
                                 </div>
-                                <div>
-                                    <label class="block text-xs text-muted-foreground mb-1">Hybrid (FCFA)</label>
-                                    <input v-model="packageForm.hybrid_price" type="number" step="0.01" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary" />
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-foreground mb-1">
+                                    {{ packageForm.pricing_model === 'per_student' ? 'Rate per Student (FCFA)' : 'Monthly Price (FCFA)' }}
+                                </label>
+                                <input v-model="packageForm.price" type="number" step="0.01" required class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary" />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-foreground mb-1.5 mt-2">Supported Modes</label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="flex items-center space-x-2 text-sm cursor-pointer">
+                                        <input type="checkbox" value="online" v-model="packageForm.supported_modes" class="rounded border-input bg-background text-primary" />
+                                        <span class="text-foreground">Online</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 text-sm cursor-pointer">
+                                        <input type="checkbox" value="offline" v-model="packageForm.supported_modes" class="rounded border-input bg-background text-primary" />
+                                        <span class="text-foreground">Offline</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 text-sm cursor-pointer">
+                                        <input type="checkbox" value="hybrid" v-model="packageForm.supported_modes" class="rounded border-input bg-background text-primary" />
+                                        <span class="text-foreground">Hybrid</span>
+                                    </label>
                                 </div>
                             </div>
                             

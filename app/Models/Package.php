@@ -6,7 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Package extends Model
 {
-    protected $fillable = ['service_id', 'name', 'description', 'online_price', 'offline_price', 'hybrid_price'];
+    protected $fillable = [
+        'service_id',
+        'name',
+        'description',
+        'price',
+        'pricing_model',
+        'payer_type',
+        'supported_modes',
+    ];
+
+    protected $casts = [
+        'supported_modes' => 'array',
+        'price' => 'decimal:2',
+    ];
 
     public function service()
     {

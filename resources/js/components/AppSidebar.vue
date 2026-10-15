@@ -10,6 +10,7 @@ import {
     Users,
     BarChart3,
     Activity,
+    PiggyBank,
 } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -54,6 +55,7 @@ const mainNavItems = computed(() => {
     }
     if (perms.includes('view reports')) {
         items.push({ title: 'Reports', href: route('reports.index'), icon: BarChart3 });
+        items.push({ title: 'Budget', href: route('budgets.index'), icon: PiggyBank });
     }
     
     // Audit logs for Admin only or settings manager

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { route } from 'ziggy-js';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import { computed, watch, onMounted } from 'vue';
+import { computed, watch, ref, onMounted } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
 
 const props = defineProps<{
@@ -16,6 +16,11 @@ const isEditing = !!props.subscription;
 const isRenewing = !!props.renewing;
 const sourceData = props.subscription || props.renewing || {};
 
+// Determine initial start date. If renewing, use the old end date.
+const initialStartDate = isRenewing 
+    ? sourceData.end_date 
+    : (sourceData.start_date || new Date().toISOString().split('T')[0]);
+
 const form = useForm({
     business_id: sourceData.business_id || props.defaultBusinessId || '',
     service_id: sourceData.service_id || '',
@@ -23,10 +28,24 @@ const form = useForm({
     modules: sourceData.modules?.map((m: any) => m.id) || [],
     mode: sourceData.mode || '',
     amount: sourceData.amount || '',
-    start_date: sourceData.start_date || '',
+    student_count: sourceData.student_count || '',
+    start_date: initialStartDate,
     end_date: sourceData.end_date || '',
     notes: sourceData.notes || '',
 });
+
+// A local ref for duration (in months)
+const duration = ref(1);
+
+// Calculate initial duration if editing
+if (isEditing && form.start_date && form.end_date) {
+    const start = new Date(form.start_date);
+    const end = new Date(form.end_date);
+    let months = (end.getFullYear() - start.getFullYear()) * 12;
+    months -= start.getMonth();
+    months += end.getMonth();
+    duration.value = months > 0 ? months : 1;
+}
 
 const selectedService = computed(() => {
     return props.services.find((s) => s.id === form.service_id);
@@ -40,36 +59,60 @@ const availableModules = computed(() => {
     return selectedService.value?.modules || [];
 });
 
-// Auto-suggest base price when service or mode changes
-watch([() => form.service_id, () => form.mode, () => form.package_id], ([newServiceId, newMode, newPackageId]) => {
-    if (newServiceId && !isEditing && !isRenewing) {
-        let basePrice = 0;
-        
-        if (newPackageId && newMode) {
-             const pkg = availablePackages.value.find((p: any) => p.id === newPackageId);
-             if (pkg) {
-                 const priceKey = newMode + '_price'; // online_price, offline_price, hybrid_price
-                 if (pkg[priceKey]) {
-                     basePrice = parseFloat(pkg[priceKey]);
-                 }
-             }
-        }
-        
-        if (basePrice > 0) {
-             form.amount = basePrice.toString();
-        } else {
-             form.amount = '';
-        }
-    }
+// Filter supported modes based on the selected package
+const selectedPackage = computed(() => {
+    return availablePackages.value.find((p: any) => p.id === form.package_id);
 });
 
+const isPerStudent = computed(() => {
+    return selectedPackage.value?.pricing_model === 'per_student';
+});
+
+const isStudentMoMo = computed(() => {
+    return selectedPackage.value?.payer_type === 'student_momo';
+});
+
+const availableModes = computed(() => {
+    if (selectedPackage.value && selectedPackage.value.supported_modes) {
+        return selectedPackage.value.supported_modes;
+    }
+    // If no package selected, allow all by default
+    return ['online', 'offline', 'hybrid'];
+});
+
+// Calculate end_date when start_date or duration changes
+watch([() => form.start_date, duration], ([newStart, newDuration]) => {
+    if (newStart && newDuration > 0) {
+        const date = new Date(newStart);
+        date.setMonth(date.getMonth() + Number(newDuration));
+        form.end_date = date.toISOString().split('T')[0];
+    }
+}, { immediate: true });
+
+// Auto-calculate amount when package, duration, or student_count changes
+watch([selectedPackage, duration, () => form.student_count], ([pkg, dur, students]) => {
+    if (pkg && pkg.price !== undefined) {
+        if (isPerStudent.value) {
+            const count = parseInt(students as any) || 0;
+            form.amount = (parseFloat(pkg.price) * count).toString();
+        } else {
+            form.amount = (parseFloat(pkg.price) * dur).toString();
+        }
+    }
+}, { immediate: !isEditing });
+
+// Auto-select modules when package changes
 watch(() => form.package_id, (newPackageId) => {
     if (newPackageId) {
         const pkg = availablePackages.value.find((p: any) => p.id === newPackageId);
         if (pkg && pkg.modules) {
-            // Auto-select modules from package
             const moduleIds = pkg.modules.map((m: any) => m.id);
             form.modules = [...new Set([...form.modules, ...moduleIds])];
+        }
+        
+        // Reset mode if the current one isn't supported
+        if (pkg && pkg.supported_modes && !pkg.supported_modes.includes(form.mode)) {
+            form.mode = '';
         }
     }
 });
@@ -78,7 +121,7 @@ const submit = () => {
     if (isEditing) {
         form.put(route('subscriptions.update', props.subscription.id));
     } else if (isRenewing) {
-        form.post(route('subscriptions.renewForm', props.renewing.id));
+        form.post(route('subscriptions.renew', props.renewing.id));
     } else {
         form.post(route('subscriptions.store'));
     }
@@ -86,8 +129,7 @@ const submit = () => {
 
 const title = computed(() => {
     if (isEditing) return 'Edit Subscription';
-    if (isRenewing)
-        return `Renew Subscription: ${props.renewing.business?.name}`;
+    if (isRenewing) return `Renew Subscription: ${props.renewing.business?.name}`;
     return 'New Subscription';
 });
 </script>
@@ -182,37 +224,13 @@ const title = computed(() => {
                             class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary disabled:bg-muted disabled:opacity-50 sm:text-sm"
                         >
                             <option value="">Select Mode</option>
-                            <option value="online">Online</option>
-                            <option value="offline">Offline</option>
-                            <option value="hybrid">Hybrid</option>
+                            <option v-for="m in availableModes" :key="m" :value="m" class="capitalize">{{ m }}</option>
                         </select>
                         <p
                             v-if="form.errors.mode"
                             class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.mode }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label
-                            class="mb-1 block text-sm font-medium text-foreground"
-                            >Amount (FCFA)
-                            <span class="text-destructive">*</span></label
-                        >
-                        <input
-                            v-model="form.amount"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            required
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
-                        />
-                        <p
-                            v-if="form.errors.amount"
-                            class="mt-1 text-sm text-destructive"
-                        >
-                            {{ form.errors.amount }}
                         </p>
                     </div>
                 </div>
@@ -223,12 +241,38 @@ const title = computed(() => {
                     <div v-if="availablePackages.length > 0">
                         <label class="mb-1 block text-sm font-medium text-foreground">Select Package (Optional)</label>
                         <select v-model="form.package_id" class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm">
-                            <option value="">Custom Configuration</option>
+                            <option value="" disabled>Select a package</option>
                             <option v-for="pkg in availablePackages" :key="pkg.id" :value="pkg.id">
-                                {{ pkg.name }} (Select mode to see price)
+                                {{ pkg.name }} ({{ pkg.price ? Number(pkg.price).toLocaleString('en-US') + (pkg.pricing_model === 'per_student' ? ' FCFA/student' : ' FCFA/mo') : 'Free' }})
                             </option>
                         </select>
                         <p v-if="form.errors.package_id" class="mt-1 text-sm text-destructive">{{ form.errors.package_id }}</p>
+
+                        <!-- Student Population Input for Per-Student Packages -->
+                        <div v-if="isPerStudent" class="mt-3">
+                            <label class="mb-1 block text-sm font-medium text-foreground">
+                                Enrolled Student Population <span class="text-destructive">*</span>
+                            </label>
+                            <input
+                                v-model.number="form.student_count"
+                                type="number"
+                                min="1"
+                                required
+                                placeholder="e.g. 850"
+                                class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            />
+                            <p class="mt-1 text-xs text-muted-foreground">
+                                Used to compute total contract value ({{ selectedPackage?.price ? Number(selectedPackage.price).toLocaleString('en-US') : 0 }} FCFA per student).
+                            </p>
+                            <p v-if="form.errors.student_count" class="mt-1 text-sm text-destructive">
+                                {{ form.errors.student_count }}
+                            </p>
+                        </div>
+
+                        <!-- Notice for Student-Funded MoMo Packages -->
+                        <div v-if="isStudentMoMo" class="mt-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 p-3 text-xs text-blue-700 dark:text-blue-300">
+                            <strong>📱 Student Mobile Money Tier:</strong> This subscription amount serves as the annual target. Collections from students will be recorded on the subscription details page as Mobile Money receipts arrive.
+                        </div>
                     </div>
 
                     <div v-if="availableModules.length > 0">
@@ -253,7 +297,7 @@ const title = computed(() => {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                         <label
                             class="mb-1 block text-sm font-medium text-foreground"
@@ -277,19 +321,63 @@ const title = computed(() => {
                     <div>
                         <label
                             class="mb-1 block text-sm font-medium text-foreground"
+                            >Duration (Months) <span class="text-destructive">*</span></label
+                        >
+                        <input
+                            v-model="duration"
+                            type="number"
+                            min="1"
+                            step="1"
+                            required
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label
+                            class="mb-1 block text-sm font-medium text-foreground"
                             >End Date <span class="text-destructive">*</span></label
                         >
                         <input
                             v-model="form.end_date"
                             type="date"
                             required
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            readonly
+                            class="w-full rounded-md border border-input bg-muted text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm opacity-80 cursor-not-allowed"
                         />
                         <p
                             v-if="form.errors.end_date"
                             class="mt-1 text-sm text-destructive"
                         >
                             {{ form.errors.end_date }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                        <label
+                            class="mb-1 block text-sm font-medium text-foreground"
+                            >Amount (FCFA)
+                            <span class="text-destructive">*</span></label
+                        >
+                        <input
+                            v-model="form.amount"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            required
+                            readonly
+                            class="w-full rounded-md border border-input bg-muted text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm opacity-80 cursor-not-allowed"
+                        />
+                        <p class="mt-1 text-xs text-muted-foreground">
+                            {{ isPerStudent ? 'Amount is auto-calculated: Enrolled Students × Rate per student.' : 'Amount is auto-calculated based on package monthly price × duration.' }}
+                        </p>
+                        <p
+                            v-if="form.errors.amount"
+                            class="mt-1 text-sm text-destructive"
+                        >
+                            {{ form.errors.amount }}
                         </p>
                     </div>
                 </div>

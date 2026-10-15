@@ -66,7 +66,12 @@ const confirmDelete = (id: number) => {
                             class="transition-colors hover:bg-muted/50"
                         >
                             <td class="px-4 py-3 font-medium text-foreground">
-                                {{ service.name }}
+                                <div class="flex items-center gap-2">
+                                    <span>{{ service.name }}</span>
+                                    <span v-if="service.category === 'education'" class="inline-flex items-center rounded-md bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                                        🎓 Education
+                                    </span>
+                                </div>
                             </td>
                             <td
                                 class="max-w-xs truncate px-4 py-3 text-muted-foreground"

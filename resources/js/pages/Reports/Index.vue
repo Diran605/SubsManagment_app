@@ -55,10 +55,28 @@ const commonOptions = computed(() => ({
                 drawBorder: false,
             },
             ticks: {
+                font: { size: 11 },
+                autoSkip: false,
                 callback: function(value: any) {
                     const label = this.getLabelForValue(value);
-                    if (typeof label === 'string' && label.length > 15) {
-                        return label.substring(0, 15) + '...';
+                    if (typeof label === 'string') {
+                        const words = label.split(' ');
+                        const lines = [];
+                        let currentLine = '';
+                        words.forEach(word => {
+                            if ((currentLine + word).length > 12) {
+                                if (currentLine.trim().length > 0) {
+                                    lines.push(currentLine.trim());
+                                }
+                                currentLine = word + ' ';
+                            } else {
+                                currentLine += word + ' ';
+                            }
+                        });
+                        if (currentLine.trim().length > 0) {
+                            lines.push(currentLine.trim());
+                        }
+                        return lines;
                     }
                     return label;
                 }

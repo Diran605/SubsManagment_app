@@ -19,6 +19,7 @@ class Subscription extends Model
         'service_id',
         'mode',
         'amount',
+        'student_count',
         'start_date',
         'end_date',
         'notes',
@@ -98,5 +99,10 @@ class Subscription extends Model
     public function modules()
     {
         return $this->belongsToMany(Module::class, 'subscription_modules');
+    }
+
+    public function collections()
+    {
+        return $this->hasMany(SubscriptionCollection::class);
     }
 }

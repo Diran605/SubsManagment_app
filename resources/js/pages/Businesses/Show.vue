@@ -155,7 +155,9 @@ const confirmDelete = () => {
                                     {{ sub.mode }}
                                 </td>
                                 <td class="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">
-                                    {{ sub.start_date }} <br/><span class="text-muted-foreground/50">↓</span><br/> {{ sub.end_date }}
+                                    {{ new Date(sub.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }}
+                                    <br/><span class="text-muted-foreground/50">↓</span><br/>
+                                    {{ new Date(sub.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }}
                                 </td>
                                 <td
                                     class="px-4 py-3 text-right font-medium text-foreground whitespace-nowrap"
