@@ -164,6 +164,33 @@ class Subscription extends Model
         return $this->hasMany(SubscriptionCollection::class);
     }
 
+    /**
+     * Student-funded ("Student MoMo") subscriptions are paid by each student via
+     * Mobile Money, so their amount is only a target, not money owed.
+     */
+    public function isStudentFunded(): bool
+    {
+        return $this->package?->payer_type === 'student_momo';
+    }
+
+    /**
+     * Money this subscription actually brings in: the agreed amount for
+     * school-paid subscriptions, and only what has been collected for
+     * student-funded ones. Load with withSum('collections', 'amount') to avoid
+     * one query per subscription.
+     */
+    public function realisedRevenue(): float
+    {
+        if (! $this->isStudentFunded()) {
+            return (float) $this->amount;
+        }
+
+        return (float) ($this->collections_sum_amount
+            ?? ($this->relationLoaded('collections')
+                ? $this->collections->sum('amount')
+                : $this->collections()->sum('amount')));
+    }
+
     public function activityLabel(): string
     {
         $business = $this->business?->name ?? 'Unknown business';

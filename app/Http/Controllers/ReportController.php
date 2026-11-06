@@ -13,7 +13,10 @@ class ReportController extends Controller
     {
         $period = $request->input('period', '12m'); // '6m', '12m', 'all'
 
-        $subscriptionsQuery = Subscription::with(['business', 'service', 'renewals']);
+        $subscriptionsQuery = Subscription::with([
+            'business', 'service', 'renewals', 'package:id,payer_type',
+            'collections:id,subscription_id,amount,collection_date',
+        ]);
 
         if ($period !== 'all') {
             $months = $period === '6m' ? 6 : 12;
@@ -29,9 +32,15 @@ class ReportController extends Controller
             && ! $sub->business?->trashed()
         );
 
-        // Revenue Over Time (Monthly)
-        $revenueOverTime = $subscriptions
-            ->groupBy(fn ($sub) => Carbon::parse($sub->start_date)->format('Y-m'))
+        // Revenue Over Time (Monthly). School-paid subscriptions count in the
+        // month they start; student MoMo money counts in the month it was collected.
+        $revenueEvents = $subscriptions->flatMap(fn ($sub) => $sub->isStudentFunded()
+            ? $sub->collections->map(fn ($c) => ['date' => $c->collection_date, 'amount' => (float) $c->amount])
+            : [['date' => $sub->start_date, 'amount' => (float) $sub->amount]]
+        );
+
+        $revenueOverTime = $revenueEvents
+            ->groupBy(fn ($event) => Carbon::parse($event['date'])->format('Y-m'))
             ->sortKeys()
             ->mapWithKeys(fn ($group, $key) => [
                 Carbon::parse($key.'-01')->format('M Y') => $group->sum('amount'),
@@ -41,7 +50,7 @@ class ReportController extends Controller
         // Revenue by Service
         $revenueByService = $activeSubscriptions
             ->groupBy(fn ($sub) => $sub->service->name ?? 'Unknown')
-            ->map(fn ($group) => $group->sum('amount'))
+            ->map(fn ($group) => $group->sum->realisedRevenue())
             ->sortDesc()
             ->take(10)
             ->toArray();
@@ -49,7 +58,7 @@ class ReportController extends Controller
         // Revenue by Business (Top 10)
         $revenueByBusiness = $activeSubscriptions
             ->groupBy(fn ($sub) => $sub->business->name ?? 'Unknown')
-            ->map(fn ($group) => $group->sum('amount'))
+            ->map(fn ($group) => $group->sum->realisedRevenue())
             ->sortDesc()
             ->take(10)
             ->toArray();
@@ -57,12 +66,12 @@ class ReportController extends Controller
         // Revenue by Mode
         $revenueByMode = $activeSubscriptions
             ->groupBy('mode')
-            ->map(fn ($group) => $group->sum('amount'))
+            ->map(fn ($group) => $group->sum->realisedRevenue())
             ->toArray();
 
         // Total historical vs active
-        $totalHistoricalRevenue = $subscriptions->sum('amount');
-        $totalActiveRevenue = $activeSubscriptions->sum('amount');
+        $totalHistoricalRevenue = $subscriptions->sum->realisedRevenue();
+        $totalActiveRevenue = $activeSubscriptions->sum->realisedRevenue();
 
         // New vs Renewed split for active subscriptions
         $newCount = $activeSubscriptions->whereNull('renewed_from_id')->count();
@@ -72,8 +81,8 @@ class ReportController extends Controller
             ? round(($renewedCount / ($newCount + $renewedCount)) * 100, 1)
             : 0;
 
-        $newRevenue = $activeSubscriptions->whereNull('renewed_from_id')->sum('amount');
-        $renewedRevenue = $activeSubscriptions->whereNotNull('renewed_from_id')->sum('amount');
+        $newRevenue = $activeSubscriptions->whereNull('renewed_from_id')->sum->realisedRevenue();
+        $renewedRevenue = $activeSubscriptions->whereNotNull('renewed_from_id')->sum->realisedRevenue();
 
         return Inertia::render('Reports/Index', [
             'period' => $period,

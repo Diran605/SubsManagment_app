@@ -24,6 +24,7 @@ const props = defineProps<{
     expiringSubscriptions: any[];
     expiringThreshold: number;
     totalRevenue: number | string;
+    momo: { count: number; target: number; collected: number };
     subscriptionsByService: Record<string, number>;
     subscriptionsByBusiness: Record<string, number>;
     totalBusinesses: number;
@@ -58,6 +59,12 @@ const getBarChartData = (
         },
     ],
 });
+
+const momoPercent = computed(() =>
+    props.momo.target > 0
+        ? Math.min(100, Math.round((props.momo.collected / props.momo.target) * 100))
+        : 0,
+);
 
 const serviceColor = { light: '#0A3094', dark: '#0ea5e9' };
 const businessColor = { light: '#FF5F00', dark: '#f97316' };
@@ -152,7 +159,7 @@ const barChartOptions = computed(() => ({
 
         <template v-else>
         <!-- Metric Cards -->
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2" :class="props.momo.count > 0 ? 'xl:grid-cols-4' : 'xl:grid-cols-3'">
             <!-- Active Revenue -->
             <div class="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div class="flex items-start justify-between">
@@ -166,9 +173,30 @@ const barChartOptions = computed(() => ({
                 </div>
                 <div class="mt-4 flex items-center text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                    From active subscriptions
+                    School payments + MoMo collected
                 </div>
                 <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-500 to-orange-400 opacity-80 dark:opacity-40 rounded-b-2xl"></div>
+            </div>
+
+            <!-- Student MoMo: collected vs target -->
+            <div v-if="props.momo.count > 0" class="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-semibold text-muted-foreground">Student MoMo Collected</span>
+                        <span class="mt-2 text-3xl font-bold tracking-tight text-foreground">{{ Number(props.momo.collected).toLocaleString('en-US') }} <span class="text-lg text-muted-foreground">FCFA</span></span>
+                    </div>
+                    <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 dark:bg-blue-500/20 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-muted" role="progressbar" :aria-valuenow="momoPercent" aria-valuemin="0" aria-valuemax="100" aria-label="MoMo collected against target">
+                        <div class="h-full rounded-full bg-blue-600 dark:bg-blue-400" :style="{ width: momoPercent + '%' }"></div>
+                    </div>
+                    <p class="mt-2 text-xs font-medium text-muted-foreground">
+                        {{ momoPercent }}% of {{ Number(props.momo.target).toLocaleString('en-US') }} FCFA target · {{ props.momo.count }} subscription(s)
+                    </p>
+                </div>
             </div>
 
             <!-- Total Businesses -->
