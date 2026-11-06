@@ -58,12 +58,13 @@ const mainNavItems = computed(() => {
         items.push({ title: 'Budget', href: route('budgets.index'), icon: PiggyBank });
     }
     
-    // Audit logs for Admin only or settings manager
-    if (page.props.auth?.user?.roles?.includes('Admin') || perms.includes('manage settings')) {
+    // Must match the route middleware in routes/web.php.
+    if (perms.includes('manage settings')) {
         items.push({ title: 'Audit Logs', href: route('audit_logs.index'), icon: Activity });
     }
 
-    if (perms.includes('manage staff') || page.props.auth?.user?.roles?.includes('Admin')) {
+    // Staff routes are restricted to the Admin role (routes/web.php).
+    if (page.props.auth?.user?.roles?.includes('Admin')) {
         items.push({
             title: 'Staff Accounts',
             href: route('staff.index'),

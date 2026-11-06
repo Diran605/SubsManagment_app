@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { route } from 'ziggy-js';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import { computed, watch, ref, onMounted } from 'vue';
+import { computed, watch, ref } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
+import { addDays, monthsCovered, subscriptionEndDate, today } from '@/lib/dates';
 
 const props = defineProps<{
     subscription?: any;
@@ -16,10 +17,16 @@ const isEditing = !!props.subscription;
 const isRenewing = !!props.renewing;
 const sourceData = props.subscription || props.renewing || {};
 
-// Determine initial start date. If renewing, use the old end date.
-const initialStartDate = isRenewing 
-    ? sourceData.end_date 
-    : (sourceData.start_date || new Date().toISOString().split('T')[0]);
+// A renewal starts the day after the previous subscription ends, and by
+// default runs for the same number of months.
+const initialStartDate = isRenewing
+    ? addDays(sourceData.end_date, 1)
+    : sourceData.start_date || today();
+
+const initialDuration =
+    sourceData.start_date && sourceData.end_date
+        ? monthsCovered(sourceData.start_date, sourceData.end_date)
+        : 12;
 
 const form = useForm({
     business_id: sourceData.business_id || props.defaultBusinessId || '',
@@ -30,22 +37,12 @@ const form = useForm({
     amount: sourceData.amount || '',
     student_count: sourceData.student_count || '',
     start_date: initialStartDate,
-    end_date: sourceData.end_date || '',
-    notes: sourceData.notes || '',
+    end_date: isEditing ? sourceData.end_date : subscriptionEndDate(initialStartDate, initialDuration),
+    notes: isRenewing ? '' : sourceData.notes || '',
 });
 
-// A local ref for duration (in months)
-const duration = ref(1);
-
-// Calculate initial duration if editing
-if (isEditing && form.start_date && form.end_date) {
-    const start = new Date(form.start_date);
-    const end = new Date(form.end_date);
-    let months = (end.getFullYear() - start.getFullYear()) * 12;
-    months -= start.getMonth();
-    months += end.getMonth();
-    duration.value = months > 0 ? months : 1;
-}
+// Subscription length in months; the end date is derived from it.
+const duration = ref(initialDuration);
 
 const selectedService = computed(() => {
     return props.services.find((s) => s.id === form.service_id);
@@ -59,7 +56,6 @@ const availableModules = computed(() => {
     return selectedService.value?.modules || [];
 });
 
-// Filter supported modes based on the selected package
 const selectedPackage = computed(() => {
     return availablePackages.value.find((p: any) => p.id === form.package_id);
 });
@@ -73,49 +69,72 @@ const isStudentMoMo = computed(() => {
 });
 
 const availableModes = computed(() => {
-    if (selectedPackage.value && selectedPackage.value.supported_modes) {
-        return selectedPackage.value.supported_modes;
-    }
-    // If no package selected, allow all by default
-    return ['online', 'offline', 'hybrid'];
+    const modes = selectedPackage.value?.supported_modes;
+
+    // A package with no modes listed accepts all of them.
+    return modes && modes.length > 0 ? modes : ['online', 'offline', 'hybrid'];
 });
 
-// Calculate end_date when start_date or duration changes
+// Recalculate the end date when the user changes the start date or duration.
+// When editing, the stored end date is kept until one of them changes.
 watch([() => form.start_date, duration], ([newStart, newDuration]) => {
-    if (newStart && newDuration > 0) {
-        const date = new Date(newStart);
-        date.setMonth(date.getMonth() + Number(newDuration));
-        form.end_date = date.toISOString().split('T')[0];
+    if (newStart && Number(newDuration) > 0) {
+        form.end_date = subscriptionEndDate(newStart, Number(newDuration));
     }
-}, { immediate: true });
+});
 
-// Auto-calculate amount when package, duration, or student_count changes
-watch([selectedPackage, duration, () => form.student_count], ([pkg, dur, students]) => {
-    if (pkg && pkg.price !== undefined) {
-        if (isPerStudent.value) {
-            const count = parseInt(students as any) || 0;
-            form.amount = (parseFloat(pkg.price) * count).toString();
-        } else {
-            form.amount = (parseFloat(pkg.price) * dur).toString();
+// With a package selected the amount is calculated from its price; without
+// one, the amount is typed in by hand.
+const calculateAmount = () => {
+    const pkg = selectedPackage.value;
+
+    if (!pkg || pkg.price === undefined || pkg.price === null) {
+        return;
+    }
+
+    if (isPerStudent.value) {
+        const count = parseInt(form.student_count as any) || 0;
+        form.amount = (parseFloat(pkg.price) * count).toString();
+    } else {
+        form.amount = (parseFloat(pkg.price) * Number(duration.value)).toString();
+    }
+};
+
+watch([selectedPackage, duration, () => form.student_count], calculateAmount, {
+    immediate: !isEditing,
+});
+
+// Clear the package when the service changes, since packages belong to a service.
+watch(
+    () => form.service_id,
+    (newServiceId, oldServiceId) => {
+        if (oldServiceId && newServiceId !== oldServiceId) {
+            form.package_id = '';
+            form.modules = [];
         }
-    }
-}, { immediate: !isEditing });
+    },
+);
 
-// Auto-select modules when package changes
-watch(() => form.package_id, (newPackageId) => {
-    if (newPackageId) {
+// Auto-select the package's modules and reset an unsupported mode.
+watch(
+    () => form.package_id,
+    (newPackageId) => {
+        if (!newPackageId) {
+            return;
+        }
+
         const pkg = availablePackages.value.find((p: any) => p.id === newPackageId);
-        if (pkg && pkg.modules) {
+
+        if (pkg?.modules) {
             const moduleIds = pkg.modules.map((m: any) => m.id);
             form.modules = [...new Set([...form.modules, ...moduleIds])];
         }
-        
-        // Reset mode if the current one isn't supported
-        if (pkg && pkg.supported_modes && !pkg.supported_modes.includes(form.mode)) {
+
+        if (!availableModes.value.includes(form.mode) && !isRenewing) {
             form.mode = '';
         }
-    }
-});
+    },
+);
 
 const submit = () => {
     if (isEditing) {
@@ -143,10 +162,10 @@ const title = computed(() => {
                 <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ title }}</h1>
             </div>
             <Link
-                :href="'/dashboard'"
+                :href="route('subscriptions.index')"
                 class="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-                &larr; Back to Dashboard
+                &larr; Back to Subscriptions
             </Link>
         </div>
 
@@ -241,7 +260,7 @@ const title = computed(() => {
                     <div v-if="availablePackages.length > 0">
                         <label class="mb-1 block text-sm font-medium text-foreground">Select Package (Optional)</label>
                         <select v-model="form.package_id" class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm">
-                            <option value="" disabled>Select a package</option>
+                            <option value="">No package (custom amount)</option>
                             <option v-for="pkg in availablePackages" :key="pkg.id" :value="pkg.id">
                                 {{ pkg.name }} ({{ pkg.price ? Number(pkg.price).toLocaleString('en-US') + (pkg.pricing_model === 'per_student' ? ' FCFA/student' : ' FCFA/mo') : 'Free' }})
                             </option>
@@ -336,7 +355,7 @@ const title = computed(() => {
                     <div>
                         <label
                             class="mb-1 block text-sm font-medium text-foreground"
-                            >End Date <span class="text-destructive">*</span></label
+                            >End Date (last day) <span class="text-destructive">*</span></label
                         >
                         <input
                             v-model="form.end_date"
@@ -367,11 +386,14 @@ const title = computed(() => {
                             min="0"
                             step="0.01"
                             required
-                            readonly
-                            class="w-full rounded-md border border-input bg-muted text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm opacity-80 cursor-not-allowed"
+                            :readonly="!!selectedPackage"
+                            :class="selectedPackage ? 'bg-muted opacity-80 cursor-not-allowed' : 'bg-background'"
+                            class="w-full rounded-md border border-input text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
                         />
                         <p class="mt-1 text-xs text-muted-foreground">
-                            {{ isPerStudent ? 'Amount is auto-calculated: Enrolled Students × Rate per student.' : 'Amount is auto-calculated based on package monthly price × duration.' }}
+                            <template v-if="!selectedPackage">Enter the agreed contract amount.</template>
+                            <template v-else-if="isPerStudent">Amount is auto-calculated: Enrolled Students × Rate per student.</template>
+                            <template v-else>Amount is auto-calculated based on package monthly price × duration.</template>
                         </p>
                         <p
                             v-if="form.errors.amount"

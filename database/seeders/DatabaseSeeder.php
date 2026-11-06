@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Business;
 use App\Models\Service;
-use App\Models\ServicePricing;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -15,39 +14,66 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Seed the application's database with roles and some demo data.
      */
     public function run(): void
     {
+        $this->call(RolesAndPermissionsSeeder::class);
+
         $admin = User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
-            'password' => bcrypt('password'),
+            'password' => 'password',
             'is_active' => true,
         ]);
+        $admin->assignRole('Admin');
 
-        $services = [
-            ['name' => 'POS System', 'desc' => 'Point of Sale management system for retail'],
-            ['name' => 'School Management System', 'desc' => 'Complete ERP for schools'],
-            ['name' => 'Hospital ERP', 'desc' => 'Management system for clinics and hospitals'],
+        $catalogue = [
+            [
+                'name' => 'POS System',
+                'description' => 'Point of Sale management system for retail',
+                'category' => 'standard',
+                'modules' => ['Inventory', 'Sales', 'Reporting'],
+                'packages' => [
+                    ['name' => 'Basic', 'price' => 15000, 'pricing_model' => 'flat', 'payer_type' => 'school', 'modules' => 2],
+                    ['name' => 'Pro', 'price' => 30000, 'pricing_model' => 'flat', 'payer_type' => 'school', 'modules' => 3],
+                ],
+            ],
+            [
+                'name' => 'School Management System',
+                'description' => 'Complete ERP for schools',
+                'category' => 'education',
+                'modules' => ['Admissions', 'Grades', 'Fees'],
+                'packages' => [
+                    ['name' => 'School Licence', 'price' => 2000, 'pricing_model' => 'per_student', 'payer_type' => 'school', 'modules' => 3],
+                    ['name' => 'Student MoMo', 'price' => 1500, 'pricing_model' => 'per_student', 'payer_type' => 'student_momo', 'modules' => 2],
+                ],
+            ],
         ];
 
-        $createdServices = [];
-        foreach ($services as $serviceData) {
+        $packages = collect();
+
+        foreach ($catalogue as $item) {
             $service = Service::create([
-                'name' => $serviceData['name'],
-                'description' => $serviceData['desc'],
+                'name' => $item['name'],
+                'description' => $item['description'],
+                'category' => $item['category'],
                 'created_by' => $admin->id,
             ]);
-            $createdServices[] = $service;
 
-            $modes = ['online', 'offline', 'hybrid'];
-            foreach ($modes as $mode) {
-                ServicePricing::create([
-                    'service_id' => $service->id,
-                    'mode' => $mode,
-                    'base_price' => rand(500, 2000),
+            $modules = collect($item['modules'])
+                ->map(fn ($name) => $service->modules()->create(['name' => $name]));
+
+            foreach ($item['packages'] as $pkg) {
+                $package = $service->packages()->create([
+                    'name' => $pkg['name'],
+                    'price' => $pkg['price'],
+                    'pricing_model' => $pkg['pricing_model'],
+                    'payer_type' => $pkg['payer_type'],
+                    'supported_modes' => ['online', 'offline', 'hybrid'],
                 ]);
+                $package->modules()->sync($modules->take($pkg['modules'])->pluck('id'));
+                $packages->push($package);
             }
         }
 
@@ -61,21 +87,22 @@ class DatabaseSeeder extends Seeder
                 'created_by' => $admin->id,
             ]);
 
-            // Add some subscriptions
-            $service = $createdServices[array_rand($createdServices)];
-            $mode = ['online', 'offline', 'hybrid'][rand(0, 2)];
-            $startDate = now()->subDays(rand(10, 300));
-            $endDate = (clone $startDate)->addYear();
+            $package = $packages->random();
+            $startDate = now()->subDays(rand(10, 300))->startOfDay();
+            $students = $package->pricing_model === 'per_student' ? rand(200, 1200) : null;
 
-            Subscription::create([
+            $subscription = Subscription::create([
                 'business_id' => $business->id,
-                'service_id' => $service->id,
-                'mode' => $mode,
-                'amount' => rand(500, 2500),
+                'service_id' => $package->service_id,
+                'package_id' => $package->id,
+                'mode' => ['online', 'offline', 'hybrid'][rand(0, 2)],
+                'amount' => $students ? $students * $package->price : $package->price * 12,
+                'student_count' => $students,
                 'start_date' => $startDate,
-                'end_date' => $endDate,
+                'end_date' => $startDate->addYear()->subDay(),
                 'created_by' => $admin->id,
             ]);
+            $subscription->modules()->sync($package->modules->pluck('id'));
         }
     }
 }

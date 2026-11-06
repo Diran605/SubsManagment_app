@@ -5,6 +5,7 @@ import { computed, ref } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
 
 const page = usePage<any>();
+const canCreate = computed(() => page.props.auth?.user?.permissions?.includes('create subscriptions'));
 const canEdit = computed(() => page.props.auth?.user?.permissions?.includes('edit subscriptions'));
 const canRestore = computed(() => page.props.auth?.user?.permissions?.includes('restore subscriptions'));
 
@@ -63,6 +64,12 @@ const deleteCollection = (id: number) => {
         router.delete(route('subscriptions.collections.destroy', id), {
             preserveScroll: true,
         });
+    }
+};
+
+const restoreSubscription = () => {
+    if (confirm('Are you sure you want to restore this subscription?')) {
+        router.post(route('subscriptions.restore', props.subscription.id));
     }
 };
 
@@ -267,16 +274,17 @@ const formatMoney = (val: number) =>
             <div class="space-y-6">
                 <!-- Actions -->
                 <div class="rounded-2xl border border-border bg-card p-4 shadow-sm flex flex-col gap-3">
-                    <template v-if="props.subscription.status_badge !== 'trashed' && canEdit">
+                    <template v-if="props.subscription.status_badge !== 'trashed'">
                         <Link
-                            v-if="props.subscription.status_badge !== 'active' && props.subscription.status_badge !== 'renewed'"
-                            :href="route('subscriptions.renewForm', props.subscription.id)"
+                            v-if="canCreate && props.subscription.status_badge !== 'active' && props.subscription.status_badge !== 'renewed'"
+                            :href="route('subscriptions.createRenewal', props.subscription.id)"
                             :class="buttonVariants({ variant: 'default' })"
                             class="bg-emerald-600 hover:bg-emerald-700 text-white w-full"
                         >
                             Renew Subscription
                         </Link>
                         <Link
+                            v-if="canEdit"
                             :href="route('subscriptions.edit', props.subscription.id)"
                             :class="buttonVariants({ variant: 'secondary' })"
                             class="w-full"
@@ -286,7 +294,7 @@ const formatMoney = (val: number) =>
                     </template>
                     <button
                         v-else-if="canRestore"
-                        @click="confirm('Are you sure you want to restore this subscription?') && router.post(route('subscriptions.restore', props.subscription.id))"
+                        @click="restoreSubscription"
                         :class="buttonVariants({ variant: 'secondary' })"
                         class="w-full text-amber-600 dark:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 border-amber-200 dark:border-amber-800/50"
                     >

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\RoleController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
@@ -24,9 +25,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
-    
+
     Route::middleware(['role:Admin'])->group(function () {
-        Route::resource('settings/roles', \App\Http\Controllers\Settings\RoleController::class)->except(['create', 'show', 'edit']);
+        Route::resource('settings/roles', RoleController::class)->except(['create', 'show', 'edit']);
     });
 });
 

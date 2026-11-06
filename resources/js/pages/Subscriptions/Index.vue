@@ -2,6 +2,7 @@
 import { route } from 'ziggy-js';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref, watch, computed } from 'vue';
+import { useDebounceFn } from '@vueuse/core';
 import { buttonVariants } from '@/components/ui/button';
 
 const page = usePage<any>();
@@ -25,13 +26,17 @@ const status = ref(props.filters?.status || 'all');
 const dateFrom = ref(props.filters?.date_from || '');
 const dateTo = ref(props.filters?.date_to || '');
 
-watch([search, status, dateFrom, dateTo], ([newSearch, newStatus, newFrom, newTo]) => {
+const applyFilters = () => {
     router.get(
         route('subscriptions.index'),
-        { search: newSearch, status: newStatus, date_from: newFrom, date_to: newTo },
+        { search: search.value, status: status.value, date_from: dateFrom.value, date_to: dateTo.value },
         { preserveState: true, preserveScroll: true, replace: true },
     );
-});
+};
+
+// Wait for the user to stop typing before searching, instead of one request per keystroke.
+watch(search, useDebounceFn(applyFilters, 300));
+watch([status, dateFrom, dateTo], applyFilters);
 
 const deleteForm = useForm({});
 
@@ -165,11 +170,12 @@ const confirmRestore = (id: number) => {
                                     >View</Link>
                                     <template v-if="sub.status_badge !== 'trashed'">
                                         <Link
-                                            v-if="sub.status_badge !== 'active' && sub.status_badge !== 'renewed'"
-                                            :href="route('subscriptions.renewForm', sub.id)"
+                                            v-if="canCreate && sub.status_badge !== 'active' && sub.status_badge !== 'renewed'"
+                                            :href="route('subscriptions.createRenewal', sub.id)"
                                             class="inline-flex items-center rounded-md border border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"
                                         >Renew</Link>
                                         <Link
+                                            v-if="canEdit"
                                             :href="route('subscriptions.edit', sub.id)"
                                             class="inline-flex items-center rounded-md border border-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white transition-colors"
                                         >Edit</Link>

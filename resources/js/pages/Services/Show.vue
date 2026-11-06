@@ -20,6 +20,9 @@ const props = defineProps<{
 
 const deleteForm = useForm({});
 
+// The server reports "in use" problems under these keys (see ModuleController/PackageController).
+type DeleteErrors = { module?: string; package?: string };
+
 const confirmDelete = () => {
     if (confirm('Are you sure you want to delete this service?')) {
         deleteForm.delete(route('services.destroy', props.service.id));
@@ -306,7 +309,7 @@ const submitEditPackage = (id: number) => {
                             <div>
                                 <input v-model="moduleForm.description" type="text" placeholder="Description (Optional)" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary" />
                             </div>
-                            <div v-if="deleteModuleForm.hasErrors" class="text-xs text-destructive">{{ deleteModuleForm.errors.module }}</div>
+                            <div v-if="deleteModuleForm.hasErrors" class="text-xs text-destructive">{{ (deleteModuleForm.errors as DeleteErrors).module }}</div>
                             <button type="submit" :disabled="moduleForm.processing" :class="buttonVariants({ variant: 'secondary', class: 'w-full' })">Add Module</button>
                         </form>
                     </div>
@@ -428,7 +431,7 @@ const submitEditPackage = (id: number) => {
                     <div v-if="canCreatePackages" class="border-t border-border p-4 bg-muted/30 rounded-b-2xl">
                         <form @submit.prevent="submitPackage" class="space-y-3">
                             <h4 class="text-sm font-medium text-foreground">Create New Package</h4>
-                            <div v-if="deletePackageForm.hasErrors" class="text-xs text-destructive mb-2">{{ deletePackageForm.errors.package }}</div>
+                            <div v-if="deletePackageForm.hasErrors" class="text-xs text-destructive mb-2">{{ (deletePackageForm.errors as DeleteErrors).package }}</div>
                             <div>
                                 <input v-model="packageForm.name" type="text" placeholder="Package Name" required class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm focus:border-primary focus:ring-primary" />
                                 <p v-if="packageForm.errors.name" class="mt-1 text-xs text-destructive">{{ packageForm.errors.name }}</p>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\SubscriptionFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,10 +29,18 @@ class Subscription extends Model
         'package_id',
     ];
 
+    /**
+     * Statuses a subscription can be filtered by. "trashed" is handled separately
+     * because it depends on soft deletes rather than dates.
+     */
+    public const STATUSES = ['active', 'expiring_soon', 'expired', 'renewed'];
+
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
+        // Serialize as plain dates so <input type="date"> fields can display them.
+        'start_date' => 'date:Y-m-d',
+        'end_date' => 'date:Y-m-d',
         'amount' => 'decimal:2',
+        'student_count' => 'integer',
     ];
 
     /**
@@ -53,10 +62,10 @@ class Subscription extends Model
                 }
 
                 $threshold = config('subscription.expiring_threshold', 30);
-                
+
                 // Calculate absolute days remaining
                 $daysRemaining = $today->diffInDays($endDate);
-                
+
                 if ($daysRemaining <= $threshold) {
                     return 'expiring_soon';
                 }
@@ -64,6 +73,54 @@ class Subscription extends Model
                 return 'active';
             }
         );
+    }
+
+    /**
+     * The badge shown in the UI: trashed, renewed, or the date-based status.
+     */
+    public function statusBadge(): string
+    {
+        if ($this->trashed()) {
+            return 'trashed';
+        }
+
+        $hasRenewals = $this->renewals_exists ?? $this->renewals->isNotEmpty();
+
+        return $hasRenewals ? 'renewed' : $this->status;
+    }
+
+    /**
+     * Filter by the same status rules as statusBadge(), but in the database.
+     *
+     * @param  Builder<Subscription>  $query
+     */
+    public function scopeWhereStatus(Builder $query, string $status): void
+    {
+        $today = Carbon::today()->toDateString();
+        $threshold = Carbon::today()->addDays((int) config('subscription.expiring_threshold', 30))->toDateString();
+
+        match ($status) {
+            'renewed' => $query->whereHas('renewals'),
+            'expired' => $query->whereDoesntHave('renewals')->whereDate('end_date', '<', $today),
+            'expiring_soon' => $query->whereDoesntHave('renewals')
+                ->whereDate('end_date', '>=', $today)
+                ->whereDate('end_date', '<=', $threshold),
+            'active' => $query->whereDoesntHave('renewals')->whereDate('end_date', '>', $threshold),
+            default => null,
+        };
+    }
+
+    /**
+     * Subscriptions that currently bring in revenue: not superseded by a
+     * renewal, not yet expired, and belonging to a business that still exists.
+     *
+     * @param  Builder<Subscription>  $query
+     */
+    public function scopeCurrentlyActive(Builder $query): void
+    {
+        $query->whereDoesntHave('renewals')
+            ->whereDate('end_date', '>=', Carbon::today()->toDateString())
+            ->whereHas('business', fn (Builder $q) => $q->whereNull('businesses.deleted_at'));
     }
 
     public function business()

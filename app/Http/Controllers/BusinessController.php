@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Business;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Inertia\Inertia;
 
 class BusinessController extends Controller implements HasMiddleware
 {

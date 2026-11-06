@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class StaffController extends Controller
 {
@@ -20,7 +21,7 @@ class StaffController extends Controller
     public function create()
     {
         return Inertia::render('Staff/Form', [
-            'roles' => \Spatie\Permission\Models\Role::all(),
+            'roles' => Role::all(),
         ]);
     }
 
@@ -28,10 +29,11 @@ class StaffController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'is_active' => 'boolean',
             'roles' => 'array',
+            'roles.*' => 'string|exists:roles,name',
         ]);
 
         $user = User::create([
@@ -40,6 +42,9 @@ class StaffController extends Controller
             'password' => Hash::make($validated['password']),
             'is_active' => $validated['is_active'] ?? true,
         ]);
+
+        // Accounts created by an admin are trusted, so skip the email verification step.
+        $user->forceFill(['email_verified_at' => now()])->save();
 
         if (isset($validated['roles'])) {
             $user->syncRoles($validated['roles']);
@@ -51,9 +56,10 @@ class StaffController extends Controller
     public function edit(User $staff)
     {
         $staff->load('roles');
+
         return Inertia::render('Staff/Form', [
             'staff' => $staff,
-            'roles' => \Spatie\Permission\Models\Role::all(),
+            'roles' => Role::all(),
         ]);
     }
 
@@ -61,11 +67,22 @@ class StaffController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => ['required', 'email', Rule::unique('users')->ignore($staff->id)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($staff->id)],
             'password' => 'nullable|string|min:8|confirmed',
             'is_active' => 'boolean',
             'roles' => 'array',
+            'roles.*' => 'string|exists:roles,name',
         ]);
+
+        $isSelf = $request->user()->is($staff);
+
+        if ($isSelf && array_key_exists('is_active', $validated) && ! $validated['is_active']) {
+            return back()->withErrors(['is_active' => 'You cannot deactivate your own account.']);
+        }
+
+        if ($isSelf && isset($validated['roles']) && ! in_array('Admin', $validated['roles'], true)) {
+            return back()->withErrors(['roles' => 'You cannot remove the Admin role from your own account.']);
+        }
 
         $data = [
             'name' => $validated['name'],
@@ -88,7 +105,6 @@ class StaffController extends Controller
 
     public function show(User $staff)
     {
-        // Load businesses or subscriptions they created if you want an audit trail
         $staff->load(['businesses', 'services', 'subscriptions']);
 
         return Inertia::render('Staff/Show', [
@@ -96,10 +112,14 @@ class StaffController extends Controller
         ]);
     }
 
-    public function toggleActive(User $staff)
+    public function toggleActive(Request $request, User $staff)
     {
+        if ($request->user()->is($staff)) {
+            return back()->with('error', 'You cannot deactivate your own account.');
+        }
+
         $staff->update([
-            'is_active' => !$staff->is_active,
+            'is_active' => ! $staff->is_active,
         ]);
 
         return redirect()->back()->with('success', 'Staff account status updated.');

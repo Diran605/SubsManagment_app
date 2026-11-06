@@ -111,7 +111,7 @@ const deleteRole = (id: number) => {
                                         <template v-if="res.actions.includes(action) && getPermissionId(action, res.slug)">
                                             <Checkbox
                                                 :checked="form.permissions.includes(getPermissionId(action, res.slug) as number)"
-                                                @update:checked="(checked) => {
+                                                @update:checked="(checked: boolean) => {
                                                     const pid = getPermissionId(action, res.slug);
                                                     if (!pid) return;
                                                     if (checked) form.permissions.push(pid);

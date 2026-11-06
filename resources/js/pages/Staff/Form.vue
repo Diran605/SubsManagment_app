@@ -143,6 +143,9 @@ const submit = () => {
                         Active Account
                     </label>
                 </div>
+                <p v-if="form.errors.is_active" class="text-sm text-destructive">
+                    {{ form.errors.is_active }}
+                </p>
 
                 <div v-if="roles && roles.length > 0" class="pt-4 border-t border-border">
                     <label class="mb-3 block text-sm font-medium text-foreground">Assign Roles</label>
@@ -157,6 +160,9 @@ const submit = () => {
                             <span class="text-sm font-medium text-foreground">{{ role.name }}</span>
                         </label>
                     </div>
+                    <p v-if="form.errors.roles" class="mt-2 text-sm text-destructive">
+                        {{ form.errors.roles }}
+                    </p>
                 </div>
 
                 <div class="flex justify-end pt-4">

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('expected_licenses')->default(0);
             $table->decimal('expected_amount', 12, 2)->default(0);
             $table->timestamps();
-            
+
             $table->unique(['budget_id', 'package_id']);
         });
     }

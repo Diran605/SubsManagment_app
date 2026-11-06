@@ -1,51 +1,37 @@
 <script setup lang="ts">
 import { route } from 'ziggy-js';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed, watchEffect } from 'vue';
+import { Bar } from 'vue-chartjs';
+import {
+    Chart as ChartJS,
+    Title,
+    Tooltip,
+    Legend,
+    BarElement,
+    CategoryScale,
+    LinearScale,
+} from 'chart.js';
+import { buttonVariants } from '@/components/ui/button';
+import { useAppearance } from '@/composables/useAppearance';
+import { wrappedTickCallback } from '@/lib/charts';
+
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const props = defineProps<{
-    subscriptions: any;
+    canViewSubscriptions: boolean;
     expiringSubscriptions: any[];
+    expiringThreshold: number;
     totalRevenue: number | string;
-    revenueByService: Record<string, number>;
     subscriptionsByService: Record<string, number>;
     subscriptionsByBusiness: Record<string, number>;
     totalBusinesses: number;
     totalServices: number;
-    filters: {
-        search?: string;
-        status?: string;
-    };
 }>();
 
-const search = ref(props.filters?.search || '');
-const status = ref(props.filters?.status || 'all');
-
-watch([search, status], ([newSearch, newStatus]) => {
-    router.get(
-        route('dashboard'),
-        { search: newSearch, status: newStatus },
-        { preserveState: true, preserveScroll: true, replace: true },
-    );
-});
-
-import { useForm } from '@inertiajs/vue3';
-const deleteForm = useForm({});
-const confirmDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this subscription?')) {
-        deleteForm.delete(route('subscriptions.destroy', id), {
-            preserveScroll: true
-        });
-    }
-};
-
-import { Bar, Line } from 'vue-chartjs';
-import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
-
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement);
-
-import { useAppearance } from '@/composables/useAppearance';
-import { watchEffect } from 'vue';
+const page = usePage<any>();
+const can = (permission: string) =>
+    (page.props.auth?.user?.permissions || []).includes(permission);
 
 const { resolvedAppearance } = useAppearance();
 const isDark = computed(() => resolvedAppearance.value === 'dark');
@@ -55,102 +41,59 @@ watchEffect(() => {
     ChartJS.defaults.font.family = "'Instrument Sans', sans-serif";
 });
 
-const getBarChartData = (data: Record<string, number>, dark: boolean) => {
-    return {
-        labels: Object.keys(data),
-        datasets: [{
+const getBarChartData = (
+    data: Record<string, number>,
+    color: { light: string; dark: string },
+    dark: boolean,
+) => ({
+    labels: Object.keys(data),
+    datasets: [
+        {
             label: 'Active Subscriptions',
             data: Object.values(data),
-            backgroundColor: dark ? '#0ea5e9' : '#0A3094', 
+            backgroundColor: dark ? color.dark : color.light,
             borderRadius: 4,
             maxBarThickness: 40,
-        }]
-    };
-};
-
-const getLineChartData = (data: Record<string, number>, dark: boolean) => {
-    return {
-        labels: Object.keys(data),
-        datasets: [{
-            label: 'Subscriptions',
-            data: Object.values(data),
-            backgroundColor: dark ? '#f97316' : '#FF5F00',
-            borderColor: dark ? '#f97316' : '#FF5F00',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: false,
-            pointBackgroundColor: dark ? '#f97316' : '#FF5F00',
-        }]
-    };
-};
-
-// Compute a minimum pixel width so each bar/point gets enough room.
-// Each label needs at least 80px; fallback to 100% if chart is narrow enough.
-const barChartMinWidth = computed(() => {
-    const count = Object.keys(props.subscriptionsByService || {}).length;
-    return count > 5 ? `${count * 80}px` : '100%';
+        },
+    ],
 });
 
-const lineChartMinWidth = computed(() => {
-    const count = Object.keys(props.subscriptionsByBusiness || {}).length;
-    return count > 7 ? `${count * 80}px` : '100%';
-});
+const serviceColor = { light: '#0A3094', dark: '#0ea5e9' };
+const businessColor = { light: '#FF5F00', dark: '#f97316' };
+
+// Give each bar at least 80px so long label lists scroll instead of squashing.
+const minChartWidth = (data: Record<string, number>, threshold: number) => {
+    const count = Object.keys(data || {}).length;
+    return count > threshold ? `${count * 80}px` : '100%';
+};
 
 const barChartOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-        legend: { display: false }
+        legend: { display: false },
     },
     scales: {
         x: {
-            grid: {
-                display: false,
-                drawBorder: false,
-            },
+            grid: { display: false },
             ticks: {
                 font: { size: 11 },
                 autoSkip: false,
-                callback: function(value: any) {
-                    const label = this.getLabelForValue(value);
-                    if (typeof label === 'string') {
-                        const words = label.split(' ');
-                        const lines = [];
-                        let currentLine = '';
-                        words.forEach(word => {
-                            if ((currentLine + word).length > 12) {
-                                if (currentLine.trim().length > 0) {
-                                    lines.push(currentLine.trim());
-                                }
-                                currentLine = word + ' ';
-                            } else {
-                                currentLine += word + ' ';
-                            }
-                        });
-                        if (currentLine.trim().length > 0) {
-                            lines.push(currentLine.trim());
-                        }
-                        return lines;
-                    }
-                    return label;
-                }
-            }
+                callback: wrappedTickCallback,
+            },
         },
         y: {
             grid: {
                 color: isDark.value ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                drawBorder: false,
-                borderDash: [5, 5],
             },
             ticks: {
                 stepSize: 1,
                 padding: 10,
-                font: { size: 12 }
-            }
-        }
-    }
+                font: { size: 12 },
+            },
+        },
+    },
 }));
-import { buttonVariants } from '@/components/ui/button';
 </script>
 
 <template>
@@ -158,13 +101,13 @@ import { buttonVariants } from '@/components/ui/button';
 
     <div class="flex flex-col gap-6 p-4 md:p-8">
         <!-- Expiring Soon Alert -->
-        <div v-if="props.expiringSubscriptions.length > 0" class="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 shadow-sm">
+        <div v-if="props.canViewSubscriptions && props.expiringSubscriptions.length > 0" class="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 shadow-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
             <div class="flex-1">
                 <h3 class="text-sm font-medium">Attention Needed</h3>
-                <p class="text-sm mt-1">You have {{ props.expiringSubscriptions.length }} subscription(s) expiring within the next 30 days.</p>
+                <p class="text-sm mt-1">You have {{ props.expiringSubscriptions.length }} subscription(s) expiring within the next {{ props.expiringThreshold }} days.</p>
             </div>
             <Link :href="route('subscriptions.index', { status: 'expiring_soon' })" class="text-sm font-medium text-amber-700 underline hover:text-amber-900">
                 View All
@@ -182,12 +125,14 @@ import { buttonVariants } from '@/components/ui/button';
             </div>
             <div class="flex gap-3">
                 <Link
+                    v-if="can('create businesses')"
                     :href="route('businesses.create')"
                     :class="buttonVariants({ variant: 'secondary' })"
                 >
                     Add Business
                 </Link>
                 <Link
+                    v-if="can('create subscriptions')"
                     :href="route('subscriptions.create')"
                     :class="buttonVariants({ variant: 'default' })"
                 >
@@ -196,6 +141,15 @@ import { buttonVariants } from '@/components/ui/button';
             </div>
         </div>
 
+        <div
+            v-if="!props.canViewSubscriptions"
+            class="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm"
+        >
+            Your account does not have access to subscription data. Ask an
+            administrator if you need it.
+        </div>
+
+        <template v-else>
         <!-- Metric Cards -->
         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <!-- Active Revenue -->
@@ -261,8 +215,8 @@ import { buttonVariants } from '@/components/ui/button';
                     Active Subscriptions
                 </h2>
                 <div class="mt-4 overflow-x-auto">
-                    <div class="h-48" :style="{ minWidth: barChartMinWidth }">
-                        <Bar v-if="Object.keys(props.subscriptionsByService || {}).length" :data="getBarChartData(props.subscriptionsByService, isDark)" :options="barChartOptions" />
+                    <div class="h-48" :style="{ minWidth: minChartWidth(props.subscriptionsByService, 5) }">
+                        <Bar v-if="Object.keys(props.subscriptionsByService || {}).length" :data="getBarChartData(props.subscriptionsByService, serviceColor, isDark)" :options="barChartOptions" />
                         <p v-else class="text-sm text-muted-foreground">No data available.</p>
                     </div>
                 </div>
@@ -297,7 +251,8 @@ import { buttonVariants } from '@/components/ui/button';
                             </p>
                         </div>
                         <Link
-                            :href="route('subscriptions.renewForm', sub.id)"
+                            v-if="can('create subscriptions')"
+                            :href="route('subscriptions.createRenewal', sub.id)"
                             class="inline-flex items-center rounded-md border border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"
                             >Renew</Link
                         >
@@ -312,20 +267,20 @@ import { buttonVariants } from '@/components/ui/button';
             </div>
         </div>
 
-        <!-- Subscriptions by Business Line Chart -->
+        <!-- Subscriptions by Business Chart -->
         <div class="grid grid-cols-1 gap-6 mt-6">
             <div class="rounded-2xl border border-border bg-card shadow-sm flex flex-col">
                 <div class="border-b border-border p-4 bg-muted/20">
                     <h3 class="font-semibold text-foreground">Subscriptions by Business</h3>
                 </div>
                 <div class="p-4 overflow-x-auto">
-                    <div class="h-80" :style="{ minWidth: lineChartMinWidth }">
-                        <Line v-if="Object.keys(props.subscriptionsByBusiness || {}).length" :data="getLineChartData(props.subscriptionsByBusiness, isDark)" :options="barChartOptions" />
+                    <div class="h-80" :style="{ minWidth: minChartWidth(props.subscriptionsByBusiness, 7) }">
+                        <Bar v-if="Object.keys(props.subscriptionsByBusiness || {}).length" :data="getBarChartData(props.subscriptionsByBusiness, businessColor, isDark)" :options="barChartOptions" />
                         <p v-else class="text-sm text-muted-foreground">No data available.</p>
                     </div>
                 </div>
             </div>
         </div>
-
+        </template>
     </div>
 </template>

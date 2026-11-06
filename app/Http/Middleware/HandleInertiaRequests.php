@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -35,6 +36,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $this->flashSessionMessagesAsToasts($request);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -46,5 +49,30 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * Controllers redirect with `->with('success' | 'error', ...)`. The frontend
+     * shows toasts from Inertia flash data (see resources/js/lib/flashToast.ts),
+     * so convert those session messages into an Inertia toast here.
+     */
+    protected function flashSessionMessagesAsToasts(Request $request): void
+    {
+        if (! $request->hasSession()) {
+            return;
+        }
+
+        $session = $request->session();
+
+        foreach (['success', 'error', 'warning', 'info'] as $type) {
+            if ($session->has($type)) {
+                Inertia::flash('toast', [
+                    'type' => $type,
+                    'message' => (string) $session->get($type),
+                ]);
+
+                return;
+            }
+        }
     }
 }

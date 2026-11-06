@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Budget;
+use App\Models\BudgetPackage;
+use App\Models\Package;
 use App\Models\Service;
 use App\Services\BudgetReportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class BudgetController extends Controller
@@ -15,7 +18,7 @@ class BudgetController extends Controller
     public function index(Request $request)
     {
         $currentYear = now()->year;
-        $fiscalYear  = (int) $request->input('year', $currentYear);
+        $fiscalYear = (int) $request->input('year', $currentYear);
 
         // Available years: 2 years back to 2 years forward
         $availableYears = range($currentYear - 2, $currentYear + 2);
@@ -23,9 +26,9 @@ class BudgetController extends Controller
         $report = $this->reportService->generateReport($fiscalYear);
 
         return Inertia::render('Budgets/Index', [
-            'report'         => $report,
+            'report' => $report,
             'availableYears' => $availableYears,
-            'selectedYear'   => $fiscalYear,
+            'selectedYear' => $fiscalYear,
         ]);
     }
 
@@ -47,16 +50,16 @@ class BudgetController extends Controller
                 $existingTargets[$bp->package_id] = [
                     'expected_licenses' => $bp->expected_licenses,
                     'avg_student_count' => $bp->avg_student_count ?? 0,
-                    'expected_amount'   => floatval($bp->expected_amount),
+                    'expected_amount' => floatval($bp->expected_amount),
                 ];
             }
         }
 
         return Inertia::render('Budgets/Create', [
-            'fiscalYear'      => $fiscalYear,
-            'services'        => $services,
+            'fiscalYear' => $fiscalYear,
+            'services' => $services,
             'existingTargets' => $existingTargets,
-            'existingBudget'  => $existing,
+            'existingBudget' => $existing,
         ]);
     }
 
@@ -64,39 +67,53 @@ class BudgetController extends Controller
     {
         $validated = $request->validate([
             'fiscal_year' => 'required|integer|min:2000|max:2100',
-            'packages'    => 'required|array',
-            'packages.*.package_id'        => 'required|exists:packages,id',
+            'packages' => 'present|array',
+            'packages.*.package_id' => 'required|exists:packages,id',
             'packages.*.expected_licenses' => 'required|integer|min:0',
             'packages.*.avg_student_count' => 'nullable|integer|min:0',
-            'packages.*.expected_amount'   => 'required|numeric|min:0',
         ]);
 
-        // Upsert the budget record
-        $budget = Budget::updateOrCreate(
-            ['fiscal_year' => $validated['fiscal_year']],
-            [
-                'total_expected_amount' => collect($validated['packages'])->sum('expected_amount'),
-                'created_by'            => $request->user()->id,
-            ]
-        );
+        $packages = Package::whereIn('id', collect($validated['packages'])->pluck('package_id'))
+            ->get()
+            ->keyBy('id');
 
-        // Sync all budget package targets
-        foreach ($validated['packages'] as $pkg) {
-            \App\Models\BudgetPackage::updateOrCreate(
-                ['budget_id' => $budget->id, 'package_id' => $pkg['package_id']],
-                [
-                    'expected_licenses' => $pkg['expected_licenses'],
-                    'avg_student_count' => $pkg['avg_student_count'] ?? null,
-                    'expected_amount'   => $pkg['expected_amount'],
-                ]
-            );
-        }
+        // Recalculate each target from the package price rather than trusting
+        // the amount calculated in the browser.
+        $targets = collect($validated['packages'])->map(function (array $row) use ($packages) {
+            $package = $packages[$row['package_id']];
+            $licenses = (int) $row['expected_licenses'];
+            $avgStudents = $package->pricing_model === 'per_student' ? (int) ($row['avg_student_count'] ?? 0) : null;
 
-        // Remove any package targets that were zeroed out (not submitted)
-        $submittedPackageIds = collect($validated['packages'])->pluck('package_id')->toArray();
-        $budget->budgetPackages()
-            ->whereNotIn('package_id', $submittedPackageIds)
-            ->delete();
+            $expectedAmount = $package->pricing_model === 'per_student'
+                ? $licenses * $avgStudents * (float) $package->price
+                : $licenses * (float) $package->price;
+
+            return [
+                'package_id' => $package->id,
+                'expected_licenses' => $licenses,
+                'avg_student_count' => $avgStudents,
+                'expected_amount' => round($expectedAmount, 2),
+            ];
+        });
+
+        DB::transaction(function () use ($validated, $targets, $request) {
+            $budget = Budget::firstOrNew(['fiscal_year' => $validated['fiscal_year']]);
+            $budget->total_expected_amount = $targets->sum('expected_amount');
+            $budget->created_by ??= $request->user()->id;
+            $budget->save();
+
+            foreach ($targets as $target) {
+                BudgetPackage::updateOrCreate(
+                    ['budget_id' => $budget->id, 'package_id' => $target['package_id']],
+                    collect($target)->except('package_id')->all(),
+                );
+            }
+
+            // Remove package targets that were zeroed out (not submitted)
+            $budget->budgetPackages()
+                ->whereNotIn('package_id', $targets->pluck('package_id'))
+                ->delete();
+        });
 
         return redirect()
             ->route('budgets.index', ['year' => $validated['fiscal_year']])

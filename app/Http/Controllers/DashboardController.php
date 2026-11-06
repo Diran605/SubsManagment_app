@@ -12,92 +12,52 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->input('search');
-        $statusFilter = $request->input('status');
+        $threshold = (int) config('subscription.expiring_threshold', 30);
 
-        // All subscriptions for metrics and widgets (unpaginated)
-        $allSubscriptions = Subscription::with(['business', 'service', 'creator', 'renewals'])->get()->map(function ($sub) {
-            if ($sub->renewals->isNotEmpty()) {
-                $sub->status_badge = 'renewed';
-            } else {
-                $sub->status_badge = $sub->status;
-            }
-            return $sub;
-        });
+        // Every logged-in user can open the dashboard, but only users allowed to
+        // see subscriptions get the revenue figures and client names.
+        if (! $request->user()->can('view subscriptions')) {
+            return Inertia::render('Dashboard', [
+                'canViewSubscriptions' => false,
+                'expiringSubscriptions' => [],
+                'expiringThreshold' => $threshold,
+                'totalRevenue' => 0,
+                'subscriptionsByService' => [],
+                'subscriptionsByBusiness' => [],
+                'totalBusinesses' => 0,
+                'totalServices' => 0,
+            ]);
+        }
 
-        // Computed metrics
-        $totalRevenue = $allSubscriptions->whereIn('status_badge', ['active', 'expiring_soon'])->sum('amount');
-        
-        $revenueByService = $allSubscriptions
-            ->whereIn('status_badge', ['active', 'expiring_soon'])
-            ->groupBy(fn($sub) => $sub->service->name ?? 'Unknown')
-            ->map(fn ($group) => $group->sum('amount'));
-            
-        $subscriptionsByService = $allSubscriptions
-            ->whereIn('status_badge', ['active', 'expiring_soon'])
-            ->groupBy(fn($sub) => $sub->service->name ?? 'Unknown')
+        $activeSubscriptions = Subscription::currentlyActive()
+            ->with(['business:id,name', 'service:id,name'])
+            ->get(['id', 'business_id', 'service_id', 'amount', 'end_date']);
+
+        $subscriptionsByService = $activeSubscriptions
+            ->groupBy(fn ($sub) => $sub->service->name ?? 'Unknown')
             ->map(fn ($group) => $group->count());
 
-        $subscriptionsByBusiness = $allSubscriptions
-            ->whereIn('status_badge', ['active', 'expiring_soon'])
-            ->groupBy(fn($sub) => $sub->business->name ?? 'Unknown')
+        $subscriptionsByBusiness = $activeSubscriptions
+            ->groupBy(fn ($sub) => $sub->business->name ?? 'Unknown')
             ->map(fn ($group) => $group->count())
             ->sortDesc()
-            ->take(15) // Limit to top 15 so chart isn't too cluttered
-            ->toArray();
+            ->take(15); // Keep the chart readable
 
-        $expiringSubscriptions = $allSubscriptions
-            ->where('status_badge', 'expiring_soon')
-            ->sortBy('end_date')
-            ->values();
-
-        // Paginated subscriptions for the table
-        $query = Subscription::with(['business', 'service', 'creator'])
-            ->when($search, function ($q, $search) {
-                $q->whereHas('business', function ($q2) use ($search) {
-                    $q2->where('name', 'like', "%{$search}%");
-                });
-            });
-
-        // Note: Filtering by computed status is tricky in SQL, but we can do a naive date filter for basic status filtering on the paginator,
-        // or since it's a small app, we can filter the collection and then paginate manually. 
-        // For simplicity and to ensure pagination works flawlessly with computed attributes:
-        $filtered = $allSubscriptions
-            ->when($search, function($collection) use ($search) {
-                return $collection->filter(function($sub) use ($search) {
-                    return stripos($sub->business->name ?? '', $search) !== false;
-                });
-            })
-            ->when($statusFilter && $statusFilter !== 'all', function($collection) use ($statusFilter) {
-                return $collection->filter(fn ($sub) => $sub->status_badge === $statusFilter);
-            })
-            ->sortByDesc('created_at')
-            ->values();
-            
-        // Manual pagination of the collection
-        $page = $request->input('page', 1);
-        $perPage = 5;
-        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
-            $filtered->forPage($page, $perPage)->values(),
-            $filtered->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        $expiringSubscriptions = Subscription::whereStatus('expiring_soon')
+            ->currentlyActive()
+            ->with(['business:id,name', 'service:id,name'])
+            ->orderBy('end_date')
+            ->get();
 
         return Inertia::render('Dashboard', [
-            'subscriptions' => $paginated,
+            'canViewSubscriptions' => true,
             'expiringSubscriptions' => $expiringSubscriptions,
-            'totalRevenue' => $totalRevenue,
-            'totalBusinesses' => Business::count(),
-            'totalServices' => Service::count(),
-            'revenueByService' => $revenueByService,
+            'expiringThreshold' => $threshold,
+            'totalRevenue' => $activeSubscriptions->sum('amount'),
             'subscriptionsByService' => $subscriptionsByService,
             'subscriptionsByBusiness' => $subscriptionsByBusiness,
-            'filters' => [
-                'search' => $search,
-                'status' => $statusFilter,
-            ],
+            'totalBusinesses' => Business::count(),
+            'totalServices' => Service::count(),
         ]);
     }
 }

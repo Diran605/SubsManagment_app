@@ -18,7 +18,7 @@ return new class extends Migration
         });
 
         // 2. Migrate data
-        $packages = \DB::table('packages')->get();
+        $packages = DB::table('packages')->get();
         foreach ($packages as $pkg) {
             $modes = [];
             $maxPrice = 0;
@@ -35,7 +35,7 @@ return new class extends Migration
                 $maxPrice = max($maxPrice, $pkg->hybrid_price);
             }
 
-            \DB::table('packages')
+            DB::table('packages')
                 ->where('id', $pkg->id)
                 ->update([
                     'price' => $maxPrice,
@@ -56,7 +56,7 @@ return new class extends Migration
     {
         Schema::table('packages', function (Blueprint $table) {
             $table->dropColumn(['price', 'supported_modes']);
-            
+
             $table->decimal('online_price', 10, 2)->nullable();
             $table->decimal('offline_price', 10, 2)->nullable();
             $table->decimal('hybrid_price', 10, 2)->nullable();

@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Business;
+use App\Models\Package;
 use App\Models\Service;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class SubscriptionController extends Controller implements HasMiddleware
 {
@@ -16,7 +20,7 @@ class SubscriptionController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:view subscriptions', only: ['index', 'show']),
-            new Middleware('permission:create subscriptions', only: ['create', 'store', 'renewForm', 'renew']),
+            new Middleware('permission:create subscriptions', only: ['create', 'store', 'createRenewal', 'renew']),
             new Middleware('permission:edit subscriptions', only: ['edit', 'update']),
             new Middleware('permission:delete subscriptions', only: ['destroy']),
             new Middleware('permission:restore subscriptions', only: ['restore']),
@@ -30,57 +34,32 @@ class SubscriptionController extends Controller implements HasMiddleware
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
 
-        $query = Subscription::with(['business', 'service', 'creator', 'renewals']);
-        
+        $query = Subscription::with(['business', 'service', 'creator'])
+            ->withExists('renewals');
+
         if ($statusFilter === 'trashed') {
             $query->onlyTrashed();
         } elseif ($statusFilter === 'all') {
             $query->withTrashed();
+        } elseif (in_array($statusFilter, Subscription::STATUSES, true)) {
+            $query->whereStatus($statusFilter);
         }
 
-        $allSubscriptions = $query->get()->map(function ($sub) {
-            if ($sub->trashed()) {
-                $sub->status_badge = 'trashed';
-            } elseif ($sub->renewals->isNotEmpty()) {
-                $sub->status_badge = 'renewed';
-            } else {
-                $sub->status_badge = $sub->status;
-            }
-            return $sub;
-        });
+        $subscriptions = $query
+            ->when($search, fn ($q) => $q->whereHas('business', fn ($b) => $b->where('name', 'like', "%{$search}%")))
+            ->when($dateFrom, fn ($q) => $q->whereDate('start_date', '>=', $dateFrom))
+            ->when($dateTo, fn ($q) => $q->whereDate('start_date', '<=', $dateTo))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString()
+            ->through(function (Subscription $sub) {
+                $sub->status_badge = $sub->statusBadge();
 
-        $filtered = $allSubscriptions
-            ->when($search, function($collection) use ($search) {
-                return $collection->filter(function($sub) use ($search) {
-                    return stripos($sub->business->name ?? '', $search) !== false;
-                });
-            })
-            ->when($statusFilter && $statusFilter !== 'all', function($collection) use ($statusFilter) {
-                return $collection->filter(fn ($sub) => $sub->status_badge === $statusFilter);
-            })
-            ->when($dateFrom, function($collection) use ($dateFrom) {
-                $from = \Carbon\Carbon::parse($dateFrom)->startOfDay();
-                return $collection->filter(fn ($sub) => \Carbon\Carbon::parse($sub->start_date)->startOfDay()->gte($from));
-            })
-            ->when($dateTo, function($collection) use ($dateTo) {
-                $to = \Carbon\Carbon::parse($dateTo)->endOfDay();
-                return $collection->filter(fn ($sub) => \Carbon\Carbon::parse($sub->start_date)->startOfDay()->lte($to));
-            })
-            ->sortByDesc('created_at')
-            ->values();
-            
-        $page = $request->input('page', 1);
-        $perPage = 10;
-        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
-            $filtered->forPage($page, $perPage)->values(),
-            $filtered->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+                return $sub;
+            });
 
         return Inertia::render('Subscriptions/Index', [
-            'subscriptions' => $paginated,
+            'subscriptions' => $subscriptions,
             'filters' => [
                 'search' => $search,
                 'status' => $statusFilter,
@@ -103,35 +82,27 @@ class SubscriptionController extends Controller implements HasMiddleware
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'business_id' => 'required|exists:businesses,id',
-            'service_id' => 'required|exists:services,id',
-            'mode' => 'required|in:online,offline,hybrid',
-            'amount' => 'required|numeric|min:0',
-            'student_count' => 'nullable|integer|min:1',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'notes' => 'nullable|string',
-            'package_id' => 'nullable|exists:packages,id',
-            'modules' => 'nullable|array',
-            'modules.*' => 'exists:modules,id',
-        ]);
+        $validated = $this->validateSubscription($request);
 
-        $subscriptionData = $validated;
-        unset($subscriptionData['modules']);
-        $subscriptionData['created_by'] = $request->user()->id;
+        DB::transaction(function () use ($validated, $request) {
+            $subscription = Subscription::create([
+                ...collect($validated)->except('modules')->all(),
+                'created_by' => $request->user()->id,
+            ]);
 
-        $subscription = Subscription::create($subscriptionData);
-
-        if (isset($validated['modules'])) {
-            $subscription->modules()->sync($validated['modules']);
-        }
+            $subscription->modules()->sync($validated['modules'] ?? []);
+        });
 
         return redirect()->route('subscriptions.index')->with('success', 'Subscription recorded successfully.');
     }
 
-    public function renewForm(Subscription $subscription)
+    public function createRenewal(Subscription $subscription)
     {
+        if ($subscription->renewals()->exists()) {
+            return redirect()->route('subscriptions.show', $subscription)
+                ->with('error', 'This subscription has already been renewed.');
+        }
+
         $subscription->load(['business', 'service.modules', 'service.packages.modules', 'modules']);
 
         return Inertia::render('Subscriptions/Form', [
@@ -143,33 +114,37 @@ class SubscriptionController extends Controller implements HasMiddleware
 
     public function renew(Request $request, Subscription $subscription)
     {
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:0',
-            'student_count' => 'nullable|integer|min:1',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'notes' => 'nullable|string',
-            'package_id' => 'nullable|exists:packages,id',
-            'modules' => 'nullable|array',
-            'modules.*' => 'exists:modules,id',
-        ]);
-
-        $newSub = Subscription::create([
+        // Business, service and mode carry over from the original subscription.
+        $request->merge([
             'business_id' => $subscription->business_id,
             'service_id' => $subscription->service_id,
             'mode' => $subscription->mode,
-            'amount' => $validated['amount'],
-            'student_count' => $validated['student_count'] ?? null,
-            'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
-            'notes' => $validated['notes'] ?? null,
-            'package_id' => $validated['package_id'] ?? null,
-            'renewed_from_id' => $subscription->id,
-            'created_by' => $request->user()->id,
         ]);
 
-        if (isset($validated['modules'])) {
-            $newSub->modules()->sync($validated['modules']);
+        $validated = $this->validateSubscription($request);
+
+        $renewed = DB::transaction(function () use ($validated, $request, $subscription) {
+            // Lock the original row so two simultaneous renewals can't both succeed.
+            $original = Subscription::whereKey($subscription->id)->lockForUpdate()->first();
+
+            if ($original->renewals()->exists()) {
+                return false;
+            }
+
+            $newSub = Subscription::create([
+                ...collect($validated)->except('modules')->all(),
+                'renewed_from_id' => $original->id,
+                'created_by' => $request->user()->id,
+            ]);
+
+            $newSub->modules()->sync($validated['modules'] ?? []);
+
+            return true;
+        });
+
+        if (! $renewed) {
+            return redirect()->route('subscriptions.show', $subscription)
+                ->with('error', 'This subscription has already been renewed.');
         }
 
         return redirect()->route('subscriptions.index')->with('success', 'Subscription renewed successfully.');
@@ -184,16 +159,11 @@ class SubscriptionController extends Controller implements HasMiddleware
             'modules',
             'creator',
             'renewals',
-            'collections.recorder' => function($query) {
-                $query->select('id', 'name', 'email');
-            }
+            'collections' => fn ($query) => $query->orderByDesc('collection_date'),
+            'collections.recorder' => fn ($query) => $query->select('id', 'name', 'email'),
         ])->findOrFail($id);
 
-        if ($subscription->trashed()) {
-            $subscription->status_badge = 'trashed';
-        } else {
-            $subscription->status_badge = $subscription->renewals->isNotEmpty() ? 'renewed' : $subscription->status;
-        }
+        $subscription->status_badge = $subscription->statusBadge();
 
         return Inertia::render('Subscriptions/Show', [
             'subscription' => $subscription,
@@ -203,7 +173,7 @@ class SubscriptionController extends Controller implements HasMiddleware
     public function edit(Subscription $subscription)
     {
         $subscription->load('modules');
-        
+
         return Inertia::render('Subscriptions/Form', [
             'businesses' => Business::orderBy('name')->get(['id', 'name']),
             'services' => Service::with(['modules', 'packages.modules'])->orderBy('name')->get(),
@@ -213,30 +183,12 @@ class SubscriptionController extends Controller implements HasMiddleware
 
     public function update(Request $request, Subscription $subscription)
     {
-        $validated = $request->validate([
-            'business_id' => 'required|exists:businesses,id',
-            'service_id' => 'required|exists:services,id',
-            'mode' => 'required|in:online,offline,hybrid',
-            'amount' => 'required|numeric|min:0',
-            'student_count' => 'nullable|integer|min:1',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'notes' => 'nullable|string',
-            'package_id' => 'nullable|exists:packages,id',
-            'modules' => 'nullable|array',
-            'modules.*' => 'exists:modules,id',
-        ]);
+        $validated = $this->validateSubscription($request);
 
-        $subscriptionData = $validated;
-        unset($subscriptionData['modules']);
-        
-        $subscription->update($subscriptionData);
-
-        if (isset($validated['modules'])) {
-            $subscription->modules()->sync($validated['modules']);
-        } else {
-            $subscription->modules()->detach();
-        }
+        DB::transaction(function () use ($validated, $subscription) {
+            $subscription->update(collect($validated)->except('modules')->all());
+            $subscription->modules()->sync($validated['modules'] ?? []);
+        });
 
         return redirect()->route('subscriptions.index')->with('success', 'Subscription updated successfully.');
     }
@@ -254,5 +206,62 @@ class SubscriptionController extends Controller implements HasMiddleware
         $subscription->restore();
 
         return redirect()->back()->with('success', 'Subscription restored successfully.');
+    }
+
+    /**
+     * Validate subscription input, including checks that the package and
+     * modules belong to the chosen service and match the package's rules.
+     *
+     * @return array<string, mixed>
+     */
+    protected function validateSubscription(Request $request): array
+    {
+        $serviceId = $request->input('service_id');
+
+        $validated = $request->validate([
+            'business_id' => 'required|exists:businesses,id',
+            'service_id' => 'required|exists:services,id',
+            'mode' => 'required|in:online,offline,hybrid',
+            'amount' => 'required|numeric|min:0',
+            'student_count' => 'nullable|integer|min:1',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'notes' => 'nullable|string',
+            'package_id' => [
+                'nullable',
+                Rule::exists('packages', 'id')->where('service_id', $serviceId),
+            ],
+            'modules' => 'nullable|array',
+            'modules.*' => [
+                Rule::exists('modules', 'id')->where('service_id', $serviceId),
+            ],
+        ], [
+            'package_id.exists' => 'The selected package does not belong to this service.',
+            'modules.*.exists' => 'One of the selected modules does not belong to this service.',
+        ]);
+
+        $package = isset($validated['package_id']) ? Package::find($validated['package_id']) : null;
+
+        if ($package) {
+            $modes = $package->supported_modes ?? [];
+
+            if (! empty($modes) && ! in_array($validated['mode'], $modes, true)) {
+                throw ValidationException::withMessages([
+                    'mode' => 'This package does not support the "'.$validated['mode'].'" mode.',
+                ]);
+            }
+
+            if ($package->pricing_model === 'per_student' && empty($validated['student_count'])) {
+                throw ValidationException::withMessages([
+                    'student_count' => 'The student count is required for per-student packages.',
+                ]);
+            }
+        }
+
+        $validated['student_count'] = $validated['student_count'] ?? null;
+        $validated['package_id'] = $validated['package_id'] ?? null;
+        $validated['notes'] = $validated['notes'] ?? null;
+
+        return $validated;
     }
 }

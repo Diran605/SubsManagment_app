@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Business;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +19,12 @@ class BusinessFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => fake()->company(),
+            'contact_person' => fake()->name(),
+            'phone' => fake()->phoneNumber(),
+            'email' => fake()->companyEmail(),
+            'address' => fake()->address(),
+            'created_by' => User::factory(),
         ];
     }
 }
