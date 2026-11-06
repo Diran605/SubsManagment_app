@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import businessesRoutes from '@/routes/businesses';
 import { ref, watch } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -19,7 +19,7 @@ const search = ref(props.filters.search || '');
 
 watch(search, (value) => {
     router.get(
-        route('businesses.index'),
+        businessesRoutes.index.url(),
         { search: value },
         { preserveState: true, replace: true },
     );
@@ -29,7 +29,7 @@ import { useForm } from '@inertiajs/vue3';
 const deleteForm = useForm({});
 const confirmDelete = (id: number) => {
     if (confirm('Are you sure you want to delete this business?')) {
-        deleteForm.delete(route('businesses.destroy', id), {
+        deleteForm.delete(businessesRoutes.destroy.url(id), {
             preserveScroll: true
         });
     }
@@ -49,7 +49,7 @@ const confirmDelete = (id: number) => {
             </div>
             <Link
                 v-if="canCreate"
-                :href="route('businesses.create')"
+                :href="businessesRoutes.create.url()"
                 :class="buttonVariants({ variant: 'default' })"
             >
                 Add Business
@@ -104,13 +104,13 @@ const confirmDelete = (id: number) => {
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <Link
-                                        :href="route('businesses.show', business.id)"
+                                        :href="businessesRoutes.show.url(business.id)"
                                         class="inline-flex items-center rounded-md border border-primary bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary hover:text-white transition-colors dark:border-primary dark:text-primary"
                                         >View</Link
                                     >
                                     <Link
                                         v-if="canEdit"
-                                        :href="route('businesses.edit', business.id)"
+                                        :href="businessesRoutes.edit.url(business.id)"
                                         class="inline-flex items-center rounded-md border border-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white transition-colors"
                                         >Edit</Link
                                     >

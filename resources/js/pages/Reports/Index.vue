@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import reportsRoutes from '@/routes/reports';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, computed, watchEffect } from 'vue';
 
@@ -23,7 +23,7 @@ const props = defineProps<{
 const selectedPeriod = ref(props.period);
 
 const applyFilter = () => {
-    router.get(route('reports.index'), { period: selectedPeriod.value }, { preserveState: true });
+    router.get(reportsRoutes.index.url(), { period: selectedPeriod.value }, { preserveState: true });
 };
 
 import { Bar, Pie, Line } from 'vue-chartjs';

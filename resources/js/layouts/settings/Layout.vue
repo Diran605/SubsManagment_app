@@ -12,7 +12,7 @@ import type { NavItem } from '@/types';
 import { Shield } from '@lucide/vue';
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { route } from 'ziggy-js';
+import rolesRoutes from '@/routes/roles';
 
 const page = usePage<any>();
 
@@ -35,7 +35,7 @@ const sidebarNavItems = computed(() => {
     if (page.props.auth?.user?.roles?.includes('Admin')) {
         items.push({
             title: 'Roles & Permissions',
-            href: route('roles.index'),
+            href: rolesRoutes.index.url(),
             icon: Shield,
         });
     }

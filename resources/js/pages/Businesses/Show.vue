@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import businessesRoutes from '@/routes/businesses';
+import subscriptionsRoutes from '@/routes/subscriptions';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
@@ -16,7 +17,7 @@ const deleteForm = useForm({});
 
 const confirmDelete = () => {
     if (confirm('Are you sure you want to delete this business?')) {
-        deleteForm.delete(route('businesses.destroy', props.business.id));
+        deleteForm.delete(businessesRoutes.destroy.url(props.business.id));
     }
 };
 </script>
@@ -36,14 +37,14 @@ const confirmDelete = () => {
             </div>
             <div class="flex gap-2">
                 <Link
-                    :href="route('businesses.index')"
+                    :href="businessesRoutes.index.url()"
                     :class="buttonVariants({ variant: 'outline' })"
                 >
                     Back to List
                 </Link>
                 <Link
                     v-if="canEdit"
-                    :href="route('businesses.edit', business.id)"
+                    :href="businessesRoutes.edit.url(business.id)"
                     :class="buttonVariants({ variant: 'default' })"
                 >
                     Edit
@@ -111,7 +112,7 @@ const confirmDelete = () => {
                 >
                     <h3 class="font-semibold text-foreground">Subscriptions</h3>
                     <Link
-                        :href="route('subscriptions.create', { business_id: business.id })"
+                        :href="subscriptionsRoutes.create.url({ query: { business_id: business.id } })"
                         class="text-sm font-medium text-primary hover:underline"
                     >
                         + New Subscription

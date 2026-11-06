@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { route } from 'ziggy-js';
+import budgetsRoutes from '@/routes/budgets';
 import { computed, ref } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -85,7 +85,7 @@ const submit = () => {
         packages,
     });
 
-    form.post(route('budgets.store'), {
+    form.post(budgetsRoutes.store.url(), {
         onFinish: () => { isSubmitting.value = false; }
     });
 };
@@ -105,7 +105,7 @@ const submit = () => {
                     Set the expected number of licences per package, and for monthly packages how many months they'll run this year. Expected revenue is calculated automatically.
                 </p>
             </div>
-            <Link :href="route('budgets.index', { year: fiscalYear })" :class="buttonVariants({ variant: 'outline' })">
+            <Link :href="budgetsRoutes.index.url({ query: { year: fiscalYear } })" :class="buttonVariants({ variant: 'outline' })">
                 Cancel
             </Link>
         </div>
@@ -200,7 +200,7 @@ const submit = () => {
 
             <!-- Submit -->
             <div class="flex justify-end gap-3 pt-2">
-                <Link :href="route('budgets.index', { year: fiscalYear })" :class="buttonVariants({ variant: 'outline' })">
+                <Link :href="budgetsRoutes.index.url({ query: { year: fiscalYear } })" :class="buttonVariants({ variant: 'outline' })">
                     Cancel
                 </Link>
                 <button

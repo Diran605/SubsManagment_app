@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import staffRoutes from '@/routes/staff';
 import { Head, Link } from '@inertiajs/vue3';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -20,7 +20,7 @@ const props = defineProps<{
                 </p>
             </div>
             <Link
-                :href="route('staff.create')"
+                :href="staffRoutes.create.url()"
                 :class="buttonVariants({ variant: 'default' })"
             >
                 Add Staff
@@ -71,19 +71,19 @@ const props = defineProps<{
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <Link
-                                        :href="route('staff.show', user.id)"
+                                        :href="staffRoutes.show.url(user.id)"
                                         class="inline-flex items-center rounded-md border border-primary bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary hover:text-white transition-colors dark:border-primary dark:text-primary"
                                     >
                                         View
                                     </Link>
                                     <Link
-                                        :href="route('staff.edit', user.id)"
+                                        :href="staffRoutes.edit.url(user.id)"
                                         class="inline-flex items-center rounded-md border border-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white transition-colors"
                                     >
                                         Edit
                                     </Link>
                                     <Link
-                                        :href="route('staff.toggle', user.id)"
+                                        :href="staffRoutes.toggle.url(user.id)"
                                         method="patch"
                                         as="button"
                                         class="inline-flex items-center rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-600 dark:text-amber-500 hover:bg-amber-500 hover:text-white transition-colors"

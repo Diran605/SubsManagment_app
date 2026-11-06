@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import servicesRoutes from '@/routes/services';
+import modulesRoutes from '@/routes/modules';
+import packagesRoutes from '@/routes/packages';
+import businessesRoutes from '@/routes/businesses';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
@@ -25,7 +28,7 @@ type DeleteErrors = { module?: string; package?: string };
 
 const confirmDelete = () => {
     if (confirm('Are you sure you want to delete this service?')) {
-        deleteForm.delete(route('services.destroy', props.service.id));
+        deleteForm.delete(servicesRoutes.destroy.url(props.service.id));
     }
 };
 
@@ -35,7 +38,7 @@ const moduleForm = useForm({
 });
 
 const submitModule = () => {
-    moduleForm.post(route('services.modules.store', props.service.id), {
+    moduleForm.post(servicesRoutes.modules.store.url(props.service.id), {
         preserveScroll: true,
         onSuccess: () => moduleForm.reset(),
     });
@@ -52,7 +55,7 @@ const packageForm = useForm({
 });
 
 const submitPackage = () => {
-    packageForm.post(route('services.packages.store', props.service.id), {
+    packageForm.post(servicesRoutes.packages.store.url(props.service.id), {
         preserveScroll: true,
         onSuccess: () => packageForm.reset(),
     });
@@ -61,7 +64,7 @@ const submitPackage = () => {
 const deleteModuleForm = useForm({});
 const deleteModule = (id: number) => {
     if (confirm('Are you sure you want to delete this module?')) {
-        deleteModuleForm.delete(route('modules.destroy', id), {
+        deleteModuleForm.delete(modulesRoutes.destroy.url(id), {
             preserveScroll: true
         });
     }
@@ -83,7 +86,7 @@ const cancelEditModule = () => {
 };
 
 const submitEditModule = (id: number) => {
-    editModuleForm.put(route('modules.update', id), {
+    editModuleForm.put(modulesRoutes.update.url(id), {
         preserveScroll: true,
         onSuccess: () => { editingModuleId.value = null; }
     });
@@ -92,7 +95,7 @@ const submitEditModule = (id: number) => {
 const deletePackageForm = useForm({});
 const deletePackage = (id: number) => {
     if (confirm('Are you sure you want to delete this package?')) {
-        deletePackageForm.delete(route('packages.destroy', id), {
+        deletePackageForm.delete(packagesRoutes.destroy.url(id), {
             preserveScroll: true
         });
     }
@@ -127,7 +130,7 @@ const cancelEditPackage = () => {
 };
 
 const submitEditPackage = (id: number) => {
-    editPackageForm.put(route('packages.update', id), {
+    editPackageForm.put(packagesRoutes.update.url(id), {
         preserveScroll: true,
         onSuccess: () => { editingPackageId.value = null; }
     });
@@ -149,14 +152,14 @@ const submitEditPackage = (id: number) => {
             </div>
             <div class="flex gap-2">
                 <Link
-                    :href="route('services.index')"
+                    :href="servicesRoutes.index.url()"
                     :class="buttonVariants({ variant: 'outline' })"
                 >
                     Back to List
                 </Link>
                 <Link
                     v-if="canEdit"
-                    :href="route('services.edit', service.id)"
+                    :href="servicesRoutes.edit.url(service.id)"
                     :class="buttonVariants({ variant: 'default' })"
                 >
                     Edit
@@ -225,7 +228,7 @@ const submitEditPackage = (id: number) => {
                             >
                                 <td class="px-4 py-3 font-medium text-foreground">
                                     <Link
-                                        :href="route('businesses.show', sub.business_id)"
+                                        :href="businessesRoutes.show.url(sub.business_id)"
                                         class="text-primary hover:underline"
                                         >{{ sub.business?.name }}</Link
                                     >

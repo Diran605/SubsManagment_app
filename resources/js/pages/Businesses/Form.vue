@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import businessesRoutes from '@/routes/businesses';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -26,9 +26,9 @@ const form = useForm({
 
 const submit = () => {
     if (isEditing) {
-        form.put(route('businesses.update', props.business!.id));
+        form.put(businessesRoutes.update.url(props.business!.id));
     } else {
-        form.post(route('businesses.store'));
+        form.post(businessesRoutes.store.url());
     }
 };
 </script>
@@ -44,7 +44,7 @@ const submit = () => {
                 </h1>
             </div>
             <Link
-                :href="route('businesses.index')"
+                :href="businessesRoutes.index.url()"
                 class="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
                 &larr; Back to List

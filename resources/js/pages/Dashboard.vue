@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import subscriptionsRoutes from '@/routes/subscriptions';
+import businessesRoutes from '@/routes/businesses';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, watchEffect } from 'vue';
 import { Bar } from 'vue-chartjs';
@@ -109,7 +110,7 @@ const barChartOptions = computed(() => ({
                 <h3 class="text-sm font-medium">Attention Needed</h3>
                 <p class="text-sm mt-1">You have {{ props.expiringSubscriptions.length }} subscription(s) expiring within the next {{ props.expiringThreshold }} days.</p>
             </div>
-            <Link :href="route('subscriptions.index', { status: 'expiring_soon' })" class="text-sm font-medium text-amber-700 underline hover:text-amber-900">
+            <Link :href="subscriptionsRoutes.index.url({ query: { status: 'expiring_soon' } })" class="text-sm font-medium text-amber-700 underline hover:text-amber-900">
                 View All
             </Link>
         </div>
@@ -126,14 +127,14 @@ const barChartOptions = computed(() => ({
             <div class="flex gap-3">
                 <Link
                     v-if="can('create businesses')"
-                    :href="route('businesses.create')"
+                    :href="businessesRoutes.create.url()"
                     :class="buttonVariants({ variant: 'secondary' })"
                 >
                     Add Business
                 </Link>
                 <Link
                     v-if="can('create subscriptions')"
-                    :href="route('subscriptions.create')"
+                    :href="subscriptionsRoutes.create.url()"
                     :class="buttonVariants({ variant: 'default' })"
                 >
                     New Subscription
@@ -252,7 +253,7 @@ const barChartOptions = computed(() => ({
                         </div>
                         <Link
                             v-if="can('create subscriptions')"
-                            :href="route('subscriptions.createRenewal', sub.id)"
+                            :href="subscriptionsRoutes.createRenewal.url(sub.id)"
                             class="inline-flex items-center rounded-md border border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"
                             >Renew</Link
                         >

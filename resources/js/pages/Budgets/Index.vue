@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { route } from 'ziggy-js';
+import budgetsRoutes from '@/routes/budgets';
 import { ref } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -26,7 +26,7 @@ const formatMoney = (val: number) =>
     val ? Number(val).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' FCFA' : '0 FCFA';
 
 const changeYear = (year: number) => {
-    router.get(route('budgets.index'), { year }, { preserveState: false });
+    router.get(budgetsRoutes.index.url(), { year }, { preserveState: false });
 };
 </script>
 
@@ -58,7 +58,7 @@ const changeYear = (year: number) => {
                     </button>
                 </div>
                 <Link
-                    :href="route('budgets.create', { year: selectedYear })"
+                    :href="budgetsRoutes.create.url({ query: { year: selectedYear } })"
                     :class="buttonVariants({ variant: 'default' })"
                 >
                     {{ report.budget ? 'Edit Budget' : 'Setup Budget' }}
@@ -160,7 +160,7 @@ const changeYear = (year: number) => {
             <div v-else class="flex flex-col items-center justify-center py-16 text-center">
                 <p class="text-muted-foreground text-sm">No budget data for {{ selectedYear }}.</p>
                 <Link
-                    :href="route('budgets.create', { year: selectedYear })"
+                    :href="budgetsRoutes.create.url({ query: { year: selectedYear } })"
                     :class="[buttonVariants({ variant: 'default' }), 'mt-4']"
                 >
                     Setup Budget for {{ selectedYear }}

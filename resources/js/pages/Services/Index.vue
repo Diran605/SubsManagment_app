@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import servicesRoutes from '@/routes/services';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import { useForm } from '@inertiajs/vue3';
 const deleteForm = useForm({});
 const confirmDelete = (id: number) => {
     if (confirm('Are you sure you want to delete this service?')) {
-        deleteForm.delete(route('services.destroy', id), {
+        deleteForm.delete(servicesRoutes.destroy.url(id), {
             preserveScroll: true
         });
     }
@@ -37,7 +37,7 @@ const confirmDelete = (id: number) => {
             </div>
             <Link
                 v-if="canCreate"
-                :href="route('services.create')"
+                :href="servicesRoutes.create.url()"
                 :class="buttonVariants({ variant: 'default' })"
             >
                 Add Service
@@ -91,13 +91,13 @@ const confirmDelete = (id: number) => {
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <Link
-                                        :href="route('services.show', service.id)"
+                                        :href="servicesRoutes.show.url(service.id)"
                                         class="inline-flex items-center rounded-md border border-primary bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary hover:text-white transition-colors dark:border-primary dark:text-primary"
                                         >View</Link
                                     >
                                     <Link
                                         v-if="canEdit"
-                                        :href="route('services.edit', service.id)"
+                                        :href="servicesRoutes.edit.url(service.id)"
                                         class="inline-flex items-center rounded-md border border-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white transition-colors"
                                         >Edit</Link
                                     >

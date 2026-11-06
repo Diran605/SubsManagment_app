@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import subscriptionsRoutes from '@/routes/subscriptions';
+import businessesRoutes from '@/routes/businesses';
 import { Head, Link, router, usePage, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
@@ -49,7 +50,7 @@ const collectionForm = useForm({
 });
 
 const submitCollection = () => {
-    collectionForm.post(route('subscriptions.collections.store', props.subscription.id), {
+    collectionForm.post(subscriptionsRoutes.collections.store.url(props.subscription.id), {
         preserveScroll: true,
         onSuccess: () => {
             showCollectionModal.value = false;
@@ -61,7 +62,7 @@ const submitCollection = () => {
 
 const deleteCollection = (id: number) => {
     if (confirm('Are you sure you want to delete this collection entry?')) {
-        router.delete(route('subscriptions.collections.destroy', id), {
+        router.delete(subscriptionsRoutes.collections.destroy.url(id), {
             preserveScroll: true,
         });
     }
@@ -69,7 +70,7 @@ const deleteCollection = (id: number) => {
 
 const restoreSubscription = () => {
     if (confirm('Are you sure you want to restore this subscription?')) {
-        router.post(route('subscriptions.restore', props.subscription.id));
+        router.post(subscriptionsRoutes.restore.url(props.subscription.id));
     }
 };
 
@@ -85,7 +86,7 @@ const formatMoney = (val: number) =>
             <div>
                 <h1 class="text-3xl font-bold tracking-tight text-foreground">Subscription Details</h1>
             </div>
-            <Link :href="route('subscriptions.index')" class="text-sm font-medium text-muted-foreground hover:text-foreground">
+            <Link :href="subscriptionsRoutes.index.url()" class="text-sm font-medium text-muted-foreground hover:text-foreground">
                 &larr; Back to Subscriptions
             </Link>
         </div>
@@ -99,7 +100,7 @@ const formatMoney = (val: number) =>
                     <div class="flex justify-between items-start mb-6 border-b border-border pb-4">
                         <div>
                             <h2 class="text-xl font-semibold text-foreground">{{ props.subscription.service?.name }}</h2>
-                            <p class="text-sm text-muted-foreground mt-1">for <Link :href="route('businesses.show', props.subscription.business_id)" class="font-medium text-primary hover:underline">{{ props.subscription.business?.name }}</Link></p>
+                            <p class="text-sm text-muted-foreground mt-1">for <Link :href="businessesRoutes.show.url(props.subscription.business_id)" class="font-medium text-primary hover:underline">{{ props.subscription.business?.name }}</Link></p>
                         </div>
                         <span :class="['px-3 py-1 rounded-full text-xs font-bold border', statusColor]">
                             {{ formattedStatus }}
@@ -277,7 +278,7 @@ const formatMoney = (val: number) =>
                     <template v-if="props.subscription.status_badge !== 'trashed'">
                         <Link
                             v-if="canCreate && props.subscription.status_badge !== 'active' && props.subscription.status_badge !== 'renewed'"
-                            :href="route('subscriptions.createRenewal', props.subscription.id)"
+                            :href="subscriptionsRoutes.createRenewal.url(props.subscription.id)"
                             :class="buttonVariants({ variant: 'default' })"
                             class="bg-emerald-600 hover:bg-emerald-700 text-white w-full"
                         >
@@ -285,7 +286,7 @@ const formatMoney = (val: number) =>
                         </Link>
                         <Link
                             v-if="canEdit"
-                            :href="route('subscriptions.edit', props.subscription.id)"
+                            :href="subscriptionsRoutes.edit.url(props.subscription.id)"
                             :class="buttonVariants({ variant: 'secondary' })"
                             class="w-full"
                         >

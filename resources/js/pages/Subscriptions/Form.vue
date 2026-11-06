@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import subscriptionsRoutes from '@/routes/subscriptions';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { computed, watch, ref } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
@@ -138,11 +138,11 @@ watch(
 
 const submit = () => {
     if (isEditing) {
-        form.put(route('subscriptions.update', props.subscription.id));
+        form.put(subscriptionsRoutes.update.url(props.subscription.id));
     } else if (isRenewing) {
-        form.post(route('subscriptions.renew', props.renewing.id));
+        form.post(subscriptionsRoutes.renew.url(props.renewing.id));
     } else {
-        form.post(route('subscriptions.store'));
+        form.post(subscriptionsRoutes.store.url());
     }
 };
 
@@ -162,7 +162,7 @@ const title = computed(() => {
                 <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ title }}</h1>
             </div>
             <Link
-                :href="route('subscriptions.index')"
+                :href="subscriptionsRoutes.index.url()"
                 class="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
                 &larr; Back to Subscriptions

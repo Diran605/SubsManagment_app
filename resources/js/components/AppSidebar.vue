@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import businessesRoutes from '@/routes/businesses';
+import servicesRoutes from '@/routes/services';
+import subscriptionsRoutes from '@/routes/subscriptions';
+import reportsRoutes from '@/routes/reports';
+import budgetsRoutes from '@/routes/budgets';
+import auditLogsRoutes from '@/routes/audit_logs';
+import staffRoutes from '@/routes/staff';
 import { Link } from '@inertiajs/vue3';
 import {
     BookOpen,
@@ -37,7 +43,7 @@ const mainNavItems = computed(() => {
     const items: NavItem[] = [
         {
             title: 'Dashboard',
-            href: route('dashboard'),
+            href: dashboard.url(),
             icon: LayoutGrid,
         },
     ];
@@ -45,29 +51,29 @@ const mainNavItems = computed(() => {
     const perms = page.props.auth?.user?.permissions || [];
     
     if (perms.includes('view businesses')) {
-        items.push({ title: 'Businesses', href: route('businesses.index'), icon: Building2 });
+        items.push({ title: 'Businesses', href: businessesRoutes.index.url(), icon: Building2 });
     }
     if (perms.includes('view services')) {
-        items.push({ title: 'Services', href: route('services.index'), icon: Briefcase });
+        items.push({ title: 'Services', href: servicesRoutes.index.url(), icon: Briefcase });
     }
     if (perms.includes('view subscriptions')) {
-        items.push({ title: 'Subscriptions', href: route('subscriptions.index'), icon: BookOpen });
+        items.push({ title: 'Subscriptions', href: subscriptionsRoutes.index.url(), icon: BookOpen });
     }
     if (perms.includes('view reports')) {
-        items.push({ title: 'Reports', href: route('reports.index'), icon: BarChart3 });
-        items.push({ title: 'Budget', href: route('budgets.index'), icon: PiggyBank });
+        items.push({ title: 'Reports', href: reportsRoutes.index.url(), icon: BarChart3 });
+        items.push({ title: 'Budget', href: budgetsRoutes.index.url(), icon: PiggyBank });
     }
     
     // Must match the route middleware in routes/web.php.
     if (perms.includes('manage settings')) {
-        items.push({ title: 'Audit Logs', href: route('audit_logs.index'), icon: Activity });
+        items.push({ title: 'Audit Logs', href: auditLogsRoutes.index.url(), icon: Activity });
     }
 
     // Staff routes are restricted to the Admin role (routes/web.php).
     if (page.props.auth?.user?.roles?.includes('Admin')) {
         items.push({
             title: 'Staff Accounts',
-            href: route('staff.index'),
+            href: staffRoutes.index.url(),
             icon: Users,
         });
     }

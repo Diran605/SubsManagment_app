@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import staffRoutes from '@/routes/staff';
+import businessesRoutes from '@/routes/businesses';
 import { Head, Link } from '@inertiajs/vue3';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -23,19 +24,19 @@ const props = defineProps<{
             </div>
             <div class="flex gap-2">
                 <Link
-                    :href="route('staff.index')"
+                    :href="staffRoutes.index.url()"
                     :class="buttonVariants({ variant: 'outline' })"
                 >
                     Back to List
                 </Link>
                 <Link
-                    :href="route('staff.edit', staff.id)"
+                    :href="staffRoutes.edit.url(staff.id)"
                     :class="buttonVariants({ variant: 'default' })"
                 >
                     Edit
                 </Link>
                 <Link
-                    :href="route('staff.toggle', staff.id)"
+                    :href="staffRoutes.toggle.url(staff.id)"
                     method="patch"
                     as="button"
                     :class="buttonVariants({ variant: 'secondary' })"
@@ -88,7 +89,7 @@ const props = defineProps<{
                     </div>
                     <ul class="divide-y divide-border" v-else>
                         <li v-for="b in staff.businesses" :key="b.id" class="p-4 transition-colors hover:bg-muted/50">
-                            <Link :href="route('businesses.show', b.id)" class="text-sm font-medium text-primary hover:underline">{{ b.name }}</Link>
+                            <Link :href="businessesRoutes.show.url(b.id)" class="text-sm font-medium text-primary hover:underline">{{ b.name }}</Link>
                             <span class="ml-2 text-xs text-muted-foreground">on {{ new Date(b.created_at).toLocaleDateString() }}</span>
                         </li>
                     </ul>

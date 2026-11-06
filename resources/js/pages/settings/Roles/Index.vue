@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ref } from 'vue';
-import { route } from 'ziggy-js';
+import rolesRoutes from '@/routes/roles';
 
 const props = defineProps<{
     roles: Array<{ id: number, name: string, permissions: Array<{ id: number, name: string }> }>;
@@ -51,11 +51,11 @@ const cancelEdit = () => {
 
 const submit = () => {
     if (editingRole.value) {
-        form.put(route('roles.update', editingRole.value), {
+        form.put(rolesRoutes.update.url(editingRole.value), {
             onSuccess: () => cancelEdit(),
         });
     } else {
-        form.post(route('roles.store'), {
+        form.post(rolesRoutes.store.url(), {
             onSuccess: () => form.reset(),
         });
     }
@@ -63,7 +63,7 @@ const submit = () => {
 
 const deleteRole = (id: number) => {
     if (confirm('Are you sure you want to delete this role?')) {
-        router.delete(route('roles.destroy', id));
+        router.delete(rolesRoutes.destroy.url(id));
     }
 };
 </script>

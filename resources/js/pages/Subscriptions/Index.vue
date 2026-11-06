@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import subscriptionsRoutes from '@/routes/subscriptions';
+import businessesRoutes from '@/routes/businesses';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref, watch, computed } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
@@ -28,7 +29,7 @@ const dateTo = ref(props.filters?.date_to || '');
 
 const applyFilters = () => {
     router.get(
-        route('subscriptions.index'),
+        subscriptionsRoutes.index.url(),
         { search: search.value, status: status.value, date_from: dateFrom.value, date_to: dateTo.value },
         { preserveState: true, preserveScroll: true, replace: true },
     );
@@ -42,7 +43,7 @@ const deleteForm = useForm({});
 
 const confirmDelete = (id: number) => {
     if (confirm('Are you sure you want to delete this subscription?')) {
-        deleteForm.delete(route('subscriptions.destroy', id), {
+        deleteForm.delete(subscriptionsRoutes.destroy.url(id), {
             preserveScroll: true
         });
     }
@@ -50,7 +51,7 @@ const confirmDelete = (id: number) => {
 
 const confirmRestore = (id: number) => {
     if (confirm('Are you sure you want to restore this subscription?')) {
-        deleteForm.post(route('subscriptions.restore', id), {
+        deleteForm.post(subscriptionsRoutes.restore.url(id), {
             preserveScroll: true
         });
     }
@@ -70,7 +71,7 @@ const confirmRestore = (id: number) => {
             </div>
             <Link
                 v-if="canCreate"
-                :href="route('subscriptions.create')"
+                :href="subscriptionsRoutes.create.url()"
                 :class="buttonVariants({ variant: 'default' })"
             >
                 New Subscription
@@ -137,7 +138,7 @@ const confirmRestore = (id: number) => {
                             class="transition-colors hover:bg-muted/50"
                         >
                             <td class="px-4 py-3 font-medium text-foreground">
-                                <Link :href="route('businesses.show', sub.business_id)" class="hover:underline">
+                                <Link :href="businessesRoutes.show.url(sub.business_id)" class="hover:underline">
                                     {{ sub.business?.name }}
                                 </Link>
                             </td>
@@ -165,18 +166,18 @@ const confirmRestore = (id: number) => {
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <Link
-                                        :href="route('subscriptions.show', sub.id)"
+                                        :href="subscriptionsRoutes.show.url(sub.id)"
                                         class="inline-flex items-center rounded-md border border-primary bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary hover:text-white transition-colors dark:border-primary dark:text-primary"
                                     >View</Link>
                                     <template v-if="sub.status_badge !== 'trashed'">
                                         <Link
                                             v-if="canCreate && sub.status_badge !== 'active' && sub.status_badge !== 'renewed'"
-                                            :href="route('subscriptions.createRenewal', sub.id)"
+                                            :href="subscriptionsRoutes.createRenewal.url(sub.id)"
                                             class="inline-flex items-center rounded-md border border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"
                                         >Renew</Link>
                                         <Link
                                             v-if="canEdit"
-                                            :href="route('subscriptions.edit', sub.id)"
+                                            :href="subscriptionsRoutes.edit.url(sub.id)"
                                             class="inline-flex items-center rounded-md border border-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white transition-colors"
                                         >Edit</Link>
                                         <button
