@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class BudgetPackage extends Model
 {
+    use RecordsActivity;
+
     protected $fillable = [
         'budget_id',
         'package_id',
@@ -49,5 +52,13 @@ class BudgetPackage extends Model
     public function package()
     {
         return $this->belongsTo(Package::class);
+    }
+
+    public function activityLabel(): string
+    {
+        $year = $this->budget?->fiscal_year ?? '?';
+        $package = $this->package?->name ?? 'package #'.$this->package_id;
+
+        return "Budget {$year} – {$package}";
     }
 }

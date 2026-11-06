@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class Module extends Model
 {
+    use RecordsActivity;
+
     protected $fillable = ['service_id', 'name', 'description'];
 
     public function service()

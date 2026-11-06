@@ -2,87 +2,110 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Business;
-use App\Models\Service;
-use App\Models\Subscription;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
+use Spatie\Activitylog\Models\Activity;
 
 class AuditLogController extends Controller
 {
-    public function index()
+    /**
+     * Record types that can be filtered on, keyed by activity log name.
+     */
+    private const TYPES = [
+        'business' => 'Businesses',
+        'service' => 'Services',
+        'package' => 'Packages',
+        'module' => 'Modules',
+        'subscription' => 'Subscriptions',
+        'subscription_collection' => 'MoMo collections',
+        'budget' => 'Budgets',
+        'budget_package' => 'Budget lines',
+        'user' => 'Staff accounts',
+        'role' => 'Roles',
+    ];
+
+    private const EVENTS = ['created', 'updated', 'deleted', 'restored', 'renewed', 'roles_changed'];
+
+    /**
+     * Fields that are never worth showing in the "changes" column.
+     */
+    private const HIDDEN_FIELDS = ['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'recorded_by'];
+
+    public function index(Request $request)
     {
-        $businesses = Business::withTrashed()->with('creator')->latest()->take(50)->get();
-        $bLogs = collect();
-        foreach ($businesses as $b) {
-            $bLogs->push([
-                'id' => 'bus_'.$b->id.'_c',
-                'action' => 'Created Business: '.$b->name,
-                'user' => $b->creator->name ?? 'System',
-                'created_at' => $b->created_at,
-                'type' => 'business',
-            ]);
-            if ($b->trashed()) {
-                $bLogs->push([
-                    'id' => 'bus_'.$b->id.'_d',
-                    'action' => 'Deleted Business: '.$b->name,
-                    'user' => 'System',
-                    'created_at' => $b->deleted_at,
-                    'type' => 'business',
-                ]);
-            }
-        }
+        $filters = $request->validate([
+            'type' => 'nullable|string|in:'.implode(',', array_keys(self::TYPES)),
+            'event' => 'nullable|string|in:'.implode(',', self::EVENTS),
+            'user' => 'nullable|integer',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
+        ]);
 
-        $services = Service::withTrashed()->with('creator')->latest()->take(50)->get();
-        $sLogs = collect();
-        foreach ($services as $s) {
-            $sLogs->push([
-                'id' => 'srv_'.$s->id.'_c',
-                'action' => 'Created Service: '.$s->name,
-                'user' => $s->creator->name ?? 'System',
-                'created_at' => $s->created_at,
-                'type' => 'service',
+        $logs = Activity::query()
+            ->with('causer')
+            ->when($filters['type'] ?? null, fn ($q, $type) => $q->where('log_name', $type))
+            ->when($filters['event'] ?? null, fn ($q, $event) => $q->where('event', $event))
+            ->when($filters['user'] ?? null, fn ($q, $user) => $q->where('causer_type', (new User)->getMorphClass())->where('causer_id', $user))
+            ->when($filters['date_from'] ?? null, fn ($q, $from) => $q->whereDate('created_at', '>=', $from))
+            ->when($filters['date_to'] ?? null, fn ($q, $to) => $q->whereDate('created_at', '<=', $to))
+            ->latest('id')
+            ->paginate(25)
+            ->withQueryString()
+            ->through(fn (Activity $activity) => [
+                'id' => $activity->id,
+                'event' => $activity->event ?? $activity->description,
+                'type' => $activity->log_name,
+                'type_label' => self::TYPES[$activity->log_name] ?? ucfirst((string) $activity->log_name),
+                'label' => $activity->properties['label'] ?? '#'.$activity->subject_id,
+                'user' => $activity->causer?->name,
+                'created_at' => $activity->created_at?->toIso8601String(),
+                'changes' => $this->changes($activity),
             ]);
-            if ($s->trashed()) {
-                $sLogs->push([
-                    'id' => 'srv_'.$s->id.'_d',
-                    'action' => 'Deleted Service: '.$s->name,
-                    'user' => 'System',
-                    'created_at' => $s->deleted_at,
-                    'type' => 'service',
-                ]);
-            }
-        }
-
-        $subscriptions = Subscription::withTrashed()->with(['creator', 'business', 'service'])->latest()->take(50)->get();
-        $subLogs = collect();
-        foreach ($subscriptions as $sub) {
-            $bName = $sub->business->name ?? 'Unknown';
-            $sName = $sub->service->name ?? 'Unknown';
-            $subLogs->push([
-                'id' => 'sub_'.$sub->id.'_c',
-                'action' => $sub->renewed_from_id ? "Renewed Subscription for $bName ($sName)" : "Created Subscription for $bName ($sName)",
-                'user' => $sub->creator->name ?? 'System',
-                'created_at' => $sub->created_at,
-                'type' => 'subscription',
-            ]);
-            if ($sub->trashed()) {
-                $subLogs->push([
-                    'id' => 'sub_'.$sub->id.'_d',
-                    'action' => "Deleted Subscription for $bName ($sName)",
-                    'user' => 'System',
-                    'created_at' => $sub->deleted_at,
-                    'type' => 'subscription',
-                ]);
-            }
-        }
-
-        $logs = $bLogs->concat($sLogs)->concat($subLogs)
-            ->sortByDesc('created_at')
-            ->values()
-            ->take(100);
 
         return Inertia::render('AuditLogs/Index', [
             'logs' => $logs,
+            'filters' => [
+                'type' => $filters['type'] ?? null,
+                'event' => $filters['event'] ?? null,
+                'user' => isset($filters['user']) ? (int) $filters['user'] : null,
+                'date_from' => $filters['date_from'] ?? null,
+                'date_to' => $filters['date_to'] ?? null,
+            ],
+            'types' => collect(self::TYPES)->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values(),
+            'events' => self::EVENTS,
+            'users' => User::orderBy('name')->get(['id', 'name']),
         ]);
+    }
+
+    /**
+     * Turn the logged old/new attributes into a list of field changes.
+     *
+     * @return Collection<int, array{field: string, old: mixed, new: mixed}>
+     */
+    private function changes(Activity $activity): Collection
+    {
+        $new = Arr::except((array) ($activity->properties['attributes'] ?? []), self::HIDDEN_FIELDS);
+        $old = Arr::except((array) ($activity->properties['old'] ?? []), self::HIDDEN_FIELDS);
+
+        return collect(array_unique([...array_keys($new), ...array_keys($old)]))
+            ->map(fn (string $field) => [
+                'field' => str_replace('_', ' ', $field),
+                'old' => $this->display($old[$field] ?? null),
+                'new' => $this->display($new[$field] ?? null),
+            ])
+            ->values();
+    }
+
+    private function display(mixed $value): ?string
+    {
+        return match (true) {
+            $value === null => null,
+            is_bool($value) => $value ? 'Yes' : 'No',
+            is_array($value) => implode(', ', array_map(fn ($v) => is_scalar($v) ? (string) $v : json_encode($v), $value)),
+            default => (string) $value,
+        };
     }
 }

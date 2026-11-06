@@ -139,6 +139,15 @@ class SubscriptionController extends Controller implements HasMiddleware
 
             $newSub->modules()->sync($validated['modules'] ?? []);
 
+            activity('subscription')
+                ->performedOn($original)
+                ->event('renewed')
+                ->withProperties([
+                    'attributes' => ['renewal_id' => $newSub->id, 'end_date' => $newSub->end_date->toDateString()],
+                    'label' => $original->activityLabel(),
+                ])
+                ->log('renewed');
+
             return true;
         });
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivity;
 use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -13,7 +14,7 @@ use Illuminate\Support\Carbon;
 class Subscription extends Model
 {
     /** @use HasFactory<SubscriptionFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, RecordsActivity, SoftDeletes;
 
     protected $fillable = [
         'business_id',
@@ -161,5 +162,13 @@ class Subscription extends Model
     public function collections()
     {
         return $this->hasMany(SubscriptionCollection::class);
+    }
+
+    public function activityLabel(): string
+    {
+        $business = $this->business?->name ?? 'Unknown business';
+        $service = $this->service?->name ?? 'Unknown service';
+
+        return "{$business} – {$service}";
     }
 }

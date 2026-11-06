@@ -1,9 +1,94 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { reactive, watch } from 'vue';
+import { index as auditLogsIndex } from '@/routes/audit_logs';
+
+type Change = { field: string; old: string | null; new: string | null };
+
+type Log = {
+    id: number;
+    event: string;
+    type: string;
+    type_label: string;
+    label: string;
+    user: string | null;
+    created_at: string;
+    changes: Change[];
+};
 
 const props = defineProps<{
-    logs: any[];
+    logs: {
+        data: Log[];
+        prev_page_url: string | null;
+        next_page_url: string | null;
+        from: number | null;
+        to: number | null;
+        total: number;
+    };
+    filters: {
+        type: string | null;
+        event: string | null;
+        user: number | null;
+        date_from: string | null;
+        date_to: string | null;
+    };
+    types: { value: string; label: string }[];
+    events: string[];
+    users: { id: number; name: string }[];
 }>();
+
+const filters = reactive({
+    type: props.filters.type ?? '',
+    event: props.filters.event ?? '',
+    user: props.filters.user ?? '',
+    date_from: props.filters.date_from ?? '',
+    date_to: props.filters.date_to ?? '',
+});
+
+watch(filters, () => {
+    // Drop empty filters so the URL stays clean.
+    const query = Object.fromEntries(
+        Object.entries(filters).filter(([, value]) => value !== '' && value !== null),
+    );
+
+    router.get(auditLogsIndex.url({ query }), {}, { preserveState: true, replace: true });
+});
+
+const clearFilters = () => {
+    Object.assign(filters, { type: '', event: '', user: '', date_from: '', date_to: '' });
+};
+
+const eventLabels: Record<string, string> = {
+    created: 'created',
+    updated: 'updated',
+    deleted: 'deleted',
+    restored: 'restored',
+    renewed: 'renewed',
+    roles_changed: 'changed roles of',
+};
+
+const eventStyles: Record<string, string> = {
+    created: 'bg-success/10 text-success ring-success/20',
+    updated: 'bg-info/10 text-info ring-info/20',
+    deleted: 'bg-destructive/10 text-destructive ring-destructive/20',
+    restored: 'bg-warning/10 text-warning ring-warning/25',
+    renewed: 'bg-success/10 text-success ring-success/20',
+    roles_changed: 'bg-accent/10 text-accent ring-accent/20',
+};
+
+const formatEvent = (event: string) => event.replace('_', ' ');
+
+const formatDateTime = (value: string) =>
+    new Date(value).toLocaleString(undefined, {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
+const selectClass =
+    'h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-xs focus:border-ring focus:ring-2 focus:ring-ring/30 focus:outline-none';
 </script>
 
 <template>
@@ -11,44 +96,119 @@ const props = defineProps<{
 
     <div class="flex h-full flex-col gap-6 p-4 md:p-8">
         <div>
-            <h1 class="text-3xl font-bold tracking-tight text-foreground">Audit Logs</h1>
-            <p class="text-sm text-muted-foreground mt-1">
-                Timeline of actions performed by staff members.
+            <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">Audit Logs</h1>
+            <p class="mt-1 text-sm text-muted-foreground">
+                Every change made in the app: who did it, when, and what changed.
             </p>
         </div>
 
-        <div class="flex-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="border-b border-border bg-orange-500 text-white">
-                        <tr>
-                            <th class="px-4 py-3 font-medium">Date & Time</th>
-                            <th class="px-4 py-3 font-medium">User (Staff)</th>
-                            <th class="px-4 py-3 font-medium">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-border">
-                        <tr v-for="log in props.logs" :key="log.id" class="transition-colors hover:bg-muted/50">
-                            <td class="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                                {{ new Date(log.created_at).toLocaleString() }}
-                            </td>
-                            <td class="px-4 py-3 font-medium text-foreground">
-                                {{ log.user }}
-                            </td>
-                            <td class="px-4 py-3 text-foreground">
-                                <span v-if="log.type === 'business'" class="mr-2 inline-block rounded-md bg-blue-500/10 px-2 py-0.5 text-xs text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-500/20">Business</span>
-                                <span v-else-if="log.type === 'service'" class="mr-2 inline-block rounded-md bg-purple-500/10 px-2 py-0.5 text-xs text-purple-600 dark:text-purple-400 ring-1 ring-inset ring-purple-500/20">Service</span>
-                                <span v-else class="mr-2 inline-block rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20">Subscription</span>
-                                {{ log.action }}
-                            </td>
-                        </tr>
-                        <tr v-if="props.logs.length === 0">
-                            <td colspan="3" class="py-8 text-center text-muted-foreground">
-                                No activity found.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        <!-- Filters -->
+        <div class="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4 shadow-xs">
+            <label class="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+                Record type
+                <select v-model="filters.type" :class="selectClass">
+                    <option value="">All types</option>
+                    <option v-for="t in props.types" :key="t.value" :value="t.value">{{ t.label }}</option>
+                </select>
+            </label>
+            <label class="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+                Action
+                <select v-model="filters.event" :class="selectClass">
+                    <option value="">All actions</option>
+                    <option v-for="e in props.events" :key="e" :value="e" class="capitalize">{{ formatEvent(e) }}</option>
+                </select>
+            </label>
+            <label class="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+                Staff member
+                <select v-model="filters.user" :class="selectClass">
+                    <option value="">Everyone</option>
+                    <option v-for="u in props.users" :key="u.id" :value="u.id">{{ u.name }}</option>
+                </select>
+            </label>
+            <label class="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+                From
+                <input v-model="filters.date_from" type="date" :class="selectClass" />
+            </label>
+            <label class="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+                To
+                <input v-model="filters.date_to" type="date" :class="selectClass" />
+            </label>
+            <button
+                type="button"
+                class="h-9 rounded-md px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                @click="clearFilters"
+            >
+                Clear
+            </button>
+        </div>
+
+        <!-- Log entries -->
+        <div class="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+            <ul v-if="props.logs.data.length" class="divide-y divide-border">
+                <li v-for="log in props.logs.data" :key="log.id" class="px-5 py-4">
+                    <div class="flex flex-wrap items-start justify-between gap-2">
+                        <div class="flex min-w-0 flex-wrap items-center gap-2 text-sm">
+                            <span
+                                class="rounded-md px-2 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset"
+                                :class="eventStyles[log.event] ?? 'bg-muted text-muted-foreground ring-border'"
+                            >
+                                {{ formatEvent(log.event) }}
+                            </span>
+                            <span class="font-medium text-foreground">{{ log.user ?? 'System' }}</span>
+                            <span class="text-muted-foreground">{{ eventLabels[log.event] ?? log.event }}</span>
+                            <span class="text-muted-foreground">{{ log.type_label.toLowerCase() }}:</span>
+                            <span class="truncate font-medium text-foreground">{{ log.label }}</span>
+                        </div>
+                        <time class="shrink-0 text-xs text-muted-foreground" :datetime="log.created_at">
+                            {{ formatDateTime(log.created_at) }}
+                        </time>
+                    </div>
+
+                    <dl v-if="log.changes.length" class="mt-3 grid gap-1.5 rounded-lg bg-muted/50 p-3 text-xs">
+                        <div v-for="change in log.changes" :key="change.field" class="grid grid-cols-[8rem_1fr] gap-3">
+                            <dt class="font-medium capitalize text-muted-foreground">{{ change.field }}</dt>
+                            <dd class="min-w-0 break-words text-foreground">
+                                <template v-if="log.event === 'updated' || log.event === 'roles_changed'">
+                                    <span class="text-muted-foreground line-through">{{ change.old ?? '—' }}</span>
+                                    <span class="mx-1.5 text-muted-foreground">→</span>
+                                </template>
+                                <span>{{ (log.event === 'deleted' ? change.old : change.new) ?? '—' }}</span>
+                            </dd>
+                        </div>
+                    </dl>
+                </li>
+            </ul>
+
+            <div v-else class="px-5 py-16 text-center">
+                <p class="text-sm font-medium text-foreground">No activity found</p>
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Try clearing the filters. Changes are recorded from the moment the activity log was installed.
+                </p>
+            </div>
+
+            <div
+                v-if="props.logs.total > 0"
+                class="flex items-center justify-between border-t border-border px-5 py-3 text-sm text-muted-foreground"
+            >
+                <span>Showing {{ props.logs.from }}–{{ props.logs.to }} of {{ props.logs.total }}</span>
+                <div class="flex gap-2">
+                    <Link
+                        v-if="props.logs.prev_page_url"
+                        :href="props.logs.prev_page_url"
+                        preserve-scroll
+                        class="rounded-md border border-border px-3 py-1.5 font-medium text-foreground hover:bg-muted"
+                    >
+                        Previous
+                    </Link>
+                    <Link
+                        v-if="props.logs.next_page_url"
+                        :href="props.logs.next_page_url"
+                        preserve-scroll
+                        class="rounded-md border border-border px-3 py-1.5 font-medium text-foreground hover:bg-muted"
+                    >
+                        Next
+                    </Link>
+                </div>
             </div>
         </div>
     </div>

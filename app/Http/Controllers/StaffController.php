@@ -48,6 +48,7 @@ class StaffController extends Controller
 
         if (isset($validated['roles'])) {
             $user->syncRoles($validated['roles']);
+            $this->logRoleChange($user, [], $validated['roles']);
         }
 
         return redirect()->route('staff.index')->with('success', 'Staff account created successfully.');
@@ -97,7 +98,9 @@ class StaffController extends Controller
         $staff->update($data);
 
         if (isset($validated['roles'])) {
+            $oldRoles = $staff->getRoleNames()->all();
             $staff->syncRoles($validated['roles']);
+            $this->logRoleChange($staff, $oldRoles, $validated['roles']);
         }
 
         return redirect()->route('staff.index')->with('success', 'Staff account updated successfully.');
@@ -123,5 +126,31 @@ class StaffController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Staff account status updated.');
+    }
+
+    /**
+     * Role assignments aren't model attributes, so record them by hand.
+     *
+     * @param  array<int, string>  $old
+     * @param  array<int, string>  $new
+     */
+    private function logRoleChange(User $user, array $old, array $new): void
+    {
+        sort($old);
+        sort($new);
+
+        if ($old === $new) {
+            return;
+        }
+
+        activity('user')
+            ->performedOn($user)
+            ->event('roles_changed')
+            ->withProperties([
+                'old' => ['roles' => $old],
+                'attributes' => ['roles' => $new],
+                'label' => $user->activityLabel(),
+            ])
+            ->log('roles_changed');
     }
 }
