@@ -14,6 +14,10 @@ import {
     LinearScale,
 } from 'chart.js';
 import { buttonVariants } from '@/components/ui/button';
+import PageHeader from '@/components/PageHeader.vue';
+import StatCard from '@/components/StatCard.vue';
+import { rowActionVariants } from '@/lib/ui';
+import { AlertTriangle, Banknote, Building2, Layers, Plus, Smartphone } from '@lucide/vue';
 import { useAppearance } from '@/composables/useAppearance';
 import { wrappedTickCallback } from '@/lib/charts';
 
@@ -108,208 +112,155 @@ const barChartOptions = computed(() => ({
     <Head title="Dashboard" />
 
     <div class="flex flex-col gap-6 p-4 md:p-8">
-        <!-- Expiring Soon Alert -->
-        <div v-if="props.canViewSubscriptions && props.expiringSubscriptions.length > 0" class="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            <div class="flex-1">
-                <h3 class="text-sm font-medium">Attention Needed</h3>
-                <p class="text-sm mt-1">You have {{ props.expiringSubscriptions.length }} subscription(s) expiring within the next {{ props.expiringThreshold }} days.</p>
-            </div>
-            <Link :href="subscriptionsRoutes.index.url({ query: { status: 'expiring_soon' } })" class="text-sm font-medium text-amber-700 underline hover:text-amber-900">
-                View All
-            </Link>
-        </div>
-
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">
-                    Dashboard
-                </h1>
-                <p class="text-sm text-muted-foreground mt-1">
-                    Monitor your active subscriptions and revenue metrics.
-                </p>
-            </div>
-            <div class="flex gap-3">
-                <Link
-                    v-if="can('create businesses')"
-                    :href="businessesRoutes.create.url()"
-                    :class="buttonVariants({ variant: 'secondary' })"
-                >
-                    Add Business
+        <PageHeader title="Dashboard" description="Active subscriptions and revenue at a glance.">
+            <template #actions>
+                <Link v-if="can('create businesses')" :href="businessesRoutes.create.url()" :class="buttonVariants({ variant: 'outline' })">
+                    Add business
                 </Link>
-                <Link
-                    v-if="can('create subscriptions')"
-                    :href="subscriptionsRoutes.create.url()"
-                    :class="buttonVariants({ variant: 'default' })"
-                >
-                    New Subscription
+                <Link v-if="can('create subscriptions')" :href="subscriptionsRoutes.create.url()" :class="buttonVariants()">
+                    <Plus class="size-4" /> New subscription
                 </Link>
-            </div>
-        </div>
+            </template>
+        </PageHeader>
 
         <div
             v-if="!props.canViewSubscriptions"
-            class="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm"
+            class="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-xs"
         >
-            Your account does not have access to subscription data. Ask an
-            administrator if you need it.
+            Your account does not have access to subscription data. Ask an administrator if you need it.
         </div>
 
         <template v-else>
-        <!-- Metric Cards -->
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2" :class="props.momo.count > 0 ? 'xl:grid-cols-4' : 'xl:grid-cols-3'">
-            <!-- Active Revenue -->
-            <div class="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-sm font-semibold text-muted-foreground">Active Revenue</span>
-                        <span class="mt-2 text-3xl font-bold tracking-tight text-foreground">{{ Number(props.totalRevenue).toLocaleString('en-US') }} <span class="text-lg text-muted-foreground">FCFA</span></span>
-                    </div>
-                    <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-orange-500 dark:bg-orange-500/20 shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white dark:text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                    <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                    School payments + MoMo collected
-                </div>
-                <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-500 to-orange-400 opacity-80 dark:opacity-40 rounded-b-2xl"></div>
-            </div>
-
-            <!-- Student MoMo: collected vs target -->
-            <div v-if="props.momo.count > 0" class="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-sm font-semibold text-muted-foreground">Student MoMo Collected</span>
-                        <span class="mt-2 text-3xl font-bold tracking-tight text-foreground">{{ Number(props.momo.collected).toLocaleString('en-US') }} <span class="text-lg text-muted-foreground">FCFA</span></span>
-                    </div>
-                    <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 dark:bg-blue-500/20 shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <div class="h-2 w-full overflow-hidden rounded-full bg-muted" role="progressbar" :aria-valuenow="momoPercent" aria-valuemin="0" aria-valuemax="100" aria-label="MoMo collected against target">
-                        <div class="h-full rounded-full bg-blue-600 dark:bg-blue-400" :style="{ width: momoPercent + '%' }"></div>
-                    </div>
-                    <p class="mt-2 text-xs font-medium text-muted-foreground">
-                        {{ momoPercent }}% of {{ Number(props.momo.target).toLocaleString('en-US') }} FCFA target · {{ props.momo.count }} subscription(s)
+            <!-- Expiring soon alert -->
+            <div
+                v-if="props.expiringSubscriptions.length > 0"
+                role="status"
+                class="flex flex-col gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4 sm:flex-row sm:items-center"
+            >
+                <AlertTriangle class="size-5 shrink-0 text-warning" aria-hidden="true" />
+                <div class="flex-1 text-sm">
+                    <p class="font-medium text-foreground">Renewals coming up</p>
+                    <p class="text-muted-foreground">
+                        {{ props.expiringSubscriptions.length }} subscription(s) end within the next {{ props.expiringThreshold }} days.
                     </p>
                 </div>
+                <Link
+                    :href="subscriptionsRoutes.index.url({ query: { status: 'expiring_soon' } })"
+                    :class="rowActionVariants({ tone: 'warning' })"
+                >
+                    Review them
+                </Link>
             </div>
 
-            <!-- Total Businesses -->
-            <div class="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-sm font-semibold text-muted-foreground">Total Businesses</span>
-                        <span class="mt-2 text-3xl font-bold tracking-tight text-foreground">{{ props.totalBusinesses }}</span>
-                    </div>
-                    <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-orange-500 dark:bg-orange-500/20 shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white dark:text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center text-xs font-medium text-muted-foreground">
-                    Active clients on platform
-                </div>
-                <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-500 to-orange-400 opacity-80 dark:opacity-40 rounded-b-2xl"></div>
-            </div>
+            <!-- Metrics -->
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2" :class="props.momo.count > 0 ? 'xl:grid-cols-4' : 'xl:grid-cols-3'">
+                <StatCard
+                    label="Active revenue"
+                    :value="Number(props.totalRevenue).toLocaleString('en-US')"
+                    unit="FCFA"
+                    hint="School payments plus MoMo actually collected"
+                    tone="accent"
+                >
+                    <template #icon><Banknote /></template>
+                </StatCard>
 
-            <!-- Active Services -->
-            <div class="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-sm font-semibold text-muted-foreground">Active Services</span>
-                        <span class="mt-2 text-3xl font-bold tracking-tight text-foreground">{{ props.totalServices }}</span>
-                    </div>
-                    <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-orange-500 dark:bg-orange-500/20 shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white dark:text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center text-xs font-medium text-muted-foreground">
-                    Available for subscription
-                </div>
-                <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-500 to-orange-400 opacity-80 dark:opacity-40 rounded-b-2xl"></div>
-            </div>
-        </div>
-
-
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <!-- Subscriptions by Service Chart -->
-            <div
-                class="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col lg:col-span-2"
-            >
-                <h2 class="mb-4 text-lg font-semibold text-foreground">
-                    Active Subscriptions
-                </h2>
-                <div class="mt-4 overflow-x-auto">
-                    <div class="h-48" :style="{ minWidth: minChartWidth(props.subscriptionsByService, 5) }">
-                        <Bar v-if="Object.keys(props.subscriptionsByService || {}).length" :data="getBarChartData(props.subscriptionsByService, serviceColor, isDark)" :options="barChartOptions" />
-                        <p v-else class="text-sm text-muted-foreground">No data available.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Expiring Soon Widget -->
-            <div
-                class="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm max-h-[300px]"
-            >
-                <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-foreground">
-                        Expiring Soon
-                    </h2>
-                    <span
-                        class="rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-1 text-xs font-bold text-amber-700 dark:text-amber-400"
-                        >{{ props.expiringSubscriptions.length }}</span
-                    >
-                </div>
-
-                <div class="flex-1 space-y-3 overflow-y-auto pr-2">
+                <StatCard
+                    v-if="props.momo.count > 0"
+                    label="Student MoMo collected"
+                    :value="Number(props.momo.collected).toLocaleString('en-US')"
+                    unit="FCFA"
+                    tone="info"
+                >
+                    <template #icon><Smartphone /></template>
                     <div
-                        v-for="sub in props.expiringSubscriptions"
-                        :key="sub.id"
-                        class="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3 hover:bg-muted transition-colors"
+                        class="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                        role="progressbar"
+                        :aria-valuenow="momoPercent"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-label="MoMo collected against target"
                     >
-                        <div>
-                            <p class="text-sm font-medium text-foreground">
-                                {{ sub.business?.name }}
-                            </p>
-                            <p class="text-xs text-muted-foreground">
-                                {{ sub.service?.name }} - {{ new Date(sub.end_date).toLocaleDateString() }}
-                            </p>
+                        <div class="h-full rounded-full bg-info transition-[width]" :style="{ width: momoPercent + '%' }" />
+                    </div>
+                    <p class="mt-2">
+                        {{ momoPercent }}% of {{ Number(props.momo.target).toLocaleString('en-US') }} FCFA target ·
+                        {{ props.momo.count }} subscription(s)
+                    </p>
+                </StatCard>
+
+                <StatCard label="Businesses" :value="props.totalBusinesses" hint="Clients on the platform" tone="primary">
+                    <template #icon><Building2 /></template>
+                </StatCard>
+
+                <StatCard label="Services" :value="props.totalServices" hint="Available to subscribe to" tone="primary">
+                    <template #icon><Layers /></template>
+                </StatCard>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <!-- Subscriptions by service -->
+                <section class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-xs lg:col-span-2">
+                    <h2 class="text-base font-semibold text-foreground">Active subscriptions by service</h2>
+                    <div class="mt-4 overflow-x-auto">
+                        <div class="h-56" :style="{ minWidth: minChartWidth(props.subscriptionsByService, 5) }">
+                            <Bar
+                                v-if="Object.keys(props.subscriptionsByService || {}).length"
+                                :data="getBarChartData(props.subscriptionsByService, serviceColor, isDark)"
+                                :options="barChartOptions"
+                            />
+                            <p v-else class="text-sm text-muted-foreground">No active subscriptions yet.</p>
                         </div>
-                        <Link
-                            v-if="can('create subscriptions')"
-                            :href="subscriptionsRoutes.createRenewal.url(sub.id)"
-                            class="inline-flex items-center rounded-md border border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"
-                            >Renew</Link
-                        >
                     </div>
-                    <div
-                        v-if="props.expiringSubscriptions.length === 0"
-                        class="py-4 text-center text-sm text-muted-foreground"
-                    >
-                        All clear! No subscriptions expiring soon.
-                    </div>
-                </div>
-            </div>
-        </div>
+                </section>
 
-        <!-- Subscriptions by Business Chart -->
-        <div class="grid grid-cols-1 gap-6 mt-6">
-            <div class="rounded-2xl border border-border bg-card shadow-sm flex flex-col">
-                <div class="border-b border-border p-4 bg-muted/20">
-                    <h3 class="font-semibold text-foreground">Subscriptions by Business</h3>
-                </div>
-                <div class="p-4 overflow-x-auto">
+                <!-- Expiring soon -->
+                <section class="flex max-h-80 flex-col rounded-xl border border-border bg-card p-5 shadow-xs">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h2 class="text-base font-semibold text-foreground">Expiring soon</h2>
+                        <span class="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning tabular-nums">
+                            {{ props.expiringSubscriptions.length }}
+                        </span>
+                    </div>
+
+                    <ul class="-mx-1 flex-1 space-y-1 overflow-y-auto px-1">
+                        <li
+                            v-for="sub in props.expiringSubscriptions"
+                            :key="sub.id"
+                            class="flex items-center justify-between gap-3 rounded-lg p-2.5 transition-colors hover:bg-muted/60"
+                        >
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-medium text-foreground">{{ sub.business?.name }}</p>
+                                <p class="truncate text-xs text-muted-foreground">
+                                    {{ sub.service?.name }} · ends {{ new Date(sub.end_date).toLocaleDateString() }}
+                                </p>
+                            </div>
+                            <Link
+                                v-if="can('create subscriptions')"
+                                :href="subscriptionsRoutes.createRenewal.url(sub.id)"
+                                :class="rowActionVariants({ tone: 'success' })"
+                            >Renew</Link>
+                        </li>
+                        <li v-if="props.expiringSubscriptions.length === 0" class="py-6 text-center text-sm text-muted-foreground">
+                            Nothing expiring soon.
+                        </li>
+                    </ul>
+                </section>
+            </div>
+
+            <!-- Subscriptions by business -->
+            <section class="rounded-xl border border-border bg-card p-5 shadow-xs">
+                <h2 class="text-base font-semibold text-foreground">Top businesses by active subscriptions</h2>
+                <div class="mt-4 overflow-x-auto">
                     <div class="h-80" :style="{ minWidth: minChartWidth(props.subscriptionsByBusiness, 7) }">
-                        <Bar v-if="Object.keys(props.subscriptionsByBusiness || {}).length" :data="getBarChartData(props.subscriptionsByBusiness, businessColor, isDark)" :options="barChartOptions" />
-                        <p v-else class="text-sm text-muted-foreground">No data available.</p>
+                        <Bar
+                            v-if="Object.keys(props.subscriptionsByBusiness || {}).length"
+                            :data="getBarChartData(props.subscriptionsByBusiness, businessColor, isDark)"
+                            :options="barChartOptions"
+                        />
+                        <p v-else class="text-sm text-muted-foreground">No active subscriptions yet.</p>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
         </template>
     </div>
 </template>

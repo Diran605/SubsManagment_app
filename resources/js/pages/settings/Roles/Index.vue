@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { table } from '@/lib/ui';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
@@ -78,20 +79,20 @@ const deleteRole = (id: number) => {
             description="Manage roles and their permissions."
         />
 
-        <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
             <h3 class="text-lg font-medium mb-4">{{ editingRole ? 'Edit Role' : 'Create New Role' }}</h3>
             <form @submit.prevent="submit" class="space-y-4">
                 <div>
                     <Label for="name">Role Name</Label>
                     <Input id="name" v-model="form.name" required class="mt-1 block w-full" />
-                    <div v-if="form.errors.name" class="text-sm text-red-600 mt-1">{{ form.errors.name }}</div>
+                    <div v-if="form.errors.name" class="text-sm text-destructive mt-1">{{ form.errors.name }}</div>
                 </div>
                 
                 <div>
                     <Label class="mb-2 block">Permissions Matrix</Label>
-                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <div class="overflow-x-auto border border-border rounded-lg">
                         <table class="w-full text-left text-sm whitespace-nowrap">
-                            <thead class="border-b border-border bg-orange-500 text-white">
+                            <thead :class="table.head">
                                 <tr>
                                     <th class="px-4 py-3 font-medium">Resource</th>
                                     <th class="px-4 py-3 font-medium text-center">View</th>
@@ -102,9 +103,9 @@ const deleteRole = (id: number) => {
                                     <th class="px-4 py-3 font-medium text-center">Manage</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-border">
                                 <tr v-for="res in resources" :key="res.slug">
-                                    <td class="px-4 py-3 font-medium text-gray-900">{{ res.name }}</td>
+                                    <td class="px-4 py-3 font-medium text-foreground">{{ res.name }}</td>
                                     
                                     <!-- Dynamic Checkboxes -->
                                     <td v-for="action in ['view', 'create', 'edit', 'delete', 'restore', 'manage']" :key="action" class="px-4 py-3 text-center">
@@ -119,7 +120,7 @@ const deleteRole = (id: number) => {
                                                 }"
                                             />
                                         </template>
-                                        <span v-else class="text-gray-300">-</span>
+                                        <span v-else class="text-muted-foreground/60">-</span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -138,21 +139,21 @@ const deleteRole = (id: number) => {
             </form>
         </div>
 
-        <div class="rounded-xl border border-gray-100 bg-white shadow-sm mt-8">
-            <div class="border-b border-gray-100 p-4">
-                <h3 class="font-semibold text-gray-900">Existing Roles</h3>
+        <div class="rounded-xl border border-border bg-card shadow-sm mt-8">
+            <div class="border-b border-border p-4">
+                <h3 class="font-semibold text-foreground">Existing Roles</h3>
             </div>
             <div class="p-4">
                 <ul class="space-y-4">
                     <li v-for="role in roles" :key="role.id" class="flex flex-col space-y-2 border-b pb-4 last:border-0 last:pb-0">
                         <div class="flex items-center justify-between">
-                            <span class="font-medium text-gray-900">{{ role.name }}</span>
+                            <span class="font-medium text-foreground">{{ role.name }}</span>
                             <div class="space-x-2">
                                 <Button size="sm" variant="outline" @click="startEdit(role)">Edit</Button>
                                 <Button size="sm" variant="destructive" @click="deleteRole(role.id)" v-if="role.name !== 'Admin'">Delete</Button>
                             </div>
                         </div>
-                        <div class="text-sm text-gray-500">
+                        <div class="text-sm text-muted-foreground">
                             Permissions: {{ role.permissions.map(p => p.name).join(', ') || 'None' }}
                         </div>
                     </li>

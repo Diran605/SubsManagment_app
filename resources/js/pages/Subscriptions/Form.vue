@@ -157,9 +157,9 @@ const title = computed(() => {
     <Head :title="title" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ title }}</h1>
+                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">{{ title }}</h1>
             </div>
             <Link
                 :href="subscriptionsRoutes.index.url()"
@@ -169,7 +169,7 @@ const title = computed(() => {
             </Link>
         </div>
 
-        <div class="rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
+        <div class="rounded-xl border border-border bg-card p-6 md:p-8 shadow-sm">
             <form @submit.prevent="submit" class="space-y-6">
                 <!-- Select Business & Service -->
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -182,7 +182,7 @@ const title = computed(() => {
                             v-model="form.business_id"
                             required
                             :disabled="isRenewing"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary disabled:bg-muted disabled:opacity-50 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:bg-muted disabled:opacity-50 sm:text-sm"
                         >
                             <option value="">Select Business</option>
                             <option
@@ -210,7 +210,7 @@ const title = computed(() => {
                             v-model="form.service_id"
                             required
                             :disabled="isRenewing"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary disabled:bg-muted disabled:opacity-50 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:bg-muted disabled:opacity-50 sm:text-sm"
                         >
                             <option value="">Select Service</option>
                             <option
@@ -240,7 +240,7 @@ const title = computed(() => {
                             v-model="form.mode"
                             required
                             :disabled="isRenewing"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary disabled:bg-muted disabled:opacity-50 sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:bg-muted disabled:opacity-50 sm:text-sm"
                         >
                             <option value="">Select Mode</option>
                             <option v-for="m in availableModes" :key="m" :value="m" class="capitalize">{{ m }}</option>
@@ -259,7 +259,7 @@ const title = computed(() => {
                     
                     <div v-if="availablePackages.length > 0">
                         <label class="mb-1 block text-sm font-medium text-foreground">Select Package (Optional)</label>
-                        <select v-model="form.package_id" class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm">
+                        <select v-model="form.package_id" class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm">
                             <option value="">No package (custom amount)</option>
                             <option v-for="pkg in availablePackages" :key="pkg.id" :value="pkg.id">
                                 {{ pkg.name }} ({{ pkg.price ? Number(pkg.price).toLocaleString('en-US') + (pkg.pricing_model === 'per_student' ? ' FCFA/student' : ' FCFA/mo') : 'Free' }})
@@ -278,7 +278,7 @@ const title = computed(() => {
                                 min="1"
                                 required
                                 placeholder="e.g. 850"
-                                class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                                class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
                             />
                             <p class="mt-1 text-xs text-muted-foreground">
                                 Used to compute total contract value ({{ selectedPackage?.price ? Number(selectedPackage.price).toLocaleString('en-US') : 0 }} FCFA per student).
@@ -289,7 +289,7 @@ const title = computed(() => {
                         </div>
 
                         <!-- Notice for Student-Funded MoMo Packages -->
-                        <div v-if="isStudentMoMo" class="mt-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 p-3 text-xs text-blue-700 dark:text-blue-300">
+                        <div v-if="isStudentMoMo" class="mt-3 rounded-lg border border-info/30 bg-info/10 p-3 text-xs text-info">
                             <strong>📱 Student Mobile Money Tier:</strong> This subscription amount serves as the annual target. Collections from students will be recorded on the subscription details page as Mobile Money receipts arrive.
                         </div>
                     </div>
@@ -327,7 +327,7 @@ const title = computed(() => {
                             v-model="form.start_date"
                             type="date"
                             required
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
                         />
                         <p
                             v-if="form.errors.start_date"
@@ -348,7 +348,7 @@ const title = computed(() => {
                             min="1"
                             step="1"
                             required
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
                         />
                     </div>
                     
@@ -362,7 +362,7 @@ const title = computed(() => {
                             type="date"
                             required
                             readonly
-                            class="w-full rounded-md border border-input bg-muted text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm opacity-80 cursor-not-allowed"
+                            class="w-full rounded-md border border-input bg-muted text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm opacity-80 cursor-not-allowed"
                         />
                         <p
                             v-if="form.errors.end_date"
@@ -388,7 +388,7 @@ const title = computed(() => {
                             required
                             :readonly="!!selectedPackage"
                             :class="selectedPackage ? 'bg-muted opacity-80 cursor-not-allowed' : 'bg-background'"
-                            class="w-full rounded-md border border-input text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            class="w-full rounded-md border border-input text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
                         />
                         <p class="mt-1 text-xs text-muted-foreground">
                             <template v-if="!selectedPackage">Enter the agreed contract amount.</template>
@@ -411,7 +411,7 @@ const title = computed(() => {
                     <textarea
                         v-model="form.notes"
                         rows="3"
-                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
                     ></textarea>
                     <p
                         v-if="form.errors.notes"

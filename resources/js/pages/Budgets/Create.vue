@@ -96,9 +96,9 @@ const submit = () => {
 
     <div class="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 md:p-8">
         <!-- Header -->
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">
+                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
                     {{ existingBudget ? 'Edit' : 'Setup' }} Budget — {{ fiscalYear }}
                 </h1>
                 <p class="mt-1 text-sm text-muted-foreground">
@@ -111,7 +111,7 @@ const submit = () => {
         </div>
 
         <!-- Grand Total Banner -->
-        <div class="rounded-2xl border border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900 p-5 flex items-center justify-between">
+        <div class="rounded-xl border border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900 p-5 flex items-center justify-between">
             <div>
                 <p class="text-sm font-medium text-orange-700 dark:text-orange-400">Total Expected Revenue for {{ fiscalYear }}</p>
                 <p class="mt-1 text-3xl font-bold text-orange-600 dark:text-orange-300">{{ formatMoney(grandTotal) }}</p>
@@ -123,7 +123,7 @@ const submit = () => {
 
         <!-- Services & Packages -->
         <form @submit.prevent="submit" class="space-y-4">
-            <div v-for="service in services" :key="service.id" class="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div v-for="service in services" :key="service.id" class="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
                 <div class="px-5 py-4 border-b border-border bg-muted/30">
                     <h2 class="text-sm font-semibold text-foreground">{{ service.name }}</h2>
                     <p v-if="service.description" class="mt-0.5 text-xs text-muted-foreground">{{ service.description }}</p>
@@ -157,7 +157,7 @@ const submit = () => {
                                     v-model.number="targets[pkg.id].expected_licenses"
                                     type="number"
                                     min="0"
-                                    class="w-24 text-center rounded-md border border-input bg-background text-foreground px-3 py-1.5 text-sm focus:border-primary focus:ring-primary"
+                                    class="w-24 text-center rounded-md border border-input bg-background text-foreground px-3 py-1.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 />
                             </div>
 
@@ -168,7 +168,7 @@ const submit = () => {
                                     v-model.number="targets[pkg.id].avg_student_count"
                                     type="number"
                                     min="0"
-                                    class="w-24 text-center rounded-md border border-input bg-background text-foreground px-3 py-1.5 text-sm focus:border-primary focus:ring-primary"
+                                    class="w-24 text-center rounded-md border border-input bg-background text-foreground px-3 py-1.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 />
                             </div>
 
@@ -180,7 +180,7 @@ const submit = () => {
                                     type="number"
                                     min="1"
                                     max="12"
-                                    class="w-24 text-center rounded-md border border-input bg-background text-foreground px-3 py-1.5 text-sm focus:border-primary focus:ring-primary"
+                                    class="w-24 text-center rounded-md border border-input bg-background text-foreground px-3 py-1.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 />
                             </div>
 

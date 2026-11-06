@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { table } from '@/lib/ui';
 import { Head, Link, router } from '@inertiajs/vue3';
 import budgetsRoutes from '@/routes/budgets';
 import { ref } from 'vue';
@@ -37,7 +38,7 @@ const changeYear = (year: number) => {
         <!-- Header -->
         <div class="flex items-center justify-between flex-wrap gap-3">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">Budget Report</h1>
+                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">Budget Report</h1>
                 <p class="mt-1 text-sm text-muted-foreground">Accrual-basis revenue budget by fiscal year</p>
             </div>
             <div class="flex items-center gap-2">
@@ -69,40 +70,40 @@ const changeYear = (year: number) => {
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <!-- Annual Goal -->
-            <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
                 <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Annual Goal</p>
                 <p class="mt-2 text-2xl font-bold text-foreground">{{ formatMoney(report.totals.expected_amount) }}</p>
                 <p class="mt-1 text-xs text-muted-foreground">Fiscal Year {{ selectedYear }}</p>
             </div>
             <!-- Actual Accrued -->
-            <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
                 <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Actual Revenue (Accrued)</p>
                 <p class="mt-2 text-2xl font-bold text-orange-500">{{ formatMoney(report.totals.actual_amount) }}</p>
                 <p class="mt-1 text-xs text-muted-foreground">Pro-rata across active subscriptions</p>
             </div>
             <!-- % to Goal -->
-            <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
                 <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">% to Goal</p>
                 <p
                     class="mt-2 text-2xl font-bold"
-                    :class="report.totals.percent_to_goal >= 100 ? 'text-green-500' : 'text-foreground'"
+                    :class="report.totals.percent_to_goal >= 100 ? 'text-success' : 'text-foreground'"
                 >
                     {{ report.totals.percent_to_goal }}%
                 </p>
                 <div class="mt-2 w-full rounded-full bg-muted h-1.5">
                     <div
                         class="h-1.5 rounded-full transition-all"
-                        :class="report.totals.percent_to_goal >= 100 ? 'bg-green-500' : 'bg-orange-500'"
+                        :class="report.totals.percent_to_goal >= 100 ? 'bg-success' : 'bg-orange-500'"
                         :style="{ width: Math.min(report.totals.percent_to_goal, 100) + '%' }"
                     ></div>
                 </div>
             </div>
             <!-- Variance -->
-            <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
                 <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Variance</p>
                 <p
                     class="mt-2 text-2xl font-bold"
-                    :class="report.totals.variance <= 0 ? 'text-green-500' : 'text-destructive'"
+                    :class="report.totals.variance <= 0 ? 'text-success' : 'text-destructive'"
                 >
                     {{ report.totals.variance <= 0 ? '+' : '-' }}{{ formatMoney(Math.abs(report.totals.variance)) }}
                 </p>
@@ -113,14 +114,14 @@ const changeYear = (year: number) => {
         </div>
 
         <!-- Budget Table -->
-        <div class="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div class="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
             <div class="px-6 py-4 border-b border-border">
                 <h2 class="text-base font-semibold text-foreground">Service Breakdown — {{ selectedYear }}</h2>
             </div>
 
             <div v-if="report.rows.length > 0" class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead class="border-b border-border bg-orange-500 text-white">
+                    <thead :class="table.head">
                         <tr>
                             <th class="px-4 py-3 text-left font-medium">Fiscal Year</th>
                             <th class="px-4 py-3 text-left font-medium">Service</th>

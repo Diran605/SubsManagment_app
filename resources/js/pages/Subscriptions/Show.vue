@@ -4,6 +4,7 @@ import businessesRoutes from '@/routes/businesses';
 import { Head, Link, router, usePage, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
+import StatusBadge from '@/components/StatusBadge.vue';
 
 const page = usePage<any>();
 const canCreate = computed(() => page.props.auth?.user?.permissions?.includes('create subscriptions'));
@@ -13,20 +14,6 @@ const canRestore = computed(() => page.props.auth?.user?.permissions?.includes('
 const props = defineProps<{
     subscription: any;
 }>();
-
-const statusColor = computed(() => {
-    switch (props.subscription.status_badge) {
-        case 'active': return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50';
-        case 'expiring_soon': return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50';
-        case 'expired': return 'bg-destructive/10 text-destructive border-destructive/20';
-        case 'renewed': return 'bg-muted text-muted-foreground border-border';
-        default: return 'bg-muted text-muted-foreground border-border';
-    }
-});
-
-const formattedStatus = computed(() => {
-    return props.subscription.status_badge ? props.subscription.status_badge.replace('_', ' ').toUpperCase() : 'UNKNOWN';
-});
 
 const isStudentMoMo = computed(() => {
     return props.subscription.package?.payer_type === 'student_momo';
@@ -84,7 +71,7 @@ const formatMoney = (val: number) =>
     <div class="p-4 md:p-8 mx-auto max-w-4xl">
         <div class="mb-6 flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">Subscription Details</h1>
+                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">Subscription Details</h1>
             </div>
             <Link :href="subscriptionsRoutes.index.url()" class="text-sm font-medium text-muted-foreground hover:text-foreground">
                 &larr; Back to Subscriptions
@@ -96,15 +83,13 @@ const formatMoney = (val: number) =>
             <!-- Left Column: Core Info -->
             <div class="md:col-span-2 space-y-6">
                 <!-- Summary Card -->
-                <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
+                <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <div class="flex justify-between items-start mb-6 border-b border-border pb-4">
                         <div>
                             <h2 class="text-xl font-semibold text-foreground">{{ props.subscription.service?.name }}</h2>
                             <p class="text-sm text-muted-foreground mt-1">for <Link :href="businessesRoutes.show.url(props.subscription.business_id)" class="font-medium text-primary hover:underline">{{ props.subscription.business?.name }}</Link></p>
                         </div>
-                        <span :class="['px-3 py-1 rounded-full text-xs font-bold border', statusColor]">
-                            {{ formattedStatus }}
-                        </span>
+                        <StatusBadge :status="props.subscription.status_badge" />
                     </div>
 
                     <div class="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
@@ -134,7 +119,7 @@ const formatMoney = (val: number) =>
                 </div>
 
                 <!-- 📱 MOBILE MONEY COLLECTION HUB (FOR UNIVERSITIES / STUDENT-MOMO) -->
-                <div v-if="isStudentMoMo" class="rounded-2xl border border-orange-200 dark:border-orange-900 bg-card shadow-sm overflow-hidden">
+                <div v-if="isStudentMoMo" class="rounded-xl border border-orange-200 dark:border-orange-900 bg-card shadow-sm overflow-hidden">
                     <div class="border-b border-orange-200 dark:border-orange-900 p-5 bg-orange-50/60 dark:bg-orange-950/20 flex items-center justify-between flex-wrap gap-3">
                         <div>
                             <h3 class="font-semibold text-foreground flex items-center gap-2">
@@ -162,9 +147,9 @@ const formatMoney = (val: number) =>
                                 <p class="text-xs text-muted-foreground font-medium uppercase">Target</p>
                                 <p class="text-base sm:text-lg font-bold text-foreground mt-1">{{ formatMoney(targetAmount) }}</p>
                             </div>
-                            <div class="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
-                                <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium uppercase">Collected</p>
-                                <p class="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">{{ formatMoney(totalCollected) }}</p>
+                            <div class="rounded-xl border border-success/30 bg-success/10 p-3">
+                                <p class="text-xs text-success font-medium uppercase">Collected</p>
+                                <p class="text-base sm:text-lg font-bold text-success mt-1">{{ formatMoney(totalCollected) }}</p>
                             </div>
                             <div class="rounded-xl border border-border bg-muted/20 p-3">
                                 <p class="text-xs text-muted-foreground font-medium uppercase">Remaining</p>
@@ -176,12 +161,12 @@ const formatMoney = (val: number) =>
                         <div>
                             <div class="flex justify-between text-xs font-medium text-foreground mb-1.5">
                                 <span>Collection Progress</span>
-                                <span :class="collectionPercent >= 100 ? 'text-green-500' : 'text-orange-500'">{{ collectionPercent }}%</span>
+                                <span :class="collectionPercent >= 100 ? 'text-success' : 'text-orange-500'">{{ collectionPercent }}%</span>
                             </div>
                             <div class="w-full bg-muted rounded-full h-2.5 overflow-hidden">
                                 <div
                                     class="h-2.5 rounded-full transition-all duration-500"
-                                    :class="collectionPercent >= 100 ? 'bg-green-500' : 'bg-orange-500'"
+                                    :class="collectionPercent >= 100 ? 'bg-success' : 'bg-orange-500'"
                                     :style="{ width: collectionPercent + '%' }"
                                 ></div>
                             </div>
@@ -207,7 +192,7 @@ const formatMoney = (val: number) =>
                                 <tbody class="divide-y divide-border">
                                     <tr v-for="col in props.subscription.collections" :key="col.id" class="hover:bg-muted/30">
                                         <td class="px-4 py-2.5 text-foreground font-medium">{{ new Date(col.collection_date).toLocaleDateString() }}</td>
-                                        <td class="px-4 py-2.5 text-right font-semibold text-emerald-600 dark:text-emerald-400">{{ formatMoney(col.amount) }}</td>
+                                        <td class="px-4 py-2.5 text-right font-semibold text-success">{{ formatMoney(col.amount) }}</td>
                                         <td class="px-4 py-2.5 text-muted-foreground text-xs">{{ col.notes || '-' }}</td>
                                         <td class="px-4 py-2.5 text-muted-foreground text-xs">{{ col.recorder?.name || 'Staff' }}</td>
                                         <td v-if="canEdit" class="px-4 py-2.5 text-right">
@@ -229,7 +214,7 @@ const formatMoney = (val: number) =>
                 </div>
 
                 <!-- Package & Modules Configuration -->
-                <div class="rounded-2xl border border-border bg-card shadow-sm flex flex-col">
+                <div class="rounded-xl border border-border bg-card shadow-xs flex flex-col">
                     <div class="border-b border-border p-4 bg-muted/20">
                         <h3 class="font-semibold text-foreground">Configuration</h3>
                     </div>
@@ -261,7 +246,7 @@ const formatMoney = (val: number) =>
                 </div>
 
                 <!-- Notes -->
-                <div v-if="props.subscription.notes" class="rounded-2xl border border-border bg-card shadow-sm flex flex-col">
+                <div v-if="props.subscription.notes" class="rounded-xl border border-border bg-card shadow-xs flex flex-col">
                     <div class="border-b border-border p-4 bg-muted/20">
                         <h3 class="font-semibold text-foreground">Notes</h3>
                     </div>
@@ -274,13 +259,13 @@ const formatMoney = (val: number) =>
             <!-- Right Column: Actions & Metadata -->
             <div class="space-y-6">
                 <!-- Actions -->
-                <div class="rounded-2xl border border-border bg-card p-4 shadow-sm flex flex-col gap-3">
+                <div class="rounded-xl border border-border bg-card p-4 shadow-sm flex flex-col gap-3">
                     <template v-if="props.subscription.status_badge !== 'trashed'">
                         <Link
                             v-if="canCreate && props.subscription.status_badge !== 'active' && props.subscription.status_badge !== 'renewed'"
                             :href="subscriptionsRoutes.createRenewal.url(props.subscription.id)"
                             :class="buttonVariants({ variant: 'default' })"
-                            class="bg-emerald-600 hover:bg-emerald-700 text-white w-full"
+                            class="bg-success text-success-foreground hover:bg-success/90 w-full"
                         >
                             Renew Subscription
                         </Link>
@@ -297,14 +282,14 @@ const formatMoney = (val: number) =>
                         v-else-if="canRestore"
                         @click="restoreSubscription"
                         :class="buttonVariants({ variant: 'secondary' })"
-                        class="w-full text-amber-600 dark:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 border-amber-200 dark:border-amber-800/50"
+                        class="w-full text-warning hover:bg-warning/10 border-warning/30"
                     >
                         Restore Subscription
                     </button>
                 </div>
 
                 <!-- Metadata -->
-                <div class="rounded-2xl border border-border bg-card p-4 shadow-sm text-sm">
+                <div class="rounded-xl border border-border bg-card p-4 shadow-sm text-sm">
                     <h3 class="font-semibold text-foreground mb-3 border-b border-border pb-2">Record Info</h3>
                     <div class="space-y-2">
                         <div class="flex justify-between">
@@ -330,7 +315,7 @@ const formatMoney = (val: number) =>
             v-if="showCollectionModal"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
         >
-            <div class="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
+            <div class="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl">
                 <div class="flex items-center justify-between pb-3 border-b border-border mb-4">
                     <h3 class="text-lg font-semibold text-foreground">Log Mobile Money Collection</h3>
                     <button @click="showCollectionModal = false" class="text-muted-foreground hover:text-foreground text-sm font-bold">✕</button>
@@ -348,7 +333,7 @@ const formatMoney = (val: number) =>
                             step="0.01"
                             required
                             placeholder="e.g. 500000"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm focus:border-primary focus:ring-primary"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                         />
                         <p v-if="collectionForm.errors.amount" class="text-xs text-destructive mt-1">{{ collectionForm.errors.amount }}</p>
                     </div>
@@ -361,7 +346,7 @@ const formatMoney = (val: number) =>
                             v-model="collectionForm.collection_date"
                             type="date"
                             required
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm focus:border-primary focus:ring-primary"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                         />
                         <p v-if="collectionForm.errors.collection_date" class="text-xs text-destructive mt-1">{{ collectionForm.errors.collection_date }}</p>
                     </div>
@@ -372,7 +357,7 @@ const formatMoney = (val: number) =>
                             v-model="collectionForm.notes"
                             rows="2"
                             placeholder="e.g. Week 2 student registration batch"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm focus:border-primary focus:ring-primary"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                         ></textarea>
                     </div>
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { table } from '@/lib/ui';
 import businessesRoutes from '@/routes/businesses';
 import subscriptionsRoutes from '@/routes/subscriptions';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
@@ -26,9 +27,9 @@ const confirmDelete = () => {
     <Head :title="business.name" />
 
     <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">
+                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
                     {{ business.name }}
                 </h1>
                 <p class="mt-1 text-sm text-muted-foreground">
@@ -62,7 +63,7 @@ const confirmDelete = () => {
         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <!-- Business Info -->
             <div
-                class="col-span-1 h-fit rounded-2xl border border-border bg-card p-6 shadow-sm"
+                class="col-span-1 h-fit rounded-xl border border-border bg-card p-6 shadow-sm"
             >
                 <h3 class="mb-4 border-b border-border pb-3 font-semibold text-foreground">
                     Contact Information
@@ -105,7 +106,7 @@ const confirmDelete = () => {
 
             <!-- Subscriptions History -->
             <div
-                class="col-span-2 flex flex-col rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
+                class="col-span-2 flex flex-col rounded-xl border border-border bg-card shadow-xs overflow-hidden"
             >
                 <div
                     class="flex items-center justify-between border-b border-border p-4 bg-muted/20"
@@ -136,13 +137,13 @@ const confirmDelete = () => {
                             <tr
                                 v-for="sub in business.subscriptions"
                                 :key="sub.id"
-                                class="transition-colors hover:bg-muted/50"
+                                :class="table.row"
                             >
                                 <td class="px-4 py-3 font-medium text-foreground">
                                     {{ sub.service?.name }}
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span v-if="sub.package" class="inline-flex items-center rounded-md bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-500/20">
+                                    <span v-if="sub.package" class="inline-flex items-center rounded-md bg-info/10 px-2 py-1 text-xs font-medium text-info ring-1 ring-inset ring-info/20">
                                         {{ sub.package.name }}
                                     </span>
                                     <span v-else class="text-xs text-muted-foreground">Custom</span>
@@ -174,7 +175,7 @@ const confirmDelete = () => {
                             >
                                 <td
                                     colspan="5"
-                                    class="py-8 text-center text-muted-foreground"
+                                    :class="table.empty"
                                 >
                                     No subscriptions yet.
                                 </td>

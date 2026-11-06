@@ -13,9 +13,9 @@ const props = defineProps<{
     <Head :title="staff.name" />
 
     <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">
+                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
                     {{ staff.name }}
                 </h1>
                 <p class="mt-1 text-sm text-muted-foreground">
@@ -40,7 +40,7 @@ const props = defineProps<{
                     method="patch"
                     as="button"
                     :class="buttonVariants({ variant: 'secondary' })"
-                    class="font-medium text-amber-600 dark:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                    class="font-medium text-warning hover:bg-warning/10"
                 >
                     {{ staff.is_active ? 'Deactivate' : 'Activate' }}
                 </Link>
@@ -49,7 +49,7 @@ const props = defineProps<{
 
         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div
-                class="col-span-1 h-fit space-y-6 rounded-2xl border border-border bg-card p-6 shadow-sm"
+                class="col-span-1 h-fit space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm"
             >
                 <dl class="space-y-4">
                     <div>
@@ -63,7 +63,7 @@ const props = defineProps<{
                                 :class="[
                                     'rounded-md border px-2 py-1 text-xs font-medium ring-1 ring-inset',
                                     staff.is_active
-                                        ? 'border-transparent bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-emerald-500/20'
+                                        ? 'border-transparent bg-success/10 text-success ring-success/20'
                                         : 'border-transparent bg-destructive/10 text-destructive ring-destructive/20',
                                 ]"
                             >
@@ -80,7 +80,7 @@ const props = defineProps<{
 
             <div class="col-span-2 space-y-6">
                 <!-- Businesses Created -->
-                <div class="flex flex-col rounded-2xl border border-border bg-card shadow-sm">
+                <div class="flex flex-col rounded-xl border border-border bg-card shadow-xs">
                     <div class="border-b border-border p-4 bg-muted/20">
                         <h3 class="font-semibold text-foreground">Businesses Added</h3>
                     </div>
@@ -96,7 +96,7 @@ const props = defineProps<{
                 </div>
 
                 <!-- Subscriptions Created -->
-                <div class="flex flex-col rounded-2xl border border-border bg-card shadow-sm">
+                <div class="flex flex-col rounded-xl border border-border bg-card shadow-xs">
                     <div class="border-b border-border p-4 bg-muted/20">
                         <h3 class="font-semibold text-foreground">Subscriptions Handled</h3>
                     </div>

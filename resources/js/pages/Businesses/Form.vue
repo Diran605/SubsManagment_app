@@ -37,9 +37,9 @@ const submit = () => {
     <Head :title="isEditing ? 'Edit Business' : 'Create Business'" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">
+                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
                     {{ isEditing ? 'Edit Business' : 'Create Business' }}
                 </h1>
             </div>
@@ -51,7 +51,7 @@ const submit = () => {
             </Link>
         </div>
 
-        <div class="rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
+        <div class="rounded-xl border border-border bg-card p-6 md:p-8 shadow-sm">
             <form @submit.prevent="submit" class="space-y-4">
                 <div>
                     <label class="mb-1 block text-sm font-medium text-foreground"
@@ -62,7 +62,7 @@ const submit = () => {
                         v-model="form.name"
                         type="text"
                         required
-                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
                     />
                     <p
                         v-if="form.errors.name"
@@ -81,7 +81,7 @@ const submit = () => {
                         <input
                             v-model="form.contact_person"
                             type="text"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
                         />
                         <p
                             v-if="form.errors.contact_person"
@@ -98,7 +98,7 @@ const submit = () => {
                         <input
                             v-model="form.phone"
                             type="text"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
                         />
                         <p
                             v-if="form.errors.phone"
@@ -116,7 +116,7 @@ const submit = () => {
                     <input
                         v-model="form.email"
                         type="email"
-                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
                     />
                     <p
                         v-if="form.errors.email"
@@ -133,7 +133,7 @@ const submit = () => {
                     <textarea
                         v-model="form.address"
                         rows="3"
-                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
                     ></textarea>
                     <p
                         v-if="form.errors.address"

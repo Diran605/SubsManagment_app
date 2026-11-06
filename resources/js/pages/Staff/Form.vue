@@ -32,9 +32,9 @@ const submit = () => {
     <Head :title="isEditing ? 'Edit Staff' : 'Create Staff'" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">
+                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
                     {{ isEditing ? 'Edit Staff' : 'Create Staff' }}
                 </h1>
             </div>
@@ -46,7 +46,7 @@ const submit = () => {
             </Link>
         </div>
 
-        <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
             <form @submit.prevent="submit" class="space-y-4">
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-foreground"
@@ -56,7 +56,7 @@ const submit = () => {
                         v-model="form.name"
                         type="text"
                         required
-                        class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-primary"
+                        class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     />
                     <p
                         v-if="form.errors.name"
@@ -74,7 +74,7 @@ const submit = () => {
                         v-model="form.email"
                         type="email"
                         required
-                        class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-primary"
+                        class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     />
                     <p
                         v-if="form.errors.email"
@@ -98,7 +98,7 @@ const submit = () => {
                             v-model="form.password"
                             type="password"
                             :required="!isEditing"
-                            class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-primary"
+                            class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                         />
                         <p
                             v-if="form.errors.password"
@@ -124,7 +124,7 @@ const submit = () => {
                             v-model="form.password_confirmation"
                             type="password"
                             :required="!isEditing"
-                            class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-primary"
+                            class="w-full rounded-md border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                         />
                     </div>
                 </div>

@@ -129,15 +129,15 @@ const getPieChartData = (data: Record<string, number>) => {
     <Head title="Reports & Analytics" />
 
     <div class="flex h-full flex-col gap-6 p-4 md:p-8">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">Reports & Analytics</h1>
+                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">Reports & Analytics</h1>
                 <p class="text-sm text-muted-foreground mt-1">
                     Detailed breakdown of your subscription metrics.
                 </p>
             </div>
             <div>
-                <select v-model="selectedPeriod" @change="applyFilter" class="rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary text-sm">
+                <select v-model="selectedPeriod" @change="applyFilter" class="rounded-md border-input bg-background text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 text-sm">
                     <option value="6m">Last 6 Months</option>
                     <option value="12m">Last 12 Months</option>
                     <option value="all">All Time</option>
@@ -146,29 +146,29 @@ const getPieChartData = (data: Record<string, number>) => {
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
                 <p class="text-sm font-medium text-muted-foreground">Active Revenue</p>
                 <p class="mt-2 text-2xl font-bold text-foreground">{{ formatCurrency(props.metrics.totalActiveRevenue) }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
                 <p class="text-sm font-medium text-muted-foreground">Total Historical Revenue</p>
                 <p class="mt-2 text-2xl font-bold text-foreground">{{ formatCurrency(props.metrics.totalHistoricalRevenue) }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
                 <p class="text-sm font-medium text-muted-foreground">New Subs Revenue</p>
-                <p class="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ formatCurrency(props.metrics.newRevenue) }}</p>
+                <p class="mt-2 text-2xl font-bold text-success">{{ formatCurrency(props.metrics.newRevenue) }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
                 <p class="text-sm font-medium text-muted-foreground">Renewals Revenue</p>
-                <p class="mt-2 text-2xl font-bold text-blue-600 dark:text-blue-400">{{ formatCurrency(props.metrics.renewedRevenue) }}</p>
+                <p class="mt-2 text-2xl font-bold text-info">{{ formatCurrency(props.metrics.renewedRevenue) }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
                 <p class="text-sm font-medium text-muted-foreground">Renewal Rate</p>
                 <p class="mt-2 text-2xl font-bold text-violet-600 dark:text-violet-400">{{ props.metrics.renewalRate }}%</p>
             </div>
         </div>
 
-        <div class="rounded-2xl border border-border bg-card shadow-sm flex flex-col mb-2">
+        <div class="rounded-xl border border-border bg-card shadow-xs flex flex-col mb-2">
             <div class="border-b border-border p-4 bg-muted/20">
                 <h3 class="font-semibold text-foreground">Revenue Over Time</h3>
             </div>
@@ -179,7 +179,7 @@ const getPieChartData = (data: Record<string, number>) => {
         </div>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
-            <div class="rounded-2xl border border-border bg-card shadow-sm flex flex-col lg:col-span-2">
+            <div class="rounded-xl border border-border bg-card shadow-xs flex flex-col lg:col-span-2">
                 <div class="border-b border-border p-4 bg-muted/20">
                     <h3 class="font-semibold text-foreground">Revenue by Service</h3>
                 </div>
@@ -189,7 +189,7 @@ const getPieChartData = (data: Record<string, number>) => {
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-border bg-card shadow-sm flex flex-col">
+            <div class="rounded-xl border border-border bg-card shadow-xs flex flex-col">
                 <div class="border-b border-border p-4 bg-muted/20">
                     <h3 class="font-semibold text-foreground">Revenue by Mode</h3>
                 </div>
@@ -201,7 +201,7 @@ const getPieChartData = (data: Record<string, number>) => {
         </div>
 
         <div class="grid grid-cols-1 gap-6">
-            <div class="rounded-2xl border border-border bg-card shadow-sm flex flex-col">
+            <div class="rounded-xl border border-border bg-card shadow-xs flex flex-col">
                 <div class="border-b border-border p-4 bg-muted/20">
                     <h3 class="font-semibold text-foreground">Top 10 Businesses</h3>
                 </div>
