@@ -7,19 +7,20 @@ import { buttonVariants } from '@/components/ui/button';
 const props = defineProps<{
     fiscalYear: number;
     services: any[];
-    existingTargets: Record<number, { expected_licenses: number; avg_student_count?: number; expected_amount: number }>;
+    existingTargets: Record<number, { expected_licenses: number; avg_student_count?: number; expected_months?: number; expected_amount: number }>;
     existingBudget: any;
 }>();
 
 // Build initial package targets from services
 const buildInitialTargets = () => {
-    const targets: Record<number, { expected_licenses: number; avg_student_count: number }> = {};
+    const targets: Record<number, { expected_licenses: number; avg_student_count: number; expected_months: number }> = {};
     props.services.forEach(service => {
         service.packages?.forEach((pkg: any) => {
             const existing = props.existingTargets[pkg.id];
             targets[pkg.id] = {
                 expected_licenses: existing ? existing.expected_licenses : 0,
                 avg_student_count: existing ? (existing.avg_student_count || 0) : (pkg.pricing_model === 'per_student' ? 500 : 0),
+                expected_months: existing?.expected_months || 12,
             };
         });
     });
@@ -28,14 +29,20 @@ const buildInitialTargets = () => {
 
 const targets = ref(buildInitialTargets());
 
-// Dynamically compute expected_amount for each package
+// Expected revenue for one package line. Must match
+// BudgetPackage::calculateExpectedAmount() on the server.
+//  - per-student: schools × average students × price per student
+//  - flat:        licences × monthly price × months
 const getExpectedAmount = (pkg: any): number => {
-    const licenses = targets.value[pkg.id]?.expected_licenses || 0;
+    const target = targets.value[pkg.id];
+    const licenses = target?.expected_licenses || 0;
+    const price = parseFloat(pkg.price || 0);
+
     if (pkg.pricing_model === 'per_student') {
-        const avgStudents = targets.value[pkg.id]?.avg_student_count || 0;
-        return licenses * avgStudents * parseFloat(pkg.price || 0);
+        return licenses * (target?.avg_student_count || 0) * price;
     }
-    return licenses * parseFloat(pkg.price || 0);
+
+    return licenses * price * (target?.expected_months || 0);
 };
 
 // Compute grand total
@@ -66,6 +73,7 @@ const submit = () => {
                     package_id: pkg.id,
                     expected_licenses: licenses,
                     avg_student_count: pkg.pricing_model === 'per_student' ? (targets.value[pkg.id]?.avg_student_count || 0) : null,
+                    expected_months: pkg.pricing_model === 'per_student' ? null : (targets.value[pkg.id]?.expected_months || 12),
                     expected_amount: getExpectedAmount(pkg),
                 });
             }
@@ -94,7 +102,7 @@ const submit = () => {
                     {{ existingBudget ? 'Edit' : 'Setup' }} Budget — {{ fiscalYear }}
                 </h1>
                 <p class="mt-1 text-sm text-muted-foreground">
-                    Set the expected number of licenses per package. The system will calculate the expected revenue automatically.
+                    Set the expected number of licences per package, and for monthly packages how many months they'll run this year. Expected revenue is calculated automatically.
                 </p>
             </div>
             <Link :href="route('budgets.index', { year: fiscalYear })" :class="buttonVariants({ variant: 'outline' })">
@@ -109,7 +117,7 @@ const submit = () => {
                 <p class="mt-1 text-3xl font-bold text-orange-600 dark:text-orange-300">{{ formatMoney(grandTotal) }}</p>
             </div>
             <p class="text-xs text-orange-500 dark:text-orange-400 max-w-xs text-right">
-                Automatically calculated from expected licenses × monthly package prices.
+                Monthly packages: licences × monthly price × months. Per-student packages: schools × students × price.
             </p>
         </div>
 
@@ -140,7 +148,7 @@ const submit = () => {
                             </p>
                         </div>
 
-                        <div class="flex items-center gap-3 flex-shrink-0">
+                        <div class="flex items-center gap-3 shrink-0">
                             <div>
                                 <label class="block text-xs text-muted-foreground mb-1 text-right">
                                     {{ pkg.pricing_model === 'per_student' ? 'Target Schools' : 'Expected Licenses' }}
@@ -164,7 +172,19 @@ const submit = () => {
                                 />
                             </div>
 
-                            <div class="text-right min-w-[140px]">
+                            <!-- Months input for monthly (flat) packages -->
+                            <div v-else>
+                                <label class="block text-xs text-muted-foreground mb-1 text-right">Months this year</label>
+                                <input
+                                    v-model.number="targets[pkg.id].expected_months"
+                                    type="number"
+                                    min="1"
+                                    max="12"
+                                    class="w-24 text-center rounded-md border border-input bg-background text-foreground px-3 py-1.5 text-sm focus:border-primary focus:ring-primary"
+                                />
+                            </div>
+
+                            <div class="text-right min-w-35">
                                 <p class="text-xs text-muted-foreground mb-1">Expected Amount</p>
                                 <p class="text-sm font-semibold text-orange-600 dark:text-orange-400">
                                     {{ formatMoney(getExpectedAmount(pkg)) }}
