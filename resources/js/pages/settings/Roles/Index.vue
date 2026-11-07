@@ -120,7 +120,7 @@ const deleteRole = (id: number) => {
                                                 }"
                                             />
                                         </template>
-                                        <span v-else class="text-muted-foreground/60">-</span>
+                                        <span v-else class="text-muted-foreground/60">—</span>
                                     </td>
                                 </tr>
                             </tbody>

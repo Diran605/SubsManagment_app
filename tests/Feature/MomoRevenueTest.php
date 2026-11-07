@@ -70,4 +70,21 @@ class MomoRevenueTest extends TestCase
                 ->where('charts.revenueOverTime', fn ($months) => (float) collect($months)->sum() === 200000.0)
             );
     }
+
+    public function test_reports_list_quiet_months_and_skip_zero_revenue_businesses()
+    {
+        // A MoMo subscription with nothing collected yet earns nothing so far.
+        $package = Package::where('payer_type', 'student_momo')->firstOrFail();
+        Subscription::factory()->create(['package_id' => $package->id, 'amount' => 300000]);
+
+        $this->actingAs($this->admin)
+            ->get(route('reports.index', ['period' => '12m']))
+            ->assertInertia(fn (Assert $page) => $page
+                // 12 months back plus the current month, even though only one has revenue.
+                ->where('charts.revenueOverTime', fn ($months) => count($months) === 13
+                    && collect($months)->filter(fn ($total) => $total == 0)->count() === 12)
+                ->where('charts.revenueByBusiness', fn ($businesses) => count($businesses) === 2
+                    && collect($businesses)->every(fn ($total) => $total > 0))
+            );
+    }
 }

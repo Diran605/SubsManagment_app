@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import Pagination from '@/components/Pagination.vue';
 import PageHeader from '@/components/PageHeader.vue';
-import { rowActionVariants, table } from '@/lib/ui';
-import { Plus } from '@lucide/vue';
+import { fieldClass, rowActionVariants, table } from '@/lib/ui';
+import { Plus, Search } from '@lucide/vue';
 import businessesRoutes from '@/routes/businesses';
 import { ref, watch } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -51,7 +51,7 @@ const confirmDelete = (id: number) => {
                     :href="businessesRoutes.create.url()"
                     :class="buttonVariants({ variant: 'default' })"
                 >
-                    <Plus class="size-4" /> Add Business
+                    <Plus class="size-4" /> Add business
                 </Link>
             </template>
         </PageHeader>
@@ -59,16 +59,17 @@ const confirmDelete = (id: number) => {
         <div
             class="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-xs"
         >
-            <div
-                :class="table.toolbar"
-            >
-                <input
-                    type="search"
-                    v-model="search"
-                    aria-label="Search businesses"
-                    placeholder="Search businesses…"
-                    class="w-full max-w-sm rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                />
+            <div :class="table.toolbar">
+                <div class="relative w-full max-w-sm">
+                    <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                        v-model="search"
+                        type="search"
+                        aria-label="Search businesses"
+                        placeholder="Search businesses…"
+                        :class="[fieldClass, 'w-full pl-9']"
+                    />
+                </div>
             </div>
 
             <div class="flex-1 overflow-x-auto">
@@ -94,13 +95,13 @@ const confirmDelete = (id: number) => {
                                 {{ business.name }}
                             </td>
                             <td class="px-4 py-3 text-muted-foreground">
-                                {{ business.contact_person || '-' }}
+                                {{ business.contact_person || '—' }}
                             </td>
                             <td class="px-4 py-3 text-muted-foreground">
-                                {{ business.phone || '-' }}
+                                {{ business.phone || '—' }}
                             </td>
                             <td class="px-4 py-3 text-muted-foreground">
-                                {{ business.email || '-' }}
+                                {{ business.email || '—' }}
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1.5">

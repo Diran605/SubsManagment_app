@@ -193,7 +193,7 @@ const formatMoney = (val: number) =>
                                     <tr v-for="col in props.subscription.collections" :key="col.id" class="hover:bg-muted/30">
                                         <td class="px-4 py-2.5 text-foreground font-medium">{{ new Date(col.collection_date).toLocaleDateString() }}</td>
                                         <td class="px-4 py-2.5 text-right font-semibold text-success">{{ formatMoney(col.amount) }}</td>
-                                        <td class="px-4 py-2.5 text-muted-foreground text-xs">{{ col.notes || '-' }}</td>
+                                        <td class="px-4 py-2.5 text-muted-foreground text-xs">{{ col.notes || '—' }}</td>
                                         <td class="px-4 py-2.5 text-muted-foreground text-xs">{{ col.recorder?.name || 'Staff' }}</td>
                                         <td v-if="canEdit" class="px-4 py-2.5 text-right">
                                             <button
@@ -267,7 +267,7 @@ const formatMoney = (val: number) =>
                             :class="buttonVariants({ variant: 'default' })"
                             class="bg-success text-success-foreground hover:bg-success/90 w-full"
                         >
-                            Renew Subscription
+                            Renew subscription
                         </Link>
                         <Link
                             v-if="canEdit"
@@ -275,7 +275,7 @@ const formatMoney = (val: number) =>
                             :class="buttonVariants({ variant: 'secondary' })"
                             class="w-full"
                         >
-                            Edit Subscription
+                            Edit subscription
                         </Link>
                     </template>
                     <button
@@ -284,7 +284,7 @@ const formatMoney = (val: number) =>
                         :class="buttonVariants({ variant: 'secondary' })"
                         class="w-full text-warning hover:bg-warning/10 border-warning/30"
                     >
-                        Restore Subscription
+                        Restore subscription
                     </button>
                 </div>
 

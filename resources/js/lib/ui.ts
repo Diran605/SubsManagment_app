@@ -10,7 +10,8 @@ export const rowActionVariants = cva(
                 primary: 'border-primary/30 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground',
                 success: 'border-success/30 bg-success/5 text-success hover:bg-success hover:text-success-foreground',
                 warning: 'border-warning/30 bg-warning/5 text-warning hover:bg-warning hover:text-warning-foreground',
-                danger: 'border-destructive/30 bg-destructive/5 text-destructive hover:bg-destructive hover:text-white',
+                // Quiet until hovered: deleting is the rarest action, so it shouldn't shout on every row.
+                danger: 'border-border bg-background text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive',
             },
         },
         defaultVariants: { tone: 'neutral' },

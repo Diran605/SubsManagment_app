@@ -2,6 +2,28 @@
 import reportsRoutes from '@/routes/reports';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, computed, watchEffect } from 'vue';
+import { Bar, Doughnut, Line } from 'vue-chartjs';
+import {
+    Chart as ChartJS,
+    Title,
+    Tooltip,
+    Legend,
+    BarElement,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    ArcElement,
+    Filler,
+} from 'chart.js';
+import { Banknote, History, RefreshCw, Repeat, Sparkles } from '@lucide/vue';
+import PageHeader from '@/components/PageHeader.vue';
+import StatCard from '@/components/StatCard.vue';
+import { useAppearance } from '@/composables/useAppearance';
+import { wrappedTickCallback } from '@/lib/charts';
+import { fieldClass } from '@/lib/ui';
+
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Filler);
 
 const props = defineProps<{
     period: string;
@@ -26,13 +48,6 @@ const applyFilter = () => {
     router.get(reportsRoutes.index.url(), { period: selectedPeriod.value }, { preserveState: true });
 };
 
-import { Bar, Pie, Line } from 'vue-chartjs';
-import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement, ArcElement } from 'chart.js';
-import { useAppearance } from '@/composables/useAppearance';
-import { wrappedTickCallback } from '@/lib/charts';
-
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement, ArcElement);
-
 const { resolvedAppearance } = useAppearance();
 const isDark = computed(() => resolvedAppearance.value === 'dark');
 
@@ -41,175 +56,179 @@ watchEffect(() => {
     ChartJS.defaults.font.family = "'Instrument Sans', sans-serif";
 });
 
-const commonOptions = computed(() => ({
+// Brand palette, matching the dashboard charts.
+const palette = computed(() =>
+    isDark.value
+        ? { navy: '#0ea5e9', orange: '#f97316', sky: '#7dd3fc', muted: '#475569' }
+        : { navy: '#0A3094', orange: '#FF5F00', sky: '#60a5fa', muted: '#94a3b8' },
+);
+
+const money = (value: number) => Number(value).toLocaleString('en-US');
+const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
+
+const hasData = (data: Record<string, number>) => Object.keys(data || {}).length > 0;
+
+// Give each bar at least 80px so long label lists scroll instead of squashing.
+const minChartWidth = (data: Record<string, number>, threshold: number) => {
+    const count = Object.keys(data || {}).length;
+    return count > threshold ? `${count * 80}px` : '100%';
+};
+
+const axisOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-        legend: { display: false }
-    },
-    layout: {
-        padding: { top: 10, bottom: 10 }
+        legend: { display: false },
+        tooltip: {
+            callbacks: {
+                label: (ctx: { parsed: { y: number | null } }) => ` ${money(ctx.parsed.y ?? 0)} FCFA`,
+            },
+        },
     },
     scales: {
         x: {
-            grid: {
-                display: false,
-                drawBorder: false,
-            },
-            ticks: {
-                font: { size: 11 },
-                autoSkip: false,
-                callback: wrappedTickCallback,
-            }
+            grid: { display: false },
+            ticks: { font: { size: 11 }, autoSkip: false, callback: wrappedTickCallback },
         },
         y: {
-            grid: {
-                color: isDark.value ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                drawBorder: false,
-                borderDash: [5, 5],
-            }
-        }
-    }
+            beginAtZero: true,
+            border: { display: false },
+            grid: { color: isDark.value ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)' },
+            ticks: { font: { size: 11 }, callback: (value: number | string) => compact.format(Number(value)) },
+        },
+    },
 }));
 
-const pieOptions = computed(() => ({
+const lineOptions = computed(() => ({
+    ...axisOptions.value,
+    scales: {
+        ...axisOptions.value.scales,
+        // Many months: let Chart.js thin out the labels instead of wrapping them all.
+        x: { grid: { display: false }, ticks: { font: { size: 11 }, autoSkip: true, maxRotation: 0 } },
+    },
+}));
+
+const doughnutOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
+    cutout: '62%',
     plugins: {
         legend: {
             position: 'bottom' as const,
-            labels: {
-                color: isDark.value ? '#94a3b8' : '#475569'
-            }
-        }
-    }
+            labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, color: isDark.value ? '#94a3b8' : '#475569' },
+        },
+        tooltip: {
+            callbacks: {
+                label: (ctx: { label: string; parsed: number }) => ` ${ctx.label}: ${money(ctx.parsed)} FCFA`,
+            },
+        },
+    },
 }));
 
-const formatCurrency = (value: number) => {
-    return Number(value).toLocaleString('en-US') + ' FCFA';
-};
+const barData = (data: Record<string, number>, color: string) => ({
+    labels: Object.keys(data),
+    datasets: [{ label: 'Revenue', data: Object.values(data), backgroundColor: color, borderRadius: 4, maxBarThickness: 36 }],
+});
 
-const getChartData = (data: Record<string, number>, label: string, color: string) => {
-    return {
-        labels: Object.keys(data),
-        datasets: [{
-            label: label,
-            data: Object.values(data),
-            backgroundColor: color,
-            borderColor: color,
+const lineData = computed(() => ({
+    labels: Object.keys(props.charts.revenueOverTime),
+    datasets: [
+        {
+            label: 'Revenue',
+            data: Object.values(props.charts.revenueOverTime),
+            borderColor: palette.value.navy,
+            backgroundColor: palette.value.navy + '1A', // ~10% opacity fill
+            fill: true,
+            tension: 0, // straight lines: don't invent values between months
             borderWidth: 2,
-            borderRadius: 4,
-            maxBarThickness: 40,
-            tension: 0.3,
-            fill: false,
-        }]
-    };
-};
+            pointRadius: 3,
+            pointBackgroundColor: palette.value.navy,
+        },
+    ],
+}));
 
-const getPieChartData = (data: Record<string, number>) => {
-    return {
-        labels: Object.keys(data),
-        datasets: [{
-            data: Object.values(data),
-            backgroundColor: [
-                '#3b82f6', // blue-500
-                '#10b981', // emerald-500
-                '#f59e0b', // amber-500
-                '#ef4444', // red-500
-                '#8b5cf6', // violet-500
-            ],
-            borderColor: isDark.value ? '#020817' : '#ffffff',
+const modeData = computed(() => ({
+    labels: Object.keys(props.charts.revenueByMode).map((m) => m.charAt(0).toUpperCase() + m.slice(1)),
+    datasets: [
+        {
+            data: Object.values(props.charts.revenueByMode),
+            backgroundColor: [palette.value.navy, palette.value.orange, palette.value.sky, palette.value.muted],
+            borderColor: isDark.value ? '#0f172a' : '#ffffff',
             borderWidth: 2,
-        }]
-    };
-};
+        },
+    ],
+}));
 </script>
 
 <template>
     <Head title="Reports & Analytics" />
 
     <div class="flex h-full flex-col gap-6 p-4 md:p-8">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">Reports & Analytics</h1>
-                <p class="text-sm text-muted-foreground mt-1">
-                    Detailed breakdown of your subscription metrics.
-                </p>
-            </div>
-            <div>
-                <select v-model="selectedPeriod" @change="applyFilter" class="rounded-md border-input bg-background text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 text-sm">
-                    <option value="6m">Last 6 Months</option>
-                    <option value="12m">Last 12 Months</option>
-                    <option value="all">All Time</option>
+        <PageHeader title="Reports & Analytics" description="Revenue from subscriptions started in the selected period.">
+            <template #actions>
+                <select v-model="selectedPeriod" @change="applyFilter" aria-label="Reporting period" :class="fieldClass">
+                    <option value="6m">Last 6 months</option>
+                    <option value="12m">Last 12 months</option>
+                    <option value="all">All time</option>
                 </select>
-            </div>
+            </template>
+        </PageHeader>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <StatCard label="Active revenue" :value="money(props.metrics.totalActiveRevenue)" unit="FCFA" hint="Subscriptions still running" tone="accent">
+                <template #icon><Banknote /></template>
+            </StatCard>
+            <StatCard label="Total revenue" :value="money(props.metrics.totalHistoricalRevenue)" unit="FCFA" hint="Including expired subscriptions" tone="primary">
+                <template #icon><History /></template>
+            </StatCard>
+            <StatCard label="From new subscriptions" :value="money(props.metrics.newRevenue)" unit="FCFA" hint="Active, first-time clients" tone="primary">
+                <template #icon><Sparkles /></template>
+            </StatCard>
+            <StatCard label="From renewals" :value="money(props.metrics.renewedRevenue)" unit="FCFA" hint="Active, renewed subscriptions" tone="primary">
+                <template #icon><RefreshCw /></template>
+            </StatCard>
+            <StatCard label="Renewal rate" :value="props.metrics.renewalRate" unit="%" hint="Share of active subscriptions that are renewals" tone="success">
+                <template #icon><Repeat /></template>
+            </StatCard>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
-                <p class="text-sm font-medium text-muted-foreground">Active Revenue</p>
-                <p class="mt-2 text-2xl font-bold text-foreground">{{ formatCurrency(props.metrics.totalActiveRevenue) }}</p>
+        <section class="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <h2 class="text-base font-semibold text-foreground">Revenue over time</h2>
+            <p class="mt-0.5 text-xs text-muted-foreground">School payments by start month; MoMo money by the month it was collected.</p>
+            <div class="mt-4 h-72">
+                <Line v-if="hasData(props.charts.revenueOverTime)" :data="lineData" :options="lineOptions" />
+                <p v-else class="pt-10 text-center text-sm text-muted-foreground">No revenue in this period.</p>
             </div>
-            <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
-                <p class="text-sm font-medium text-muted-foreground">Total Historical Revenue</p>
-                <p class="mt-2 text-2xl font-bold text-foreground">{{ formatCurrency(props.metrics.totalHistoricalRevenue) }}</p>
-            </div>
-            <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
-                <p class="text-sm font-medium text-muted-foreground">New Subs Revenue</p>
-                <p class="mt-2 text-2xl font-bold text-success">{{ formatCurrency(props.metrics.newRevenue) }}</p>
-            </div>
-            <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
-                <p class="text-sm font-medium text-muted-foreground">Renewals Revenue</p>
-                <p class="mt-2 text-2xl font-bold text-info">{{ formatCurrency(props.metrics.renewedRevenue) }}</p>
-            </div>
-            <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
-                <p class="text-sm font-medium text-muted-foreground">Renewal Rate</p>
-                <p class="mt-2 text-2xl font-bold text-violet-600 dark:text-violet-400">{{ props.metrics.renewalRate }}%</p>
-            </div>
+        </section>
+
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <section class="rounded-xl border border-border bg-card p-5 shadow-xs lg:col-span-2">
+                <h2 class="text-base font-semibold text-foreground">Revenue by service</h2>
+                <div class="mt-4 overflow-x-auto">
+                    <div class="h-72" :style="{ minWidth: minChartWidth(props.charts.revenueByService, 6) }">
+                        <Bar v-if="hasData(props.charts.revenueByService)" :data="barData(props.charts.revenueByService, palette.navy)" :options="axisOptions" />
+                        <p v-else class="pt-10 text-center text-sm text-muted-foreground">No active revenue yet.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-xl border border-border bg-card p-5 shadow-xs">
+                <h2 class="text-base font-semibold text-foreground">Revenue by mode</h2>
+                <div class="mt-4 h-72">
+                    <Doughnut v-if="hasData(props.charts.revenueByMode)" :data="modeData" :options="doughnutOptions" />
+                    <p v-else class="pt-10 text-center text-sm text-muted-foreground">No active revenue yet.</p>
+                </div>
+            </section>
         </div>
 
-        <div class="rounded-xl border border-border bg-card shadow-xs flex flex-col mb-2">
-            <div class="border-b border-border p-4 bg-muted/20">
-                <h3 class="font-semibold text-foreground">Revenue Over Time</h3>
-            </div>
-            <div class="p-4 flex-1 h-72">
-                <Line v-if="Object.keys(props.charts.revenueOverTime).length" :data="getChartData(props.charts.revenueOverTime, 'Revenue', isDark ? '#a78bfa' : '#8b5cf6')" :options="commonOptions" />
-                <p v-else class="text-sm text-muted-foreground text-center mt-10">No data</p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
-            <div class="rounded-xl border border-border bg-card shadow-xs flex flex-col lg:col-span-2">
-                <div class="border-b border-border p-4 bg-muted/20">
-                    <h3 class="font-semibold text-foreground">Revenue by Service</h3>
-                </div>
-                <div class="p-4 flex-1 h-80">
-                    <Bar v-if="Object.keys(props.charts.revenueByService).length" :data="getChartData(props.charts.revenueByService, 'Revenue', isDark ? '#60a5fa' : '#3b82f6')" :options="commonOptions" />
-                    <p v-else class="text-sm text-muted-foreground">No data</p>
+        <section class="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <h2 class="text-base font-semibold text-foreground">Top businesses by active revenue</h2>
+            <div class="mt-4 overflow-x-auto">
+                <div class="h-72" :style="{ minWidth: minChartWidth(props.charts.revenueByBusiness, 8) }">
+                    <Bar v-if="hasData(props.charts.revenueByBusiness)" :data="barData(props.charts.revenueByBusiness, palette.orange)" :options="axisOptions" />
+                    <p v-else class="pt-10 text-center text-sm text-muted-foreground">No active revenue yet.</p>
                 </div>
             </div>
-
-            <div class="rounded-xl border border-border bg-card shadow-xs flex flex-col">
-                <div class="border-b border-border p-4 bg-muted/20">
-                    <h3 class="font-semibold text-foreground">Revenue by Mode</h3>
-                </div>
-                <div class="p-4 flex-1 h-80 flex items-center justify-center">
-                    <Pie v-if="Object.keys(props.charts.revenueByMode).length" :data="getPieChartData(props.charts.revenueByMode)" :options="pieOptions" />
-                    <p v-else class="text-sm text-muted-foreground">No data</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6">
-            <div class="rounded-xl border border-border bg-card shadow-xs flex flex-col">
-                <div class="border-b border-border p-4 bg-muted/20">
-                    <h3 class="font-semibold text-foreground">Top 10 Businesses</h3>
-                </div>
-                <div class="p-4 flex-1 h-80">
-                    <Bar v-if="Object.keys(props.charts.revenueByBusiness).length" :data="getChartData(props.charts.revenueByBusiness, 'Revenue', isDark ? '#34d399' : '#10b981')" :options="commonOptions" />
-                    <p v-else class="text-sm text-muted-foreground">No data</p>
-                </div>
-            </div>
-        </div>
+        </section>
     </div>
 </template>

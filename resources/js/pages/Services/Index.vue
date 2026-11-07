@@ -39,7 +39,7 @@ const confirmDelete = (id: number) => {
                     :href="servicesRoutes.create.url()"
                     :class="buttonVariants({ variant: 'default' })"
                 >
-                    <Plus class="size-4" /> Add Service
+                    <Plus class="size-4" /> Add service
                 </Link>
             </template>
         </PageHeader>
@@ -74,7 +74,7 @@ const confirmDelete = (id: number) => {
                             <td
                                 class="max-w-xs truncate px-4 py-3 text-muted-foreground"
                             >
-                                {{ service.description || '-' }}
+                                {{ service.description || '—' }}
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex gap-2">

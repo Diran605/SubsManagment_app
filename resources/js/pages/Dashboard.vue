@@ -173,7 +173,7 @@ const barChartOptions = computed(() => ({
                 >
                     <template #icon><Smartphone /></template>
                     <div
-                        class="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                        class="h-1.5 w-full overflow-hidden rounded-full bg-info/15"
                         role="progressbar"
                         :aria-valuenow="momoPercent"
                         aria-valuemin="0"

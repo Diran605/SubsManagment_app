@@ -37,7 +37,7 @@ const toneClasses: Record<string, string> = {
                 <slot name="icon" />
             </div>
         </div>
-        <div v-if="hint || $slots.default" class="mt-3 text-xs text-muted-foreground">
+        <div v-if="hint || $slots.default" class="mt-auto pt-3 text-xs text-muted-foreground">
             <slot>{{ hint }}</slot>
         </div>
     </div>

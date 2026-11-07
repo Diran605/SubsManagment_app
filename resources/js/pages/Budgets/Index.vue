@@ -4,6 +4,9 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import budgetsRoutes from '@/routes/budgets';
 import { ref } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
+import PageHeader from '@/components/PageHeader.vue';
+import StatCard from '@/components/StatCard.vue';
+import { Banknote, Goal, Scale, TrendingUp } from '@lucide/vue';
 
 const props = defineProps<{
     report: {
@@ -23,8 +26,9 @@ const props = defineProps<{
     selectedYear: number;
 }>();
 
-const formatMoney = (val: number) =>
-    val ? Number(val).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' FCFA' : '0 FCFA';
+const number = (val: number) =>
+    Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const formatMoney = (val: number) => number(val) + ' FCFA';
 
 const changeYear = (year: number) => {
     router.get(budgetsRoutes.index.url(), { year }, { preserveState: false });
@@ -34,137 +38,123 @@ const changeYear = (year: number) => {
 <template>
     <Head title="Budget Report" />
 
-    <div class="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 md:p-8">
-        <!-- Header -->
-        <div class="flex items-center justify-between flex-wrap gap-3">
-            <div>
-                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">Budget Report</h1>
-                <p class="mt-1 text-sm text-muted-foreground">Accrual-basis revenue budget by fiscal year</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <!-- Year Selector -->
-                <div class="flex rounded-lg border border-border overflow-hidden">
+    <div class="flex flex-col gap-6 p-4 md:p-8">
+        <PageHeader title="Budget Report" description="Revenue targets against what each fiscal year has actually earned.">
+            <template #actions>
+                <div class="inline-flex rounded-md border border-border bg-card p-0.5 shadow-xs" role="group" aria-label="Fiscal year">
                     <button
                         v-for="year in availableYears"
                         :key="year"
+                        type="button"
                         @click="changeYear(year)"
+                        :aria-pressed="year === selectedYear"
                         :class="[
-                            'px-3 py-1.5 text-sm font-medium transition-colors',
+                            'rounded px-3 py-1 text-sm font-medium tabular-nums transition-colors',
                             year === selectedYear
-                                ? 'bg-orange-500 text-white'
-                                : 'bg-background text-muted-foreground hover:bg-muted'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                         ]"
                     >
                         {{ year }}
                     </button>
                 </div>
-                <Link
-                    :href="budgetsRoutes.create.url({ query: { year: selectedYear } })"
-                    :class="buttonVariants({ variant: 'default' })"
-                >
-                    {{ report.budget ? 'Edit Budget' : 'Setup Budget' }}
+                <Link :href="budgetsRoutes.create.url({ query: { year: selectedYear } })" :class="buttonVariants()">
+                    {{ report.budget ? 'Edit budget' : 'Set up budget' }}
                 </Link>
-            </div>
-        </div>
+            </template>
+        </PageHeader>
 
-        <!-- KPI Cards -->
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <!-- Annual Goal -->
-            <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
-                <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Annual Goal</p>
-                <p class="mt-2 text-2xl font-bold text-foreground">{{ formatMoney(report.totals.expected_amount) }}</p>
-                <p class="mt-1 text-xs text-muted-foreground">Fiscal Year {{ selectedYear }}</p>
-            </div>
-            <!-- Actual Accrued -->
-            <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
-                <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Actual Revenue (Accrued)</p>
-                <p class="mt-2 text-2xl font-bold text-orange-500">{{ formatMoney(report.totals.actual_amount) }}</p>
-                <p class="mt-1 text-xs text-muted-foreground">Pro-rata across active subscriptions</p>
-            </div>
-            <!-- % to Goal -->
-            <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
-                <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">% to Goal</p>
-                <p
-                    class="mt-2 text-2xl font-bold"
-                    :class="report.totals.percent_to_goal >= 100 ? 'text-success' : 'text-foreground'"
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Annual goal" :value="number(report.totals.expected_amount)" unit="FCFA" :hint="'Target for fiscal year ' + selectedYear" tone="primary">
+                <template #icon><Goal /></template>
+            </StatCard>
+
+            <StatCard label="Earned so far" :value="number(report.totals.actual_amount)" unit="FCFA" tone="accent">
+                <template #icon><Banknote /></template>
+                Only the part of each subscription that falls inside {{ selectedYear }}
+            </StatCard>
+
+            <StatCard
+                label="Progress to goal"
+                :value="report.totals.percent_to_goal"
+                unit="%"
+                :tone="report.totals.percent_to_goal >= 100 ? 'success' : 'primary'"
+            >
+                <template #icon><TrendingUp /></template>
+                <div
+                    class="h-1.5 w-full overflow-hidden rounded-full bg-primary/15"
+                    role="progressbar"
+                    :aria-valuenow="Math.min(report.totals.percent_to_goal, 100)"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-label="Progress to annual goal"
                 >
-                    {{ report.totals.percent_to_goal }}%
-                </p>
-                <div class="mt-2 w-full rounded-full bg-muted h-1.5">
                     <div
-                        class="h-1.5 rounded-full transition-all"
-                        :class="report.totals.percent_to_goal >= 100 ? 'bg-success' : 'bg-orange-500'"
+                        class="h-full rounded-full transition-[width]"
+                        :class="report.totals.percent_to_goal >= 100 ? 'bg-success' : 'bg-primary'"
                         :style="{ width: Math.min(report.totals.percent_to_goal, 100) + '%' }"
-                    ></div>
+                    />
                 </div>
-            </div>
-            <!-- Variance -->
-            <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
-                <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Variance</p>
-                <p
-                    class="mt-2 text-2xl font-bold"
-                    :class="report.totals.variance <= 0 ? 'text-success' : 'text-destructive'"
-                >
-                    {{ report.totals.variance <= 0 ? '+' : '-' }}{{ formatMoney(Math.abs(report.totals.variance)) }}
-                </p>
-                <p class="mt-1 text-xs text-muted-foreground">
-                    {{ report.totals.variance <= 0 ? 'Above target' : 'Below target' }}
-                </p>
-            </div>
+            </StatCard>
+
+            <StatCard
+                :label="report.totals.variance <= 0 ? 'Ahead of target by' : 'Short of target by'"
+                :value="number(Math.abs(report.totals.variance))"
+                unit="FCFA"
+                :tone="report.totals.variance <= 0 ? 'success' : 'warning'"
+            >
+                <template #icon><Scale /></template>
+                <span :class="report.totals.variance <= 0 ? 'text-success' : 'text-warning'">
+                    {{ report.totals.variance <= 0 ? 'Goal reached' : 'Still to earn this year' }}
+                </span>
+            </StatCard>
         </div>
 
-        <!-- Budget Table -->
-        <div class="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-            <div class="px-6 py-4 border-b border-border">
-                <h2 class="text-base font-semibold text-foreground">Service Breakdown — {{ selectedYear }}</h2>
+        <div :class="table.wrapper">
+            <div class="border-b border-border px-5 py-4">
+                <h2 class="text-base font-semibold text-foreground">Breakdown by service</h2>
             </div>
 
             <div v-if="report.rows.length > 0" class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead :class="table.head">
                         <tr>
-                            <th class="px-4 py-3 text-left font-medium">Fiscal Year</th>
-                            <th class="px-4 py-3 text-left font-medium">Service</th>
-                            <th class="px-4 py-3 text-right font-medium">Current Licenses</th>
-                            <th class="px-4 py-3 text-right font-medium">Expected Licenses</th>
-                            <th class="px-4 py-3 text-right font-medium">Actual Amount</th>
-                            <th class="px-4 py-3 text-right font-medium">Expected Amount</th>
+                            <th :class="[table.th, 'text-left']">Service</th>
+                            <th :class="[table.th, 'text-right']">Current licences</th>
+                            <th :class="[table.th, 'text-right']">Expected licences</th>
+                            <th :class="[table.th, 'text-right']">Earned</th>
+                            <th :class="[table.th, 'text-right']">Target</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-border">
-                        <tr v-for="row in report.rows" :key="row.service_id" class="hover:bg-muted/40 transition-colors">
-                            <td class="px-4 py-3 text-foreground font-medium">{{ row.fiscal_year }}</td>
-                            <td class="px-4 py-3 text-foreground font-medium">{{ row.service_name }}</td>
-                            <td class="px-4 py-3 text-right text-foreground">{{ row.current_licenses }}</td>
-                            <td class="px-4 py-3 text-right text-muted-foreground">{{ row.expected_licenses }}</td>
-                            <td class="px-4 py-3 text-right font-semibold text-orange-600 dark:text-orange-400">
+                        <tr v-for="row in report.rows" :key="row.service_id" :class="table.row">
+                            <td class="px-4 py-3 font-medium text-foreground">{{ row.service_name }}</td>
+                            <td class="px-4 py-3 text-right tabular-nums text-foreground">{{ row.current_licenses }}</td>
+                            <td class="px-4 py-3 text-right tabular-nums text-muted-foreground">{{ row.expected_licenses }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums text-foreground">
                                 {{ formatMoney(row.actual_amount) }}
                             </td>
-                            <td class="px-4 py-3 text-right text-muted-foreground">
+                            <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums text-muted-foreground">
                                 {{ formatMoney(row.expected_amount) }}
                             </td>
                         </tr>
                     </tbody>
-                    <!-- Totals Footer -->
-                    <tfoot class="border-t-2 border-border bg-muted/40">
+                    <tfoot class="border-t border-border bg-muted/40">
                         <tr>
-                            <td colspan="2" class="px-4 py-3 font-bold text-foreground">TOTAL</td>
-                            <td class="px-4 py-3 text-right font-bold text-foreground">{{ report.totals.current_licenses }}</td>
-                            <td class="px-4 py-3 text-right font-bold text-muted-foreground">{{ report.totals.expected_licenses }}</td>
-                            <td class="px-4 py-3 text-right font-bold text-orange-600 dark:text-orange-400">{{ formatMoney(report.totals.actual_amount) }}</td>
-                            <td class="px-4 py-3 text-right font-bold text-muted-foreground">{{ formatMoney(report.totals.expected_amount) }}</td>
+                            <td class="px-4 py-3 font-semibold text-foreground">Total</td>
+                            <td class="px-4 py-3 text-right font-semibold tabular-nums text-foreground">{{ report.totals.current_licenses }}</td>
+                            <td class="px-4 py-3 text-right font-semibold tabular-nums text-muted-foreground">{{ report.totals.expected_licenses }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums text-foreground">{{ formatMoney(report.totals.actual_amount) }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums text-muted-foreground">{{ formatMoney(report.totals.expected_amount) }}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
 
-            <div v-else class="flex flex-col items-center justify-center py-16 text-center">
-                <p class="text-muted-foreground text-sm">No budget data for {{ selectedYear }}.</p>
-                <Link
-                    :href="budgetsRoutes.create.url({ query: { year: selectedYear } })"
-                    :class="[buttonVariants({ variant: 'default' }), 'mt-4']"
-                >
-                    Setup Budget for {{ selectedYear }}
+            <div v-else class="flex flex-col items-center justify-center px-4 py-16 text-center">
+                <p class="text-sm text-muted-foreground">No budget set for {{ selectedYear }} yet.</p>
+                <Link :href="budgetsRoutes.create.url({ query: { year: selectedYear } })" :class="[buttonVariants(), 'mt-4']">
+                    Set up {{ selectedYear }} budget
                 </Link>
             </div>
         </div>

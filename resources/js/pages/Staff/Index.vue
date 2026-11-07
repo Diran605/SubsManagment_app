@@ -22,7 +22,7 @@ const props = defineProps<{
                     :href="staffRoutes.create.url()"
                     :class="buttonVariants({ variant: 'default' })"
                 >
-                    <Plus class="size-4" /> Add Staff
+                    <Plus class="size-4" /> Add staff
                 </Link>
             </template>
         </PageHeader>

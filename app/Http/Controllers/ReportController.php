@@ -18,9 +18,11 @@ class ReportController extends Controller
             'collections:id,subscription_id,amount,collection_date',
         ]);
 
+        $windowStart = null;
         if ($period !== 'all') {
             $months = $period === '6m' ? 6 : 12;
-            $subscriptionsQuery->where('start_date', '>=', now()->subMonths($months)->startOfMonth());
+            $windowStart = now()->subMonths($months)->startOfMonth();
+            $subscriptionsQuery->where('start_date', '>=', $windowStart);
         }
 
         $subscriptions = $subscriptionsQuery->get();
@@ -39,18 +41,29 @@ class ReportController extends Controller
             : [['date' => $sub->start_date, 'amount' => (float) $sub->amount]]
         );
 
-        $revenueOverTime = $revenueEvents
+        $monthlyTotals = $revenueEvents
             ->groupBy(fn ($event) => Carbon::parse($event['date'])->format('Y-m'))
-            ->sortKeys()
-            ->mapWithKeys(fn ($group, $key) => [
-                Carbon::parse($key.'-01')->format('M Y') => $group->sum('amount'),
-            ])
-            ->toArray();
+            ->map(fn ($group) => $group->sum('amount'));
+
+        // List every month in the range, including ones with no revenue, so the
+        // chart doesn't silently skip quiet months.
+        $revenueOverTime = [];
+        if ($windowStart || $monthlyTotals->isNotEmpty()) {
+            $cursor = ($windowStart ?? Carbon::parse($monthlyTotals->keys()->min().'-01'))->copy()->startOfMonth();
+            $lastKey = max(now()->format('Y-m'), (string) $monthlyTotals->keys()->max());
+            $last = Carbon::parse($lastKey.'-01');
+
+            while ($cursor->lte($last)) {
+                $revenueOverTime[$cursor->format('M Y')] = (float) ($monthlyTotals[$cursor->format('Y-m')] ?? 0);
+                $cursor = $cursor->addMonth();
+            }
+        }
 
         // Revenue by Service
         $revenueByService = $activeSubscriptions
             ->groupBy(fn ($sub) => $sub->service->name ?? 'Unknown')
             ->map(fn ($group) => $group->sum->realisedRevenue())
+            ->filter(fn ($total) => $total > 0)
             ->sortDesc()
             ->take(10)
             ->toArray();
@@ -59,6 +72,7 @@ class ReportController extends Controller
         $revenueByBusiness = $activeSubscriptions
             ->groupBy(fn ($sub) => $sub->business->name ?? 'Unknown')
             ->map(fn ($group) => $group->sum->realisedRevenue())
+            ->filter(fn ($total) => $total > 0)
             ->sortDesc()
             ->take(10)
             ->toArray();
@@ -67,6 +81,7 @@ class ReportController extends Controller
         $revenueByMode = $activeSubscriptions
             ->groupBy('mode')
             ->map(fn ($group) => $group->sum->realisedRevenue())
+            ->filter(fn ($total) => $total > 0)
             ->toArray();
 
         // Total historical vs active

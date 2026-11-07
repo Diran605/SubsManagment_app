@@ -18,6 +18,7 @@
     --radius-sm: calc(var(--radius) - 4px);
 
     --color-background: var(--background);
+    --color-page: var(--page);
     --color-foreground: var(--foreground);
 
     --color-card: var(--card);
@@ -98,6 +99,7 @@
 
 :root {
     --background: hsl(0 0% 100%);             /* pure white background */
+    --page: hsl(220 33% 97%);                 /* faint grey-blue behind cards */
     --foreground: hsl(220 60% 10%);           /* deep navy text */
     --card: hsl(0 0% 100%);                   /* pure white cards */
     --card-foreground: hsl(220 60% 10%);
@@ -141,6 +143,7 @@
 
 .dark {
     --background: hsl(224 71% 4%); /* Extremely dark navy #020817 */
+    --page: hsl(224 71% 4%);
     --foreground: hsl(210 40% 98%);
     --card: hsl(222 47% 11%); /* Elevated navy #0f172a */
     --card-foreground: hsl(210 40% 98%);

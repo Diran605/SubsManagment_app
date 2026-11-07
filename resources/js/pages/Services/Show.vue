@@ -314,7 +314,7 @@ const submitEditPackage = (id: number) => {
                                 <input v-model="moduleForm.description" type="text" placeholder="Description (Optional)" class="w-full rounded-md border-input bg-background px-3 py-2 text-foreground text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" />
                             </div>
                             <div v-if="deleteModuleForm.hasErrors" class="text-xs text-destructive">{{ (deleteModuleForm.errors as DeleteErrors).module }}</div>
-                            <button type="submit" :disabled="moduleForm.processing" :class="buttonVariants({ variant: 'secondary', class: 'w-full' })">Add Module</button>
+                            <button type="submit" :disabled="moduleForm.processing" :class="buttonVariants({ variant: 'secondary', class: 'w-full' })">Add module</button>
                         </form>
                     </div>
                 </div>
@@ -423,7 +423,7 @@ const submitEditPackage = (id: number) => {
                                     </div>
                                     <div class="flex gap-2 justify-end">
                                         <button type="button" @click="cancelEditPackage" class="inline-flex items-center rounded border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
-                                        <button type="submit" :disabled="editPackageForm.processing" class="inline-flex items-center rounded border border-primary bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 transition-colors">Save Changes</button>
+                                        <button type="submit" :disabled="editPackageForm.processing" class="inline-flex items-center rounded border border-primary bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 transition-colors">Save changes</button>
                                     </div>
                                 </form>
                             </li>
@@ -496,7 +496,7 @@ const submitEditPackage = (id: number) => {
                                 </div>
                             </div>
 
-                            <button type="submit" :disabled="packageForm.processing" :class="buttonVariants({ variant: 'secondary', class: 'w-full mt-4' })">Add Package</button>
+                            <button type="submit" :disabled="packageForm.processing" :class="buttonVariants({ variant: 'secondary', class: 'w-full mt-4' })">Add package</button>
                         </form>
                     </div>
                 </div>
