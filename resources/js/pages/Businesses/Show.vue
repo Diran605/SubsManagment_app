@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm';
 import { table } from '@/lib/ui';
 import businessesRoutes from '@/routes/businesses';
 import subscriptionsRoutes from '@/routes/subscriptions';
@@ -20,8 +21,17 @@ const props = defineProps<{
 
 const deleteForm = useForm({});
 
-const confirmDelete = () => {
-    if (confirm('Are you sure you want to delete this business?')) {
+const confirmAction = useConfirm();
+const confirmDelete = async () => {
+    if (
+        await confirmAction({
+            title: 'Delete this business?',
+            description:
+                'It disappears from lists, and its subscriptions stop counting towards revenue.',
+            confirmText: 'Delete business',
+            tone: 'danger',
+        })
+    ) {
         deleteForm.delete(businessesRoutes.destroy.url(props.business.id));
     }
 };

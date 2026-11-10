@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm';
 import subscriptionsRoutes from '@/routes/subscriptions';
 import businessesRoutes from '@/routes/businesses';
 import { Head, Link, router, usePage, useForm } from '@inertiajs/vue3';
@@ -68,16 +69,33 @@ const submitCollection = () => {
     );
 };
 
-const deleteCollection = (id: number) => {
-    if (confirm('Are you sure you want to delete this collection entry?')) {
+const confirmAction = useConfirm();
+const deleteCollection = async (id: number) => {
+    if (
+        await confirmAction({
+            title: 'Delete this payment?',
+            description:
+                "The amount will no longer count towards money collected. This can't be undone.",
+            confirmText: 'Delete payment',
+            tone: 'danger',
+        })
+    ) {
         router.delete(subscriptionsRoutes.collections.destroy.url(id), {
             preserveScroll: true,
         });
     }
 };
 
-const restoreSubscription = () => {
-    if (confirm('Are you sure you want to restore this subscription?')) {
+const restoreSubscription = async () => {
+    if (
+        await confirmAction({
+            title: 'Restore this subscription?',
+            description:
+                'It goes back into the subscriptions list and counts towards revenue again.',
+            confirmText: 'Restore',
+            tone: 'default',
+        })
+    ) {
         router.post(subscriptionsRoutes.restore.url(props.subscription.id));
     }
 };

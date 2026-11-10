@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm';
 import { table } from '@/lib/ui';
 import servicesRoutes from '@/routes/services';
 import modulesRoutes from '@/routes/modules';
@@ -43,8 +44,17 @@ const deleteForm = useForm({});
 // The server reports "in use" problems under these keys (see ModuleController/PackageController).
 type DeleteErrors = { module?: string; package?: string };
 
-const confirmDelete = () => {
-    if (confirm('Are you sure you want to delete this service?')) {
+const confirmAction = useConfirm();
+const confirmDelete = async () => {
+    if (
+        await confirmAction({
+            title: 'Delete this service?',
+            description:
+                'It disappears from lists and can no longer be picked for new subscriptions.',
+            confirmText: 'Delete service',
+            tone: 'danger',
+        })
+    ) {
         deleteForm.delete(servicesRoutes.destroy.url(props.service.id));
     }
 };
@@ -80,8 +90,16 @@ const submitPackage = () => {
 };
 
 const deleteModuleForm = useForm({});
-const deleteModule = (id: number) => {
-    if (confirm('Are you sure you want to delete this module?')) {
+const deleteModule = async (id: number) => {
+    if (
+        await confirmAction({
+            title: 'Delete this module?',
+            description:
+                "It is removed from this service and from any packages that include it. This can't be undone.",
+            confirmText: 'Delete module',
+            tone: 'danger',
+        })
+    ) {
         deleteModuleForm.delete(modulesRoutes.destroy.url(id), {
             preserveScroll: true,
         });
@@ -113,8 +131,16 @@ const submitEditModule = (id: number) => {
 };
 
 const deletePackageForm = useForm({});
-const deletePackage = (id: number) => {
-    if (confirm('Are you sure you want to delete this package?')) {
+const deletePackage = async (id: number) => {
+    if (
+        await confirmAction({
+            title: 'Delete this package?',
+            description:
+                "It can no longer be picked for new subscriptions. This can't be undone.",
+            confirmText: 'Delete package',
+            tone: 'danger',
+        })
+    ) {
         deletePackageForm.delete(packagesRoutes.destroy.url(id), {
             preserveScroll: true,
         });

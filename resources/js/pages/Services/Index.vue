@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm';
 import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/PageHeader.vue';
 import { rowActionVariants, table } from '@/lib/ui';
@@ -25,8 +26,17 @@ const props = defineProps<{
 
 import { useForm } from '@inertiajs/vue3';
 const deleteForm = useForm({});
-const confirmDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this service?')) {
+const confirmAction = useConfirm();
+const confirmDelete = async (id: number) => {
+    if (
+        await confirmAction({
+            title: 'Delete this service?',
+            description:
+                'It disappears from lists and can no longer be picked for new subscriptions.',
+            confirmText: 'Delete service',
+            tone: 'danger',
+        })
+    ) {
         deleteForm.delete(servicesRoutes.destroy.url(id), {
             preserveScroll: true,
         });

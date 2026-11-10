@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm';
 import { table } from '@/lib/ui';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
@@ -82,8 +83,17 @@ const submit = () => {
     }
 };
 
-const deleteRole = (id: number) => {
-    if (confirm('Are you sure you want to delete this role?')) {
+const confirmAction = useConfirm();
+const deleteRole = async (id: number) => {
+    if (
+        await confirmAction({
+            title: 'Delete this role?',
+            description:
+                'Staff who have this role lose the permissions it gives them.',
+            confirmText: 'Delete role',
+            tone: 'danger',
+        })
+    ) {
         router.delete(rolesRoutes.destroy.url(id));
     }
 };

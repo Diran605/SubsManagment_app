@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm';
 import subscriptionsRoutes from '@/routes/subscriptions';
 import businessesRoutes from '@/routes/businesses';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
@@ -58,16 +59,33 @@ watch([status, dateFrom, dateTo], applyFilters);
 
 const deleteForm = useForm({});
 
-const confirmDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this subscription?')) {
+const confirmAction = useConfirm();
+const confirmDelete = async (id: number) => {
+    if (
+        await confirmAction({
+            title: 'Delete this subscription?',
+            description:
+                'It stops counting towards revenue. You can restore it later from the Deleted filter.',
+            confirmText: 'Delete subscription',
+            tone: 'danger',
+        })
+    ) {
         deleteForm.delete(subscriptionsRoutes.destroy.url(id), {
             preserveScroll: true,
         });
     }
 };
 
-const confirmRestore = (id: number) => {
-    if (confirm('Are you sure you want to restore this subscription?')) {
+const confirmRestore = async (id: number) => {
+    if (
+        await confirmAction({
+            title: 'Restore this subscription?',
+            description:
+                'It goes back into the subscriptions list and counts towards revenue again.',
+            confirmText: 'Restore',
+            tone: 'default',
+        })
+    ) {
         deleteForm.post(subscriptionsRoutes.restore.url(id), {
             preserveScroll: true,
         });

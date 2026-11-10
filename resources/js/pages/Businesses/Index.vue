@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm';
 import Pagination from '@/components/Pagination.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { fieldClass, rowActionVariants, table } from '@/lib/ui';
@@ -37,8 +38,17 @@ watch(search, (value) => {
 
 import { useForm } from '@inertiajs/vue3';
 const deleteForm = useForm({});
-const confirmDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this business?')) {
+const confirmAction = useConfirm();
+const confirmDelete = async (id: number) => {
+    if (
+        await confirmAction({
+            title: 'Delete this business?',
+            description:
+                'It disappears from lists, and its subscriptions stop counting towards revenue.',
+            confirmText: 'Delete business',
+            tone: 'danger',
+        })
+    ) {
         deleteForm.delete(businessesRoutes.destroy.url(id), {
             preserveScroll: true,
         });
