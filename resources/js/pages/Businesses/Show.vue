@@ -49,6 +49,7 @@ const contactRows = computed(() => [
     { label: 'Email', value: orDash(props.business.email) },
     { label: 'Phone', value: orDash(props.business.phone) },
     { label: 'Address', value: orDash(props.business.address) },
+    { label: 'Landmark', value: orDash(props.business.landmark) },
 ]);
 
 const deleteForm = useForm({});

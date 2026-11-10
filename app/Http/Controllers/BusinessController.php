@@ -27,7 +27,10 @@ class BusinessController extends Controller implements HasMiddleware
     {
         $search = $request->input('search');
         $businesses = Business::when($search, function ($query, $search) {
-            $query->where('name', 'like', "%{$search}%");
+            $query->where(fn ($q) => $q
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('contact_person', 'like', "%{$search}%")
+                ->orWhere('landmark', 'like', "%{$search}%"));
         })->latest()->paginate(10)->withQueryString();
 
         return Inertia::render('Businesses/Index', [
@@ -49,6 +52,7 @@ class BusinessController extends Controller implements HasMiddleware
             'phone' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:255',
+            'landmark' => 'nullable|string|max:255',
         ]);
 
         $validated['created_by'] = $request->user()->id;
@@ -90,6 +94,7 @@ class BusinessController extends Controller implements HasMiddleware
             'phone' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:255',
+            'landmark' => 'nullable|string|max:255',
         ]);
 
         $business->update($validated);

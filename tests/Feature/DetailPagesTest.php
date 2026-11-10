@@ -63,4 +63,26 @@ class DetailPagesTest extends TestCase
                 ->where('staff.subscriptions.0.status_badge', 'expired')
             );
     }
+
+    public function test_business_landmark_is_saved_and_searchable()
+    {
+        $this->actingAs($this->admin)
+            ->post(route('businesses.store'), [
+                'name' => 'Nkwen District Hospital',
+                'landmark' => 'Opposite Total, Mile 4',
+            ])
+            ->assertRedirect(route('businesses.index'));
+
+        $this->assertDatabaseHas('businesses', [
+            'name' => 'Nkwen District Hospital',
+            'landmark' => 'Opposite Total, Mile 4',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('businesses.index', ['search' => 'Mile 4']))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('businesses.total', 1)
+                ->where('businesses.data.0.landmark', 'Opposite Total, Mile 4')
+            );
+    }
 }

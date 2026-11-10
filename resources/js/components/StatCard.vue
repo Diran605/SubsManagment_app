@@ -20,34 +20,39 @@ const toneClasses: Record<string, string> = {
 </script>
 
 <template>
+    <!-- @container: the value's font size follows the card's own width, so a
+         long amount like 5,154,000 FCFA always fits instead of being cut off. -->
     <div
-        class="border-border bg-card flex flex-col rounded-xl border p-5 shadow-xs"
+        class="border-border bg-card @container flex flex-col rounded-xl border p-5 shadow-xs"
     >
-        <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-                <p class="text-muted-foreground text-sm font-medium">
-                    {{ label }}
-                </p>
-                <p
-                    class="text-foreground mt-2 truncate text-2xl font-semibold tracking-tight tabular-nums md:text-3xl"
-                >
-                    {{ value
-                    }}<span
-                        v-if="unit"
-                        class="text-muted-foreground ml-1 text-base font-medium"
-                        >{{ unit }}</span
-                    >
-                </p>
-            </div>
+        <div class="flex items-center gap-2.5">
             <div
                 v-if="$slots.icon"
-                class="flex size-10 shrink-0 items-center justify-center rounded-lg [&>svg]:size-5"
+                class="flex size-8 shrink-0 items-center justify-center rounded-lg [&>svg]:size-4"
                 :class="toneClasses[tone]"
                 aria-hidden="true"
             >
                 <slot name="icon" />
             </div>
+            <p class="text-muted-foreground text-sm leading-tight font-medium">
+                {{ label }}
+            </p>
         </div>
+
+        <p
+            class="text-foreground mt-3 flex flex-wrap items-baseline gap-x-1.5 font-semibold tracking-tight tabular-nums"
+        >
+            <span
+                class="text-xl leading-tight whitespace-nowrap @[13rem]:text-2xl @[17rem]:text-3xl"
+                >{{ value }}</span
+            >
+            <span
+                v-if="unit"
+                class="text-muted-foreground text-xs font-medium tracking-normal @[13rem]:text-sm"
+                >{{ unit }}</span
+            >
+        </p>
+
         <div
             v-if="hint || $slots.default"
             class="text-muted-foreground mt-auto pt-3 text-xs"

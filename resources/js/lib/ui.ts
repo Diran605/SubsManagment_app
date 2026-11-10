@@ -27,9 +27,13 @@ export const table = {
     wrapper:
         'overflow-hidden rounded-xl border border-border bg-card shadow-xs',
     toolbar: 'flex flex-wrap items-center gap-3 border-b border-border p-4',
-    head: 'border-b border-border bg-muted/50 text-xs font-medium uppercase tracking-wide text-muted-foreground',
+    // Quiet header: sentence case, no fill, so the rows carry the weight.
+    head: 'border-b border-border text-xs font-medium text-muted-foreground [&_th]:h-11 [&_th]:font-medium',
     th: 'px-4 py-3 font-medium',
     row: 'transition-colors hover:bg-muted/40',
+    /** Rows that open the record when clicked. */
+    clickableRow: 'cursor-pointer transition-colors hover:bg-muted/40',
+    cell: 'px-4 py-3.5 align-middle',
     empty: 'px-4 py-12 text-center text-sm text-muted-foreground',
 };
 

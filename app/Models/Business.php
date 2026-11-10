@@ -21,6 +21,7 @@ class Business extends Model
         'phone',
         'email',
         'address',
+        'landmark',
         'created_by',
     ];
 

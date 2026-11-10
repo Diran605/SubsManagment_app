@@ -17,6 +17,7 @@ const props = defineProps<{
         phone: string | null;
         email: string | null;
         address: string | null;
+        landmark: string | null;
     };
 }>();
 
@@ -28,6 +29,7 @@ const form = useForm({
     phone: props.business?.phone || '',
     email: props.business?.email || '',
     address: props.business?.address || '',
+    landmark: props.business?.landmark || '',
 });
 
 const backHref = isEditing
@@ -107,6 +109,15 @@ const submit = () => {
                         rows="3"
                         :class="textareaClass"
                     ></textarea>
+                </FormField>
+
+                <FormField
+                    label="Landmark"
+                    for="landmark"
+                    hint="Something nearby that helps people find the place, e.g. 'Opposite Total, Mile 4'."
+                    :error="form.errors.landmark"
+                >
+                    <Input id="landmark" v-model="form.landmark" />
                 </FormField>
             </div>
 

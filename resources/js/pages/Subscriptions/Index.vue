@@ -8,8 +8,20 @@ import { useDebounceFn } from '@vueuse/core';
 import { buttonVariants } from '@/components/ui/button';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
-import { fieldClass, rowActionVariants, table } from '@/lib/ui';
-import { Plus, Search } from '@lucide/vue';
+import EntityAvatar from '@/components/EntityAvatar.vue';
+import RowActions from '@/components/RowActions.vue';
+import { fieldClass, table } from '@/lib/ui';
+import { formatDate, formatMoney } from '@/lib/format';
+import {
+    Building2,
+    Eye,
+    Pencil,
+    Plus,
+    RefreshCw,
+    RotateCcw,
+    Search,
+    Trash2,
+} from '@lucide/vue';
 
 const page = usePage<any>();
 const canCreate = computed(() =>
@@ -156,14 +168,16 @@ const confirmRestore = async (id: number) => {
                 <table class="w-full text-left text-sm">
                     <thead :class="table.head">
                         <tr>
-                            <th :class="table.th">Business</th>
-                            <th :class="table.th">Service</th>
-                            <th :class="table.th">Mode</th>
+                            <th :class="table.th">Client</th>
+                            <th :class="[table.th, 'hidden md:table-cell']">
+                                Period
+                            </th>
                             <th :class="[table.th, 'text-right']">Amount</th>
-                            <th :class="table.th">Period</th>
-                            <th :class="table.th">Added by</th>
                             <th :class="table.th">Status</th>
-                            <th :class="[table.th, 'text-right']">
+                            <th :class="[table.th, 'hidden xl:table-cell']">
+                                Added by
+                            </th>
+                            <th :class="[table.th, 'w-12']">
                                 <span class="sr-only">Actions</span>
                             </th>
                         </tr>
@@ -172,135 +186,141 @@ const confirmRestore = async (id: number) => {
                         <tr
                             v-for="sub in props.subscriptions.data"
                             :key="sub.id"
-                            :class="table.row"
+                            :class="[
+                                table.clickableRow,
+                                sub.status_badge === 'trashed' && 'opacity-60',
+                            ]"
+                            @click="
+                                router.visit(
+                                    subscriptionsRoutes.show.url(sub.id),
+                                )
+                            "
                         >
-                            <td class="text-foreground px-4 py-3 font-medium">
-                                <Link
-                                    :href="
-                                        businessesRoutes.show.url(
-                                            sub.business_id,
-                                        )
-                                    "
-                                    class="hover:underline"
-                                >
-                                    {{ sub.business?.name }}
-                                </Link>
-                            </td>
-                            <td class="text-muted-foreground px-4 py-3">
-                                {{ sub.service?.name }}
+                            <td :class="table.cell">
+                                <div class="flex items-center gap-3">
+                                    <EntityAvatar
+                                        :name="sub.business?.name ?? '?'"
+                                    />
+                                    <div class="min-w-0">
+                                        <div
+                                            class="text-foreground truncate font-medium"
+                                        >
+                                            {{ sub.business?.name ?? '—' }}
+                                        </div>
+                                        <div
+                                            class="text-muted-foreground truncate text-xs"
+                                        >
+                                            {{ sub.service?.name ?? '—' }}
+                                            <span class="capitalize"
+                                                >· {{ sub.mode }}</span
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                             <td
-                                class="text-muted-foreground px-4 py-3 capitalize"
+                                :class="[
+                                    table.cell,
+                                    'hidden text-xs whitespace-nowrap md:table-cell',
+                                ]"
                             >
-                                {{ sub.mode }}
+                                <div class="text-foreground">
+                                    {{ formatDate(sub.start_date) }}
+                                </div>
+                                <div class="text-muted-foreground">
+                                    to {{ formatDate(sub.end_date) }}
+                                </div>
                             </td>
                             <td
-                                class="text-foreground px-4 py-3 text-right font-medium whitespace-nowrap tabular-nums"
+                                :class="[
+                                    table.cell,
+                                    'text-foreground text-right font-medium whitespace-nowrap tabular-nums',
+                                ]"
                             >
-                                {{ Number(sub.amount).toLocaleString('en-US') }}
-                                <span class="text-muted-foreground text-xs"
+                                {{ formatMoney(sub.amount) }}
+                                <span
+                                    class="text-muted-foreground text-xs font-normal"
                                     >FCFA</span
                                 >
                             </td>
-                            <td
-                                class="text-muted-foreground px-4 py-3 text-xs whitespace-nowrap"
-                            >
-                                {{
-                                    new Date(
-                                        sub.start_date,
-                                    ).toLocaleDateString()
-                                }}
-                                –
-                                {{
-                                    new Date(sub.end_date).toLocaleDateString()
-                                }}
-                            </td>
-                            <td class="text-muted-foreground px-4 py-3">
-                                {{ sub.creator?.name || 'System' }}
-                            </td>
-                            <td class="px-4 py-3">
+                            <td :class="table.cell">
                                 <StatusBadge :status="sub.status_badge" />
                             </td>
-                            <td class="px-4 py-3 text-right">
-                                <div
-                                    class="flex items-center justify-end gap-1.5"
-                                >
-                                    <Link
-                                        :href="
-                                            subscriptionsRoutes.show.url(sub.id)
-                                        "
-                                        :class="
-                                            rowActionVariants({
-                                                tone: 'neutral',
-                                            })
-                                        "
-                                        >View</Link
-                                    >
-                                    <template
-                                        v-if="sub.status_badge !== 'trashed'"
-                                    >
-                                        <Link
-                                            v-if="
-                                                canCreate &&
-                                                sub.status_badge !== 'active' &&
-                                                sub.status_badge !== 'renewed'
-                                            "
-                                            :href="
-                                                subscriptionsRoutes.createRenewal.url(
-                                                    sub.id,
-                                                )
-                                            "
-                                            :class="
-                                                rowActionVariants({
-                                                    tone: 'success',
-                                                })
-                                            "
-                                            >Renew</Link
-                                        >
-                                        <Link
-                                            v-if="canEdit"
-                                            :href="
-                                                subscriptionsRoutes.edit.url(
-                                                    sub.id,
-                                                )
-                                            "
-                                            :class="
-                                                rowActionVariants({
-                                                    tone: 'primary',
-                                                })
-                                            "
-                                            >Edit</Link
-                                        >
-                                        <button
-                                            v-if="canDelete"
-                                            type="button"
-                                            @click="confirmDelete(sub.id)"
-                                            :class="
-                                                rowActionVariants({
-                                                    tone: 'danger',
-                                                })
-                                            "
-                                        >
-                                            Delete
-                                        </button>
-                                    </template>
-                                    <button
-                                        v-else-if="canRestore"
-                                        type="button"
-                                        @click="confirmRestore(sub.id)"
-                                        :class="
-                                            rowActionVariants({
-                                                tone: 'warning',
-                                            })
-                                        "
-                                    >
-                                        Restore
-                                    </button>
-                                </div>
+                            <td
+                                :class="[
+                                    table.cell,
+                                    'text-muted-foreground hidden text-xs xl:table-cell',
+                                ]"
+                            >
+                                {{ sub.creator?.name ?? '—' }}
+                            </td>
+                            <td :class="[table.cell, 'text-right']">
+                                <RowActions
+                                    :label="`Actions for ${sub.business?.name ?? 'subscription'}`"
+                                    :actions="[
+                                        {
+                                            label: 'View',
+                                            icon: Eye,
+                                            href: subscriptionsRoutes.show.url(
+                                                sub.id,
+                                            ),
+                                        },
+                                        {
+                                            label: 'Renew',
+                                            icon: RefreshCw,
+                                            href: subscriptionsRoutes.createRenewal.url(
+                                                sub.id,
+                                            ),
+                                            hidden:
+                                                !canCreate ||
+                                                [
+                                                    'active',
+                                                    'renewed',
+                                                    'trashed',
+                                                ].includes(sub.status_badge),
+                                        },
+                                        {
+                                            label: 'Edit',
+                                            icon: Pencil,
+                                            href: subscriptionsRoutes.edit.url(
+                                                sub.id,
+                                            ),
+                                            hidden:
+                                                !canEdit ||
+                                                sub.status_badge === 'trashed',
+                                        },
+                                        {
+                                            label: 'Open business',
+                                            icon: Building2,
+                                            href: businessesRoutes.show.url(
+                                                sub.business_id,
+                                            ),
+                                        },
+                                        {
+                                            label: 'Restore',
+                                            icon: RotateCcw,
+                                            onSelect: () =>
+                                                confirmRestore(sub.id),
+                                            hidden:
+                                                !canRestore ||
+                                                sub.status_badge !== 'trashed',
+                                        },
+                                        {
+                                            label: 'Delete',
+                                            icon: Trash2,
+                                            danger: true,
+                                            onSelect: () =>
+                                                confirmDelete(sub.id),
+                                            hidden:
+                                                !canDelete ||
+                                                sub.status_badge === 'trashed',
+                                        },
+                                    ]"
+                                />
                             </td>
                         </tr>
                         <tr v-if="props.subscriptions.data.length === 0">
-                            <td colspan="8" :class="table.empty">
+                            <td colspan="6" :class="table.empty">
                                 No subscriptions match these filters.
                             </td>
                         </tr>
