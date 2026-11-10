@@ -11,6 +11,13 @@ class BudgetReportService
 {
     /**
      * Generate a full budget report for a given fiscal year.
+     *
+     * @return array{
+     *     fiscal_year: int,
+     *     budget: Budget|null,
+     *     rows: list<array<string, int|float|string>>,
+     *     totals: array<string, int|float>,
+     * }
      */
     public function generateReport(int $fiscalYear): array
     {

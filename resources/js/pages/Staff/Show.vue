@@ -1,191 +1,176 @@
 <script setup lang="ts">
 import staffRoutes from '@/routes/staff';
 import businessesRoutes from '@/routes/businesses';
+import subscriptionsRoutes from '@/routes/subscriptions';
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Building2, CalendarDays, Layers, Pencil, Power } from '@lucide/vue';
+import PageHeader from '@/components/PageHeader.vue';
+import StatCard from '@/components/StatCard.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
+import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
+import { card, table } from '@/lib/ui';
+import { formatDate, formatMoney } from '@/lib/format';
 
 const props = defineProps<{
     staff: any;
 }>();
+
+const businesses = computed<any[]>(() => props.staff.businesses ?? []);
+const subscriptions = computed<any[]>(() => props.staff.subscriptions ?? []);
 </script>
 
 <template>
     <Head :title="staff.name" />
 
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h1
-                    class="text-foreground text-2xl font-semibold tracking-tight md:text-3xl"
-                >
-                    {{ staff.name }}
-                </h1>
-                <p class="text-muted-foreground mt-1 text-sm">
-                    Staff Details & Audit Log
-                </p>
-            </div>
-            <div class="flex gap-2">
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 md:p-8">
+        <PageHeader
+            :title="staff.name"
+            :back-href="staffRoutes.index.url()"
+            back-label="Back to staff"
+        >
+            <template #description>
+                <span class="inline-flex flex-wrap items-center gap-2">
+                    {{ staff.email }}
+                    <Badge :variant="staff.is_active ? 'success' : 'muted'">
+                        {{ staff.is_active ? 'Active' : 'Inactive' }}
+                    </Badge>
+                </span>
+            </template>
+            <template #actions>
                 <Link
-                    :href="staffRoutes.index.url()"
+                    :href="staffRoutes.toggle.url(staff.id)"
+                    method="patch"
+                    as="button"
                     :class="buttonVariants({ variant: 'outline' })"
+                    class="hover:border-warning/40 hover:bg-warning/10 hover:text-warning"
                 >
-                    Back to List
+                    <Power class="size-4" />
+                    {{ staff.is_active ? 'Deactivate' : 'Activate' }}
                 </Link>
                 <Link
                     :href="staffRoutes.edit.url(staff.id)"
                     :class="buttonVariants({ variant: 'default' })"
                 >
-                    Edit
+                    <Pencil class="size-4" /> Edit
                 </Link>
-                <Link
-                    :href="staffRoutes.toggle.url(staff.id)"
-                    method="patch"
-                    as="button"
-                    :class="buttonVariants({ variant: 'secondary' })"
-                    class="text-warning hover:bg-warning/10 font-medium"
-                >
-                    {{ staff.is_active ? 'Deactivate' : 'Activate' }}
-                </Link>
-            </div>
+            </template>
+        </PageHeader>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard
+                label="Businesses added"
+                :value="businesses.length"
+                tone="primary"
+            >
+                <template #icon><Building2 /></template>
+            </StatCard>
+            <StatCard
+                label="Subscriptions recorded"
+                :value="subscriptions.length"
+                tone="accent"
+            >
+                <template #icon><Layers /></template>
+            </StatCard>
+            <StatCard
+                label="Member since"
+                :value="formatDate(staff.created_at)"
+                tone="info"
+            >
+                <template #icon><CalendarDays /></template>
+            </StatCard>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div
-                class="border-border bg-card col-span-1 h-fit space-y-6 rounded-xl border p-6 shadow-sm"
-            >
-                <dl class="space-y-4">
-                    <div>
-                        <dt class="text-muted-foreground text-sm font-medium">
-                            Email
-                        </dt>
-                        <dd class="text-foreground mt-1 text-sm">
-                            {{ staff.email }}
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-foreground text-sm font-medium">
-                            Status
-                        </dt>
-                        <dd class="mt-1">
-                            <span
-                                :class="[
-                                    'rounded-md border px-2 py-1 text-xs font-medium ring-1 ring-inset',
-                                    staff.is_active
-                                        ? 'bg-success/10 text-success ring-success/20 border-transparent'
-                                        : 'bg-destructive/10 text-destructive ring-destructive/20 border-transparent',
-                                ]"
-                            >
-                                {{ staff.is_active ? 'Active' : 'Inactive' }}
-                            </span>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-foreground text-sm font-medium">
-                            Joined
-                        </dt>
-                        <dd class="text-foreground mt-1 text-sm">
-                            {{
-                                new Date(staff.created_at).toLocaleDateString()
-                            }}
-                        </dd>
-                    </div>
-                </dl>
-            </div>
-
-            <div class="col-span-2 space-y-6">
-                <!-- Businesses Created -->
-                <div
-                    class="border-border bg-card flex flex-col rounded-xl border shadow-xs"
-                >
-                    <div class="border-border bg-muted/20 border-b p-4">
-                        <h3 class="text-foreground font-semibold">
-                            Businesses Added
-                        </h3>
-                    </div>
-                    <div class="p-4" v-if="staff.businesses?.length === 0">
-                        <p class="text-muted-foreground text-sm">
-                            No businesses added by this staff member.
-                        </p>
-                    </div>
-                    <ul class="divide-border divide-y" v-else>
-                        <li
-                            v-for="b in staff.businesses"
-                            :key="b.id"
-                            class="hover:bg-muted/50 p-4 transition-colors"
-                        >
-                            <Link
-                                :href="businessesRoutes.show.url(b.id)"
-                                class="text-primary text-sm font-medium hover:underline"
-                                >{{ b.name }}</Link
-                            >
-                            <span class="text-muted-foreground ml-2 text-xs"
-                                >on
-                                {{
-                                    new Date(b.created_at).toLocaleDateString()
-                                }}</span
-                            >
-                        </li>
-                    </ul>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <section :class="[card.base, 'h-fit']">
+                <div :class="card.header">
+                    <h2 :class="card.title">Businesses added</h2>
                 </div>
-
-                <!-- Subscriptions Created -->
-                <div
-                    class="border-border bg-card flex flex-col rounded-xl border shadow-xs"
-                >
-                    <div class="border-border bg-muted/20 border-b p-4">
-                        <h3 class="text-foreground font-semibold">
-                            Subscriptions Handled
-                        </h3>
-                    </div>
-                    <div class="p-4" v-if="staff.subscriptions?.length === 0">
-                        <p class="text-muted-foreground text-sm">
-                            No subscriptions handled by this staff member.
-                        </p>
-                    </div>
-                    <ul class="divide-border divide-y" v-else>
-                        <li
-                            v-for="sub in staff.subscriptions"
-                            :key="sub.id"
-                            class="hover:bg-muted/50 flex items-center justify-between p-4 transition-colors"
+                <ul class="divide-border divide-y text-sm">
+                    <li
+                        v-for="b in businesses"
+                        :key="b.id"
+                        class="flex items-center justify-between gap-3 px-5 py-3"
+                    >
+                        <Link
+                            :href="businessesRoutes.show.url(b.id)"
+                            class="text-foreground hover:text-primary truncate font-medium"
+                            >{{ b.name }}</Link
                         >
-                            <div>
-                                <span
-                                    class="text-foreground text-sm font-medium capitalize"
-                                    >{{ sub.mode }}</span
-                                >
-                                <span class="text-muted-foreground ml-2 text-xs"
-                                    >from
-                                    {{
-                                        new Date(
-                                            sub.start_date,
-                                        ).toLocaleDateString('en-GB', {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: 'numeric',
-                                        })
-                                    }}
-                                    to
-                                    {{
-                                        new Date(
-                                            sub.end_date,
-                                        ).toLocaleDateString('en-GB', {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: 'numeric',
-                                        })
-                                    }}</span
-                                >
-                            </div>
-                            <span class="text-foreground text-sm font-medium"
-                                >{{
-                                    Number(sub.amount).toLocaleString('en-US')
-                                }}
-                                FCFA</span
-                            >
-                        </li>
-                    </ul>
+                        <span class="text-muted-foreground shrink-0 text-xs">{{
+                            formatDate(b.created_at)
+                        }}</span>
+                    </li>
+                    <li v-if="businesses.length === 0" :class="table.empty">
+                        None yet.
+                    </li>
+                </ul>
+            </section>
+
+            <section :class="[card.base, 'lg:col-span-2']">
+                <div :class="card.header">
+                    <h2 :class="card.title">Subscriptions recorded</h2>
                 </div>
-            </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead :class="table.head">
+                            <tr>
+                                <th :class="table.th">Client</th>
+                                <th :class="table.th">Period</th>
+                                <th :class="table.th">Status</th>
+                                <th :class="[table.th, 'text-right']">
+                                    Amount
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-border divide-y">
+                            <tr
+                                v-for="sub in subscriptions"
+                                :key="sub.id"
+                                :class="table.row"
+                            >
+                                <td class="px-4 py-3">
+                                    <Link
+                                        :href="
+                                            subscriptionsRoutes.show.url(sub.id)
+                                        "
+                                        class="text-foreground hover:text-primary font-medium"
+                                    >
+                                        {{ sub.business?.name ?? '—' }}
+                                    </Link>
+                                    <div class="text-muted-foreground text-xs">
+                                        {{ sub.service?.name ?? '—' }}
+                                    </div>
+                                </td>
+                                <td
+                                    class="text-muted-foreground px-4 py-3 whitespace-nowrap"
+                                >
+                                    {{ formatDate(sub.start_date) }} –
+                                    {{ formatDate(sub.end_date) }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <StatusBadge :status="sub.status_badge" />
+                                </td>
+                                <td
+                                    class="text-foreground px-4 py-3 text-right font-medium whitespace-nowrap tabular-nums"
+                                >
+                                    {{ formatMoney(sub.amount) }}
+                                    <span
+                                        class="text-muted-foreground text-xs font-normal"
+                                        >FCFA</span
+                                    >
+                                </td>
+                            </tr>
+                            <tr v-if="subscriptions.length === 0">
+                                <td colspan="4" :class="table.empty">
+                                    None yet.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </div>
 </template>

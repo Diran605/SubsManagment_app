@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import businessesRoutes from '@/routes/businesses';
-import { Head, useForm, Link } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
+import FormField from '@/components/FormField.vue';
+import PageHeader from '@/components/PageHeader.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Link } from '@inertiajs/vue3';
 import { buttonVariants } from '@/components/ui/button';
+import { textareaClass } from '@/lib/ui';
 
 const props = defineProps<{
     business?: {
@@ -11,6 +17,7 @@ const props = defineProps<{
         phone: string | null;
         email: string | null;
         address: string | null;
+        landmark: string | null;
     };
 }>();
 
@@ -22,7 +29,12 @@ const form = useForm({
     phone: props.business?.phone || '',
     email: props.business?.email || '',
     address: props.business?.address || '',
+    landmark: props.business?.landmark || '',
 });
+
+const backHref = isEditing
+    ? businessesRoutes.show.url(props.business!.id)
+    : businessesRoutes.index.url();
 
 const submit = () => {
     if (isEditing) {
@@ -34,133 +46,94 @@ const submit = () => {
 </script>
 
 <template>
-    <Head :title="isEditing ? 'Edit Business' : 'Create Business'" />
+    <Head :title="isEditing ? 'Edit business' : 'Add business'" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h1
-                    class="text-foreground text-2xl font-semibold tracking-tight md:text-3xl"
-                >
-                    {{ isEditing ? 'Edit Business' : 'Create Business' }}
-                </h1>
-            </div>
-            <Link
-                :href="businessesRoutes.index.url()"
-                class="text-muted-foreground hover:text-foreground text-sm font-medium"
-            >
-                &larr; Back to List
-            </Link>
-        </div>
+        <PageHeader
+            :title="isEditing ? 'Edit business' : 'Add business'"
+            :description="
+                isEditing
+                    ? 'Update the client\'s contact details.'
+                    : 'Add a client so you can record subscriptions for them.'
+            "
+            :back-href="backHref"
+            :back-label="isEditing ? 'Back to business' : 'Back to businesses'"
+        />
 
-        <div
-            class="border-border bg-card rounded-xl border p-6 shadow-sm md:p-8"
+        <form
+            @submit.prevent="submit"
+            class="border-border bg-card overflow-hidden rounded-xl border shadow-xs"
         >
-            <form @submit.prevent="submit" class="space-y-4">
-                <div>
-                    <label
-                        class="text-foreground mb-1 block text-sm font-medium"
-                        >Business Name
-                        <span class="text-destructive">*</span></label
-                    >
-                    <input
-                        v-model="form.name"
-                        type="text"
-                        required
-                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
-                    />
-                    <p
-                        v-if="form.errors.name"
-                        class="text-destructive mt-1 text-sm"
-                    >
-                        {{ form.errors.name }}
-                    </p>
-                </div>
+            <div class="space-y-5 p-6">
+                <FormField
+                    label="Business name"
+                    for="name"
+                    required
+                    :error="form.errors.name"
+                >
+                    <Input id="name" v-model="form.name" required autofocus />
+                </FormField>
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                        <label
-                            class="text-foreground mb-1 block text-sm font-medium"
-                            >Contact Person</label
-                        >
-                        <input
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <FormField
+                        label="Contact person"
+                        for="contact_person"
+                        :error="form.errors.contact_person"
+                    >
+                        <Input
+                            id="contact_person"
                             v-model="form.contact_person"
-                            type="text"
-                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                         />
-                        <p
-                            v-if="form.errors.contact_person"
-                            class="text-destructive mt-1 text-sm"
-                        >
-                            {{ form.errors.contact_person }}
-                        </p>
-                    </div>
-                    <div>
-                        <label
-                            class="text-foreground mb-1 block text-sm font-medium"
-                            >Phone</label
-                        >
-                        <input
-                            v-model="form.phone"
-                            type="text"
-                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
-                        />
-                        <p
-                            v-if="form.errors.phone"
-                            class="text-destructive mt-1 text-sm"
-                        >
-                            {{ form.errors.phone }}
-                        </p>
-                    </div>
+                    </FormField>
+                    <FormField
+                        label="Phone"
+                        for="phone"
+                        :error="form.errors.phone"
+                    >
+                        <Input id="phone" v-model="form.phone" type="tel" />
+                    </FormField>
                 </div>
 
-                <div>
-                    <label
-                        class="text-foreground mb-1 block text-sm font-medium"
-                        >Email</label
-                    >
-                    <input
-                        v-model="form.email"
-                        type="email"
-                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
-                    />
-                    <p
-                        v-if="form.errors.email"
-                        class="text-destructive mt-1 text-sm"
-                    >
-                        {{ form.errors.email }}
-                    </p>
-                </div>
+                <FormField label="Email" for="email" :error="form.errors.email">
+                    <Input id="email" v-model="form.email" type="email" />
+                </FormField>
 
-                <div>
-                    <label
-                        class="text-foreground mb-1 block text-sm font-medium"
-                        >Address</label
-                    >
+                <FormField
+                    label="Address"
+                    for="address"
+                    :error="form.errors.address"
+                >
                     <textarea
+                        id="address"
                         v-model="form.address"
                         rows="3"
-                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
+                        :class="textareaClass"
                     ></textarea>
-                    <p
-                        v-if="form.errors.address"
-                        class="text-destructive mt-1 text-sm"
-                    >
-                        {{ form.errors.address }}
-                    </p>
-                </div>
+                </FormField>
 
-                <div class="flex justify-end pt-4">
-                    <button
-                        type="submit"
-                        :disabled="form.processing"
-                        :class="buttonVariants({ variant: 'default' })"
-                        class="disabled:opacity-50"
-                    >
-                        {{ isEditing ? 'Update Business' : 'Save Business' }}
-                    </button>
-                </div>
-            </form>
-        </div>
+                <FormField
+                    label="Landmark"
+                    for="landmark"
+                    hint="Something nearby that helps people find the place, e.g. 'Opposite Total, Mile 4'."
+                    :error="form.errors.landmark"
+                >
+                    <Input id="landmark" v-model="form.landmark" />
+                </FormField>
+            </div>
+
+            <div
+                class="border-border bg-muted/30 flex justify-end gap-2 border-t px-6 py-4"
+            >
+                <Link
+                    :href="backHref"
+                    :class="buttonVariants({ variant: 'outline' })"
+                >
+                    Cancel
+                </Link>
+                <Button type="submit" :disabled="form.processing">
+                    {{ isEditing ? 'Save changes' : 'Add business' }}
+                </Button>
+            </div>
+        </form>
     </div>
 </template>

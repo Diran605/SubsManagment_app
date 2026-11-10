@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm';
 import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/PageHeader.vue';
-import { rowActionVariants, table } from '@/lib/ui';
-import { Plus } from '@lucide/vue';
+import EntityAvatar from '@/components/EntityAvatar.vue';
+import RowActions from '@/components/RowActions.vue';
+import { table } from '@/lib/ui';
+import { Eye, Package, Pencil, Plus, Puzzle, Trash2 } from '@lucide/vue';
 import servicesRoutes from '@/routes/services';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -25,8 +28,17 @@ const props = defineProps<{
 
 import { useForm } from '@inertiajs/vue3';
 const deleteForm = useForm({});
-const confirmDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this service?')) {
+const confirmAction = useConfirm();
+const confirmDelete = async (id: number) => {
+    if (
+        await confirmAction({
+            title: 'Delete this service?',
+            description:
+                'It disappears from lists and can no longer be picked for new subscriptions.',
+            confirmText: 'Delete service',
+            tone: 'danger',
+        })
+    ) {
         deleteForm.delete(servicesRoutes.destroy.url(id), {
             preserveScroll: true,
         });
@@ -60,11 +72,13 @@ const confirmDelete = (id: number) => {
                 <table class="w-full text-left text-sm">
                     <thead :class="table.head">
                         <tr>
-                            <th class="px-4 py-3 font-medium">Service Name</th>
-                            <th class="px-4 py-3 font-medium">Description</th>
-                            <th class="px-4 py-3 font-medium">Configuration</th>
-                            <th class="px-4 py-3 text-right font-medium">
-                                Actions
+                            <th :class="table.th">Service</th>
+                            <th :class="[table.th, 'hidden md:table-cell']">
+                                Description
+                            </th>
+                            <th :class="table.th">Catalogue</th>
+                            <th :class="[table.th, 'w-12']">
+                                <span class="sr-only">Actions</span>
                             </th>
                         </tr>
                     </thead>
@@ -72,78 +86,99 @@ const confirmDelete = (id: number) => {
                         <tr
                             v-for="service in props.services"
                             :key="service.id"
-                            :class="table.row"
+                            :class="table.clickableRow"
+                            @click="
+                                router.visit(
+                                    servicesRoutes.show.url(service.id),
+                                )
+                            "
                         >
-                            <td class="text-foreground px-4 py-3 font-medium">
-                                <div class="flex items-center gap-2">
-                                    <span>{{ service.name }}</span>
-                                    <Badge
-                                        v-if="service.category === 'education'"
-                                        variant="info"
-                                        >Education</Badge
-                                    >
+                            <td :class="table.cell">
+                                <div class="flex items-center gap-3">
+                                    <EntityAvatar :name="service.name" />
+                                    <div class="min-w-0">
+                                        <div
+                                            class="text-foreground truncate font-medium"
+                                        >
+                                            {{ service.name }}
+                                        </div>
+                                        <div
+                                            class="text-muted-foreground text-xs"
+                                        >
+                                            {{
+                                                service.category === 'education'
+                                                    ? 'Education · per student'
+                                                    : 'Standard · monthly'
+                                            }}
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                             <td
-                                class="text-muted-foreground max-w-xs truncate px-4 py-3"
+                                :class="[
+                                    table.cell,
+                                    'text-muted-foreground hidden max-w-sm md:table-cell',
+                                ]"
                             >
-                                {{ service.description || '—' }}
+                                <span class="line-clamp-2 text-xs">{{
+                                    service.description || '—'
+                                }}</span>
                             </td>
-                            <td class="px-4 py-3">
-                                <div class="flex gap-2">
-                                    <Badge variant="muted"
-                                        >{{
-                                            service.packages?.length || 0
-                                        }}
-                                        packages</Badge
-                                    >
-                                    <Badge variant="muted"
-                                        >{{
-                                            service.modules?.length || 0
-                                        }}
-                                        modules</Badge
-                                    >
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 text-right">
+                            <td :class="table.cell">
                                 <div
-                                    class="flex items-center justify-end gap-1.5"
+                                    class="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-xs"
                                 >
-                                    <Link
-                                        :href="
-                                            servicesRoutes.show.url(service.id)
-                                        "
-                                        :class="
-                                            rowActionVariants({
-                                                tone: 'neutral',
-                                            })
-                                        "
-                                        >View</Link
+                                    <span class="inline-flex items-center gap-1"
+                                        ><Package class="size-3.5" />
+                                        <span
+                                            class="text-foreground font-medium"
+                                            >{{
+                                                service.packages?.length || 0
+                                            }}</span
+                                        >
+                                        packages</span
                                     >
-                                    <Link
-                                        v-if="canEdit"
-                                        :href="
-                                            servicesRoutes.edit.url(service.id)
-                                        "
-                                        :class="
-                                            rowActionVariants({
-                                                tone: 'primary',
-                                            })
-                                        "
-                                        >Edit</Link
+                                    <span class="inline-flex items-center gap-1"
+                                        ><Puzzle class="size-3.5" />
+                                        <span
+                                            class="text-foreground font-medium"
+                                            >{{
+                                                service.modules?.length || 0
+                                            }}</span
+                                        >
+                                        modules</span
                                     >
-                                    <button
-                                        v-if="canDelete"
-                                        @click="confirmDelete(service.id)"
-                                        :class="
-                                            rowActionVariants({
-                                                tone: 'danger',
-                                            })
-                                        "
-                                    >
-                                        Delete
-                                    </button>
                                 </div>
+                            </td>
+                            <td :class="[table.cell, 'text-right']">
+                                <RowActions
+                                    :label="`Actions for ${service.name}`"
+                                    :actions="[
+                                        {
+                                            label: 'View',
+                                            icon: Eye,
+                                            href: servicesRoutes.show.url(
+                                                service.id,
+                                            ),
+                                        },
+                                        {
+                                            label: 'Edit',
+                                            icon: Pencil,
+                                            href: servicesRoutes.edit.url(
+                                                service.id,
+                                            ),
+                                            hidden: !canEdit,
+                                        },
+                                        {
+                                            label: 'Delete',
+                                            icon: Trash2,
+                                            danger: true,
+                                            onSelect: () =>
+                                                confirmDelete(service.id),
+                                            hidden: !canDelete,
+                                        },
+                                    ]"
+                                />
                             </td>
                         </tr>
                         <tr v-if="props.services.length === 0">

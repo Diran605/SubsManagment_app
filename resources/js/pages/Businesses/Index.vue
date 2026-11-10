@@ -1,8 +1,20 @@
 <script setup lang="ts">
+import { useConfirm } from '@/composables/useConfirm';
 import Pagination from '@/components/Pagination.vue';
 import PageHeader from '@/components/PageHeader.vue';
-import { fieldClass, rowActionVariants, table } from '@/lib/ui';
-import { Plus, Search } from '@lucide/vue';
+import EntityAvatar from '@/components/EntityAvatar.vue';
+import RowActions from '@/components/RowActions.vue';
+import { fieldClass, table } from '@/lib/ui';
+import {
+    Eye,
+    Mail,
+    MapPin,
+    Pencil,
+    Phone,
+    Plus,
+    Search,
+    Trash2,
+} from '@lucide/vue';
 import businessesRoutes from '@/routes/businesses';
 import { ref, watch } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -37,8 +49,17 @@ watch(search, (value) => {
 
 import { useForm } from '@inertiajs/vue3';
 const deleteForm = useForm({});
-const confirmDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this business?')) {
+const confirmAction = useConfirm();
+const confirmDelete = async (id: number) => {
+    if (
+        await confirmAction({
+            title: 'Delete this business?',
+            description:
+                'It disappears from lists, and its subscriptions stop counting towards revenue.',
+            confirmText: 'Delete business',
+            tone: 'danger',
+        })
+    ) {
         deleteForm.delete(businessesRoutes.destroy.url(id), {
             preserveScroll: true,
         });
@@ -87,14 +108,13 @@ const confirmDelete = (id: number) => {
                 <table class="w-full text-left text-sm">
                     <thead :class="table.head">
                         <tr>
-                            <th class="px-4 py-3 font-medium">Name</th>
-                            <th class="px-4 py-3 font-medium">
-                                Contact Person
+                            <th :class="table.th">Business</th>
+                            <th :class="table.th">Contact</th>
+                            <th :class="[table.th, 'hidden lg:table-cell']">
+                                Location
                             </th>
-                            <th class="px-4 py-3 font-medium">Phone</th>
-                            <th class="px-4 py-3 font-medium">Email</th>
-                            <th class="px-4 py-3 text-right font-medium">
-                                Actions
+                            <th :class="[table.th, 'w-12']">
+                                <span class="sr-only">Actions</span>
                             </th>
                         </tr>
                     </thead>
@@ -102,67 +122,111 @@ const confirmDelete = (id: number) => {
                         <tr
                             v-for="business in props.businesses.data"
                             :key="business.id"
-                            :class="table.row"
+                            :class="table.clickableRow"
+                            @click="
+                                router.visit(
+                                    businessesRoutes.show.url(business.id),
+                                )
+                            "
                         >
-                            <td class="text-foreground px-4 py-3 font-medium">
-                                {{ business.name }}
-                            </td>
-                            <td class="text-muted-foreground px-4 py-3">
-                                {{ business.contact_person || '—' }}
-                            </td>
-                            <td class="text-muted-foreground px-4 py-3">
-                                {{ business.phone || '—' }}
-                            </td>
-                            <td class="text-muted-foreground px-4 py-3">
-                                {{ business.email || '—' }}
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <div
-                                    class="flex items-center justify-end gap-1.5"
-                                >
-                                    <Link
-                                        :href="
-                                            businessesRoutes.show.url(
-                                                business.id,
-                                            )
-                                        "
-                                        :class="
-                                            rowActionVariants({
-                                                tone: 'neutral',
-                                            })
-                                        "
-                                        >View</Link
-                                    >
-                                    <Link
-                                        v-if="canEdit"
-                                        :href="
-                                            businessesRoutes.edit.url(
-                                                business.id,
-                                            )
-                                        "
-                                        :class="
-                                            rowActionVariants({
-                                                tone: 'primary',
-                                            })
-                                        "
-                                        >Edit</Link
-                                    >
-                                    <button
-                                        v-if="canDelete"
-                                        @click="confirmDelete(business.id)"
-                                        :class="
-                                            rowActionVariants({
-                                                tone: 'danger',
-                                            })
-                                        "
-                                    >
-                                        Delete
-                                    </button>
+                            <td :class="table.cell">
+                                <div class="flex items-center gap-3">
+                                    <EntityAvatar :name="business.name" />
+                                    <div class="min-w-0">
+                                        <div
+                                            class="text-foreground truncate font-medium"
+                                        >
+                                            {{ business.name }}
+                                        </div>
+                                        <div
+                                            class="text-muted-foreground truncate text-xs"
+                                        >
+                                            {{
+                                                business.contact_person ||
+                                                'No contact person'
+                                            }}
+                                        </div>
+                                    </div>
                                 </div>
+                            </td>
+                            <td :class="table.cell">
+                                <div
+                                    v-if="business.phone || business.email"
+                                    class="space-y-0.5 text-xs"
+                                >
+                                    <div
+                                        v-if="business.phone"
+                                        class="text-foreground flex items-center gap-1.5"
+                                    >
+                                        <Phone
+                                            class="text-muted-foreground size-3.5"
+                                        />
+                                        {{ business.phone }}
+                                    </div>
+                                    <div
+                                        v-if="business.email"
+                                        class="text-muted-foreground flex items-center gap-1.5"
+                                    >
+                                        <Mail class="size-3.5" />
+                                        <span class="truncate">{{
+                                            business.email
+                                        }}</span>
+                                    </div>
+                                </div>
+                                <span v-else class="text-muted-foreground"
+                                    >—</span
+                                >
+                            </td>
+                            <td
+                                :class="[
+                                    table.cell,
+                                    'text-muted-foreground hidden max-w-xs text-xs lg:table-cell',
+                                ]"
+                            >
+                                <div
+                                    v-if="business.landmark || business.address"
+                                    class="flex items-start gap-1.5"
+                                >
+                                    <MapPin class="mt-0.5 size-3.5 shrink-0" />
+                                    <span class="line-clamp-2">{{
+                                        business.landmark || business.address
+                                    }}</span>
+                                </div>
+                                <span v-else>—</span>
+                            </td>
+                            <td :class="[table.cell, 'text-right']">
+                                <RowActions
+                                    :label="`Actions for ${business.name}`"
+                                    :actions="[
+                                        {
+                                            label: 'View',
+                                            icon: Eye,
+                                            href: businessesRoutes.show.url(
+                                                business.id,
+                                            ),
+                                        },
+                                        {
+                                            label: 'Edit',
+                                            icon: Pencil,
+                                            href: businessesRoutes.edit.url(
+                                                business.id,
+                                            ),
+                                            hidden: !canEdit,
+                                        },
+                                        {
+                                            label: 'Delete',
+                                            icon: Trash2,
+                                            danger: true,
+                                            onSelect: () =>
+                                                confirmDelete(business.id),
+                                            hidden: !canDelete,
+                                        },
+                                    ]"
+                                />
                             </td>
                         </tr>
                         <tr v-if="props.businesses.data.length === 0">
-                            <td colspan="5" :class="table.empty">
+                            <td colspan="4" :class="table.empty">
                                 No businesses found.
                             </td>
                         </tr>

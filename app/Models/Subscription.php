@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -46,6 +49,8 @@ class Subscription extends Model
 
     /**
      * Computed status accessor
+     *
+     * @return Attribute<string, never>
      */
     protected function status(): Attribute
     {
@@ -124,42 +129,66 @@ class Subscription extends Model
             ->whereHas('business', fn (Builder $q) => $q->whereNull('businesses.deleted_at'));
     }
 
-    public function business()
+    /**
+     * @return BelongsTo<Business, $this>
+     */
+    public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class)->withTrashed();
     }
 
-    public function service()
+    /**
+     * @return BelongsTo<Service, $this>
+     */
+    public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class)->withTrashed();
     }
 
-    public function creator()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function renewedFrom()
+    /**
+     * @return BelongsTo<Subscription, $this>
+     */
+    public function renewedFrom(): BelongsTo
     {
         return $this->belongsTo(Subscription::class, 'renewed_from_id');
     }
 
-    public function renewals()
+    /**
+     * @return HasMany<Subscription, $this>
+     */
+    public function renewals(): HasMany
     {
         return $this->hasMany(Subscription::class, 'renewed_from_id');
     }
 
-    public function package()
+    /**
+     * @return BelongsTo<Package, $this>
+     */
+    public function package(): BelongsTo
     {
         return $this->belongsTo(Package::class);
     }
 
-    public function modules()
+    /**
+     * @return BelongsToMany<Module, $this>
+     */
+    public function modules(): BelongsToMany
     {
         return $this->belongsToMany(Module::class, 'subscription_modules');
     }
 
-    public function collections()
+    /**
+     * @return HasMany<SubscriptionCollection, $this>
+     */
+    public function collections(): HasMany
     {
         return $this->hasMany(SubscriptionCollection::class);
     }

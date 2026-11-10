@@ -6,10 +6,11 @@ use App\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ReportController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $period = $request->input('period', '12m'); // '6m', '12m', 'all'
 

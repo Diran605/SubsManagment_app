@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Module;
 use App\Models\Service;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -19,7 +20,7 @@ class ModuleController extends Controller implements HasMiddleware
         ];
     }
 
-    public function store(Request $request, Service $service)
+    public function store(Request $request, Service $service): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -31,7 +32,7 @@ class ModuleController extends Controller implements HasMiddleware
         return back()->with('success', 'Module added successfully.');
     }
 
-    public function update(Request $request, Module $module)
+    public function update(Request $request, Module $module): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -43,7 +44,7 @@ class ModuleController extends Controller implements HasMiddleware
         return back()->with('success', 'Module updated successfully.');
     }
 
-    public function destroy(Module $module)
+    public function destroy(Module $module): RedirectResponse
     {
         if ($module->subscriptions()->exists()) {
             return back()->withErrors(['module' => 'Cannot remove module because it is in use by active subscriptions.']);

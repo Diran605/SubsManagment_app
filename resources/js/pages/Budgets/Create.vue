@@ -2,7 +2,10 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import budgetsRoutes from '@/routes/budgets';
 import { computed, ref } from 'vue';
-import { buttonVariants } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import PageHeader from '@/components/PageHeader.vue';
+import { card } from '@/lib/ui';
 
 const props = defineProps<{
     fiscalYear: number;
@@ -124,51 +127,33 @@ const submit = () => {
 </script>
 
 <template>
-    <Head :title="`Setup Budget ${fiscalYear}`" />
+    <Head :title="`${fiscalYear} budget`" />
 
     <div class="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 md:p-8">
-        <!-- Header -->
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h1
-                    class="text-foreground text-2xl font-semibold tracking-tight md:text-3xl"
-                >
-                    {{ existingBudget ? 'Edit' : 'Setup' }} Budget —
-                    {{ fiscalYear }}
-                </h1>
-                <p class="text-muted-foreground mt-1 text-sm">
-                    Set the expected number of licences per package, and for
-                    monthly packages how many months they'll run this year.
-                    Expected revenue is calculated automatically.
-                </p>
-            </div>
-            <Link
-                :href="budgetsRoutes.index.url({ query: { year: fiscalYear } })"
-                :class="buttonVariants({ variant: 'outline' })"
-            >
-                Cancel
-            </Link>
-        </div>
+        <PageHeader
+            :title="`${existingBudget ? 'Edit' : 'Set up'} ${fiscalYear} budget`"
+            description="Enter how many licences you expect to sell per package. For monthly packages, also say how many months they'll run this year."
+            :back-href="
+                budgetsRoutes.index.url({ query: { year: fiscalYear } })
+            "
+            back-label="Back to budget"
+        />
 
-        <!-- Grand Total Banner -->
+        <!-- Running total -->
         <div
-            class="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 p-5 dark:border-orange-900 dark:bg-orange-950/20"
+            class="bg-primary text-primary-foreground flex flex-col gap-3 rounded-xl p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between"
         >
             <div>
-                <p
-                    class="text-sm font-medium text-orange-700 dark:text-orange-400"
-                >
-                    Total Expected Revenue for {{ fiscalYear }}
+                <p class="text-sm font-medium opacity-80">
+                    Annual goal for {{ fiscalYear }}
                 </p>
                 <p
-                    class="mt-1 text-3xl font-bold text-orange-600 dark:text-orange-300"
+                    class="mt-1 text-3xl font-semibold tracking-tight tabular-nums"
                 >
                     {{ formatMoney(grandTotal) }}
                 </p>
             </div>
-            <p
-                class="max-w-xs text-right text-xs text-orange-500 dark:text-orange-400"
-            >
+            <p class="max-w-xs text-xs opacity-80 sm:text-right">
                 Monthly packages: licences × monthly price × months. Per-student
                 packages: schools × students × price.
             </p>
@@ -179,10 +164,10 @@ const submit = () => {
             <div
                 v-for="service in services"
                 :key="service.id"
-                class="border-border bg-card overflow-hidden rounded-xl border shadow-xs"
+                :class="card.base"
             >
-                <div class="border-border bg-muted/30 border-b px-5 py-4">
-                    <h2 class="text-foreground text-sm font-semibold">
+                <div class="border-border border-b px-5 py-4">
+                    <h2 :class="card.title">
                         {{ service.name }}
                     </h2>
                     <p
@@ -200,7 +185,7 @@ const submit = () => {
                     <div
                         v-for="pkg in service.packages"
                         :key="pkg.id"
-                        class="flex items-center justify-between gap-4 px-5 py-4"
+                        class="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between"
                     >
                         <div class="min-w-0 flex-1">
                             <p class="text-foreground text-sm font-medium">
@@ -217,17 +202,21 @@ const submit = () => {
                                               : ' FCFA / month')
                                         : 'Free'
                                 }}
-                                <span
+                                <Badge
                                     v-if="pkg.pricing_model === 'per_student'"
-                                    class="ml-2 font-medium text-orange-600 dark:text-orange-400"
+                                    :variant="
+                                        pkg.payer_type === 'student_momo'
+                                            ? 'warning'
+                                            : 'info'
+                                    "
+                                    class="ml-2"
                                 >
-                                    ·
                                     {{
                                         pkg.payer_type === 'student_momo'
-                                            ? '📱 Student MoMo'
-                                            : '🏫 School Pays'
+                                            ? 'Students pay (MoMo)'
+                                            : 'School pays'
                                     }}
-                                </span>
+                                </Badge>
                                 <span
                                     v-if="
                                         pkg.supported_modes &&
@@ -240,15 +229,15 @@ const submit = () => {
                             </p>
                         </div>
 
-                        <div class="flex shrink-0 items-center gap-3">
+                        <div class="flex shrink-0 flex-wrap items-end gap-3">
                             <div>
                                 <label
-                                    class="text-muted-foreground mb-1 block text-right text-xs"
+                                    class="text-muted-foreground mb-1 block text-xs md:text-right"
                                 >
                                     {{
                                         pkg.pricing_model === 'per_student'
-                                            ? 'Target Schools'
-                                            : 'Expected Licenses'
+                                            ? 'Schools'
+                                            : 'Licences'
                                     }}
                                 </label>
                                 <input
@@ -264,8 +253,8 @@ const submit = () => {
                             <!-- Avg Students input for per-student packages -->
                             <div v-if="pkg.pricing_model === 'per_student'">
                                 <label
-                                    class="text-muted-foreground mb-1 block text-right text-xs"
-                                    >Avg. Students / School</label
+                                    class="text-muted-foreground mb-1 block text-xs md:text-right"
+                                    >Students per school</label
                                 >
                                 <input
                                     v-model.number="
@@ -280,7 +269,7 @@ const submit = () => {
                             <!-- Months input for monthly (flat) packages -->
                             <div v-else>
                                 <label
-                                    class="text-muted-foreground mb-1 block text-right text-xs"
+                                    class="text-muted-foreground mb-1 block text-xs md:text-right"
                                     >Months this year</label
                                 >
                                 <input
@@ -296,10 +285,10 @@ const submit = () => {
 
                             <div class="min-w-35 text-right">
                                 <p class="text-muted-foreground mb-1 text-xs">
-                                    Expected Amount
+                                    Expected
                                 </p>
                                 <p
-                                    class="text-sm font-semibold text-orange-600 dark:text-orange-400"
+                                    class="text-foreground text-sm font-semibold tabular-nums"
                                 >
                                     {{ formatMoney(getExpectedAmount(pkg)) }}
                                 </p>
@@ -311,7 +300,7 @@ const submit = () => {
                     v-else
                     class="text-muted-foreground px-5 py-4 text-xs italic"
                 >
-                    No packages configured for this service.
+                    No packages for this service yet.
                 </div>
             </div>
 
@@ -325,15 +314,12 @@ const submit = () => {
                 >
                     Cancel
                 </Link>
-                <button
+                <Button
                     type="submit"
                     :disabled="isSubmitting || grandTotal === 0"
-                    :class="buttonVariants({ variant: 'default' })"
                 >
-                    {{
-                        isSubmitting ? 'Saving...' : `Save ${fiscalYear} Budget`
-                    }}
-                </button>
+                    {{ isSubmitting ? 'Saving…' : `Save ${fiscalYear} budget` }}
+                </Button>
             </div>
         </form>
     </div>

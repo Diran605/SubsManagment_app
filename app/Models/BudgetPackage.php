@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BudgetPackage extends Model
 {
@@ -44,12 +45,18 @@ class BudgetPackage extends Model
         return round($amount, 2);
     }
 
-    public function budget()
+    /**
+     * @return BelongsTo<Budget, $this>
+     */
+    public function budget(): BelongsTo
     {
         return $this->belongsTo(Budget::class);
     }
 
-    public function package()
+    /**
+     * @return BelongsTo<Package, $this>
+     */
+    public function package(): BelongsTo
     {
         return $this->belongsTo(Package::class);
     }

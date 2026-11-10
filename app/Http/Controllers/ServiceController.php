@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Service;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ServiceController extends Controller implements HasMiddleware
 {
@@ -20,7 +22,7 @@ class ServiceController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $services = Service::with(['modules', 'packages'])->latest()->get();
 
@@ -29,12 +31,12 @@ class ServiceController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Services/Form');
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -52,7 +54,7 @@ class ServiceController extends Controller implements HasMiddleware
         return redirect()->route('services.show', $service)->with('success', 'Service created! You can now add modules and packages below.');
     }
 
-    public function edit(Service $service)
+    public function edit(Service $service): Response
     {
         $service->load('modules', 'packages.modules');
 
@@ -61,7 +63,7 @@ class ServiceController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function update(Request $request, Service $service)
+    public function update(Request $request, Service $service): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -78,7 +80,7 @@ class ServiceController extends Controller implements HasMiddleware
         return redirect()->route('services.index')->with('success', 'Service updated successfully.');
     }
 
-    public function show(Service $service)
+    public function show(Service $service): Response
     {
         $service->load(['modules', 'packages.modules', 'subscriptions.business', 'creator']);
 
@@ -87,7 +89,7 @@ class ServiceController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function destroy(Service $service)
+    public function destroy(Service $service): RedirectResponse
     {
         if ($service->subscriptions()->exists()) {
             $service->delete();

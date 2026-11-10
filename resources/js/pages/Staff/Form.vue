@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import staffRoutes from '@/routes/staff';
-import { Head, useForm, Link } from '@inertiajs/vue3';
-import { buttonVariants } from '@/components/ui/button';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import FormField from '@/components/FormField.vue';
+import PageHeader from '@/components/PageHeader.vue';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const props = defineProps<{
     staff?: any;
@@ -21,6 +24,10 @@ const form = useForm({
         : ([] as string[]),
 });
 
+const backHref = isEditing
+    ? staffRoutes.show.url(props.staff.id)
+    : staffRoutes.index.url();
+
 const submit = () => {
     if (isEditing) {
         form.put(staffRoutes.update.url(props.staff.id));
@@ -28,181 +35,168 @@ const submit = () => {
         form.post(staffRoutes.store.url());
     }
 };
+
+const checkboxClass =
+    'border-input text-primary focus-visible:ring-ring/50 size-4 rounded border focus-visible:ring-2';
 </script>
 
 <template>
-    <Head :title="isEditing ? 'Edit Staff' : 'Create Staff'" />
+    <Head :title="isEditing ? 'Edit staff' : 'Add staff'" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h1
-                    class="text-foreground text-2xl font-semibold tracking-tight md:text-3xl"
-                >
-                    {{ isEditing ? 'Edit Staff' : 'Create Staff' }}
-                </h1>
-            </div>
-            <Link
-                :href="staffRoutes.index.url()"
-                class="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
-            >
-                &larr; Back to List
-            </Link>
-        </div>
+        <PageHeader
+            :title="isEditing ? 'Edit staff' : 'Add staff'"
+            :description="
+                isEditing
+                    ? 'Update account details, access and roles.'
+                    : 'Create a login for a member of your team.'
+            "
+            :back-href="backHref"
+            :back-label="isEditing ? 'Back to staff member' : 'Back to staff'"
+        />
 
-        <div class="border-border bg-card rounded-xl border p-6 shadow-sm">
-            <form @submit.prevent="submit" class="space-y-4">
-                <div>
-                    <label
-                        class="text-foreground mb-1.5 block text-sm font-medium"
-                        >Name <span class="text-destructive">*</span></label
-                    >
-                    <input
-                        v-model="form.name"
-                        type="text"
+        <form
+            @submit.prevent="submit"
+            class="border-border bg-card overflow-hidden rounded-xl border shadow-xs"
+        >
+            <div class="space-y-5 p-6">
+                <h2 class="text-foreground text-sm font-semibold">Account</h2>
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <FormField
+                        label="Name"
+                        for="name"
                         required
-                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
-                    />
-                    <p
-                        v-if="form.errors.name"
-                        class="text-destructive mt-1 text-sm"
+                        :error="form.errors.name"
                     >
-                        {{ form.errors.name }}
-                    </p>
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                            required
+                            autofocus
+                        />
+                    </FormField>
+                    <FormField
+                        label="Email"
+                        for="email"
+                        required
+                        :error="form.errors.email"
+                    >
+                        <Input
+                            id="email"
+                            v-model="form.email"
+                            type="email"
+                            required
+                        />
+                    </FormField>
                 </div>
 
-                <div>
-                    <label
-                        class="text-foreground mb-1.5 block text-sm font-medium"
-                        >Email <span class="text-destructive">*</span></label
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <FormField
+                        label="Password"
+                        for="password"
+                        :required="!isEditing"
+                        :error="form.errors.password"
+                        :hint="
+                            isEditing
+                                ? 'Leave blank to keep the current password.'
+                                : undefined
+                        "
                     >
-                    <input
-                        v-model="form.email"
-                        type="email"
-                        required
-                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
-                    />
-                    <p
-                        v-if="form.errors.email"
-                        class="text-destructive mt-1 text-sm"
-                    >
-                        {{ form.errors.email }}
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                        <label
-                            class="text-foreground mb-1.5 block text-sm font-medium"
-                        >
-                            Password
-                            <span v-if="!isEditing" class="text-destructive"
-                                >*</span
-                            >
-                        </label>
-                        <input
+                        <Input
+                            id="password"
                             v-model="form.password"
                             type="password"
+                            autocomplete="new-password"
                             :required="!isEditing"
-                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                         />
-                        <p
-                            v-if="form.errors.password"
-                            class="text-destructive mt-1 text-sm"
-                        >
-                            {{ form.errors.password }}
-                        </p>
-                        <p
-                            v-if="isEditing"
-                            class="text-muted-foreground mt-1.5 text-xs"
-                        >
-                            Leave blank to keep current password
-                        </p>
-                    </div>
-
-                    <div>
-                        <label
-                            class="text-foreground mb-1.5 block text-sm font-medium"
-                        >
-                            Confirm Password
-                            <span v-if="!isEditing" class="text-destructive"
-                                >*</span
-                            >
-                        </label>
-                        <input
+                    </FormField>
+                    <FormField
+                        label="Confirm password"
+                        for="password_confirmation"
+                        :required="!isEditing"
+                    >
+                        <Input
+                            id="password_confirmation"
                             v-model="form.password_confirmation"
                             type="password"
+                            autocomplete="new-password"
                             :required="!isEditing"
-                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                         />
-                    </div>
+                    </FormField>
                 </div>
 
-                <div class="flex items-center pt-2">
+                <label
+                    for="is_active"
+                    class="border-border hover:bg-muted/40 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
+                >
                     <input
                         id="is_active"
                         v-model="form.is_active"
                         type="checkbox"
-                        class="border-input bg-background text-primary focus:ring-primary h-4 w-4 rounded"
+                        :class="[checkboxClass, 'mt-0.5']"
                     />
-                    <label
-                        for="is_active"
-                        class="text-foreground ml-2 block text-sm font-medium"
-                    >
-                        Active Account
-                    </label>
-                </div>
+                    <span>
+                        <span class="text-foreground block text-sm font-medium">
+                            Account is active
+                        </span>
+                        <span class="text-muted-foreground block text-xs">
+                            Inactive staff can't log in.
+                        </span>
+                    </span>
+                </label>
                 <p
                     v-if="form.errors.is_active"
                     class="text-destructive text-sm"
                 >
                     {{ form.errors.is_active }}
                 </p>
+            </div>
 
-                <div
-                    v-if="roles && roles.length > 0"
-                    class="border-border border-t pt-4"
-                >
-                    <label
-                        class="text-foreground mb-3 block text-sm font-medium"
-                        >Assign Roles</label
-                    >
-                    <div class="grid grid-cols-2 gap-4">
-                        <label
-                            v-for="role in roles"
-                            :key="role.id"
-                            class="flex items-center space-x-2"
-                        >
-                            <input
-                                type="checkbox"
-                                :value="role.name"
-                                v-model="form.roles"
-                                class="border-input bg-background text-primary focus:ring-primary h-4 w-4 rounded"
-                            />
-                            <span class="text-foreground text-sm font-medium">{{
-                                role.name
-                            }}</span>
-                        </label>
-                    </div>
-                    <p
-                        v-if="form.errors.roles"
-                        class="text-destructive mt-2 text-sm"
-                    >
-                        {{ form.errors.roles }}
+            <div
+                v-if="roles && roles.length > 0"
+                class="border-border space-y-3 border-t p-6"
+            >
+                <div>
+                    <h2 class="text-foreground text-sm font-semibold">Roles</h2>
+                    <p class="text-muted-foreground text-xs">
+                        Roles decide what this person can see and change.
                     </p>
                 </div>
-
-                <div class="flex justify-end pt-4">
-                    <button
-                        type="submit"
-                        :disabled="form.processing"
-                        :class="buttonVariants({ variant: 'default' })"
-                        class="disabled:opacity-50"
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <label
+                        v-for="role in roles"
+                        :key="role.id"
+                        class="border-border hover:bg-muted/40 has-checked:border-primary/40 has-checked:bg-primary/5 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors"
                     >
-                        {{ isEditing ? 'Update Staff' : 'Save Staff' }}
-                    </button>
+                        <input
+                            type="checkbox"
+                            :value="role.name"
+                            v-model="form.roles"
+                            :class="checkboxClass"
+                        />
+                        <span class="text-foreground text-sm font-medium">{{
+                            role.name
+                        }}</span>
+                    </label>
                 </div>
-            </form>
-        </div>
+                <p v-if="form.errors.roles" class="text-destructive text-sm">
+                    {{ form.errors.roles }}
+                </p>
+            </div>
+
+            <div
+                class="border-border bg-muted/30 flex justify-end gap-2 border-t px-6 py-4"
+            >
+                <Link
+                    :href="backHref"
+                    :class="buttonVariants({ variant: 'outline' })"
+                >
+                    Cancel
+                </Link>
+                <Button type="submit" :disabled="form.processing">
+                    {{ isEditing ? 'Save changes' : 'Add staff' }}
+                </Button>
+            </div>
+        </form>
     </div>
 </template>

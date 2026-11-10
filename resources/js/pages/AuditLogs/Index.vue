@@ -255,7 +255,7 @@ const selectClass =
                             >
                                 {{ change.field }}
                             </dt>
-                            <dd class="text-foreground min-w-0 break-words">
+                            <dd class="text-foreground min-w-0 wrap-break-word">
                                 <template
                                     v-if="
                                         log.event === 'updated' ||
