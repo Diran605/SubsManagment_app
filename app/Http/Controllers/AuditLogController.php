@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
+use Inertia\Response;
 use Spatie\Activitylog\Models\Activity;
 
 class AuditLogController extends Controller
@@ -34,7 +35,7 @@ class AuditLogController extends Controller
      */
     private const HIDDEN_FIELDS = ['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'recorded_by'];
 
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $filters = $request->validate([
             'type' => 'nullable|string|in:'.implode(',', array_keys(self::TYPES)),
@@ -54,13 +55,13 @@ class AuditLogController extends Controller
             ->latest('id')
             ->paginate(25)
             ->withQueryString()
-            ->through(fn (Activity $activity) => [
+            ->through(fn (Activity $activity): array => [
                 'id' => $activity->id,
                 'event' => $activity->event ?? $activity->description,
                 'type' => $activity->log_name,
                 'type_label' => self::TYPES[$activity->log_name] ?? ucfirst((string) $activity->log_name),
                 'label' => $activity->properties['label'] ?? '#'.$activity->subject_id,
-                'user' => $activity->causer?->name,
+                'user' => $activity->causer instanceof User ? $activity->causer->name : null,
                 'created_at' => $activity->created_at?->toIso8601String(),
                 'changes' => $this->changes($activity),
             ]);
@@ -83,7 +84,7 @@ class AuditLogController extends Controller
     /**
      * Turn the logged old/new attributes into a list of field changes.
      *
-     * @return Collection<int, array{field: string, old: mixed, new: mixed}>
+     * @return Collection<int, array{field: string, old: string|null, new: string|null}>
      */
     private function changes(Activity $activity): Collection
     {

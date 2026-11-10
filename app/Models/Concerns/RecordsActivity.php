@@ -5,6 +5,7 @@ namespace App\Models\Concerns;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Contracts\Activity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity as ActivityModel;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
@@ -53,6 +54,9 @@ trait RecordsActivity
 
     public function tapActivity(Activity $activity, string $eventName): void
     {
-        $activity->properties = $activity->properties->put('label', $this->activityLabel());
+        // The contract has no properties bag; the default Activity model does.
+        if ($activity instanceof ActivityModel) {
+            $activity->properties = $activity->properties->put('label', $this->activityLabel());
+        }
     }
 }
