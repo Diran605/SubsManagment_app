@@ -35,4 +35,19 @@ export const table = {
 
 /** Native inputs/selects styled like the shadcn Input component. */
 export const fieldClass =
-    'h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
+    'h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50';
+
+/** Full-width variant for form pages. */
+export const selectClass = `${fieldClass} w-full`;
+
+/** Multi-line text, matching the other fields. */
+export const textareaClass =
+    'w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
+
+/** Card used for sections on detail and form pages. */
+export const card = {
+    base: 'overflow-hidden rounded-xl border border-border bg-card shadow-xs',
+    header: 'flex items-center justify-between gap-3 border-b border-border px-5 py-4',
+    title: 'text-base font-semibold text-foreground',
+    body: 'p-5',
+};

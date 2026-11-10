@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useConfirm } from '@/composables/useConfirm';
-import { table } from '@/lib/ui';
+import { card, rowActionVariants, table } from '@/lib/ui';
+import { formatDate, formatMoney } from '@/lib/format';
 import servicesRoutes from '@/routes/services';
 import modulesRoutes from '@/routes/modules';
 import packagesRoutes from '@/routes/packages';
@@ -8,6 +9,9 @@ import businessesRoutes from '@/routes/businesses';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import PageHeader from '@/components/PageHeader.vue';
+import { Pencil, Trash2 } from '@lucide/vue';
 
 const page = usePage<any>();
 const canEdit = computed(() =>
@@ -188,63 +192,82 @@ const submitEditPackage = (id: number) => {
 <template>
     <Head :title="service.name" />
 
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h1
-                    class="text-foreground text-2xl font-semibold tracking-tight md:text-3xl"
-                >
-                    {{ service.name }}
-                </h1>
-                <p class="text-muted-foreground mt-1 text-sm">
-                    Service Details & Active Subscriptions
-                </p>
-            </div>
-            <div class="flex gap-2">
-                <Link
-                    :href="servicesRoutes.index.url()"
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 md:p-8">
+        <PageHeader
+            :title="service.name"
+            :back-href="servicesRoutes.index.url()"
+            back-label="Back to services"
+        >
+            <template #description>
+                <span class="inline-flex flex-wrap items-center gap-2">
+                    <Badge
+                        :variant="
+                            service.category === 'education'
+                                ? 'warning'
+                                : 'info'
+                        "
+                    >
+                        {{
+                            service.category === 'education'
+                                ? 'Education'
+                                : 'Standard'
+                        }}
+                    </Badge>
+                    Modules, packages and the clients using this service.
+                </span>
+            </template>
+            <template #actions>
+                <button
+                    v-if="canDelete"
+                    type="button"
+                    @click="confirmDelete"
                     :class="buttonVariants({ variant: 'outline' })"
+                    class="hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
                 >
-                    Back to List
-                </Link>
+                    <Trash2 class="size-4" /> Delete
+                </button>
                 <Link
                     v-if="canEdit"
                     :href="servicesRoutes.edit.url(service.id)"
                     :class="buttonVariants({ variant: 'default' })"
                 >
-                    Edit
+                    <Pencil class="size-4" /> Edit
                 </Link>
-                <button
-                    v-if="canDelete"
-                    @click="confirmDelete"
-                    :class="buttonVariants({ variant: 'destructive' })"
-                >
-                    Delete
-                </button>
-            </div>
-        </div>
+            </template>
+        </PageHeader>
 
         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <!-- Service Info -->
-            <div
-                class="border-border bg-card col-span-1 h-fit space-y-6 rounded-xl border p-6 shadow-sm"
-            >
-                <div>
-                    <h3 class="text-foreground mb-2 font-semibold">
-                        Description
-                    </h3>
-                    <p class="text-muted-foreground text-sm">
-                        {{ service.description || 'No description provided.' }}
-                    </p>
+            <section :class="[card.base, 'h-fit']">
+                <div :class="card.header">
+                    <h2 :class="card.title">About</h2>
                 </div>
-
-                <div class="border-border mt-4 border-t pt-4">
-                    <dt class="text-muted-foreground text-xs">Added By</dt>
-                    <dd class="text-foreground mt-1 text-xs font-medium">
-                        {{ service.creator?.name || 'Unknown' }}
-                    </dd>
-                </div>
-            </div>
+                <p :class="card.body" class="text-muted-foreground text-sm">
+                    {{ service.description || 'No description yet.' }}
+                </p>
+                <dl
+                    class="border-border bg-muted/30 divide-border divide-y border-t text-xs"
+                >
+                    <div class="flex justify-between gap-4 px-5 py-2.5">
+                        <dt class="text-muted-foreground">Modules</dt>
+                        <dd class="text-foreground font-medium">
+                            {{ service.modules?.length ?? 0 }}
+                        </dd>
+                    </div>
+                    <div class="flex justify-between gap-4 px-5 py-2.5">
+                        <dt class="text-muted-foreground">Packages</dt>
+                        <dd class="text-foreground font-medium">
+                            {{ service.packages?.length ?? 0 }}
+                        </dd>
+                    </div>
+                    <div class="flex justify-between gap-4 px-5 py-2.5">
+                        <dt class="text-muted-foreground">Added by</dt>
+                        <dd class="text-foreground">
+                            {{ service.creator?.name ?? '—' }}
+                        </dd>
+                    </div>
+                </dl>
+            </section>
 
             <!-- Subscriptions using this Service -->
             <div
@@ -253,20 +276,16 @@ const submitEditPackage = (id: number) => {
                 <div
                     class="border-border flex items-center justify-between border-b p-4"
                 >
-                    <h3 class="text-foreground font-semibold">
-                        Subscribed Businesses
-                    </h3>
+                    <h3 :class="card.title">Clients using this service</h3>
                 </div>
 
                 <div class="flex-1 overflow-x-auto">
                     <table class="w-full text-left text-sm">
-                        <thead
-                            class="border-border bg-muted/50 text-muted-foreground border-b"
-                        >
+                        <thead :class="table.head">
                             <tr>
                                 <th class="px-4 py-3 font-medium">Business</th>
                                 <th class="px-4 py-3 font-medium">Mode</th>
-                                <th class="px-4 py-3 font-medium">End Date</th>
+                                <th class="px-4 py-3 font-medium">Ends</th>
                                 <th class="px-4 py-3 text-right font-medium">
                                     Amount
                                 </th>
@@ -287,7 +306,7 @@ const submitEditPackage = (id: number) => {
                                                 sub.business_id,
                                             )
                                         "
-                                        class="text-primary hover:underline"
+                                        class="text-foreground hover:text-primary"
                                         >{{ sub.business?.name }}</Link
                                     >
                                 </td>
@@ -296,18 +315,19 @@ const submitEditPackage = (id: number) => {
                                 >
                                     {{ sub.mode }}
                                 </td>
-                                <td class="text-muted-foreground px-4 py-3">
-                                    {{ sub.end_date }}
+                                <td
+                                    class="text-muted-foreground px-4 py-3 whitespace-nowrap"
+                                >
+                                    {{ formatDate(sub.end_date) }}
                                 </td>
                                 <td
-                                    class="text-foreground px-4 py-3 text-right font-medium"
+                                    class="text-foreground px-4 py-3 text-right font-medium whitespace-nowrap tabular-nums"
                                 >
-                                    {{
-                                        Number(sub.amount).toLocaleString(
-                                            'en-US',
-                                        )
-                                    }}
-                                    FCFA
+                                    {{ formatMoney(sub.amount) }}
+                                    <span
+                                        class="text-muted-foreground text-xs font-normal"
+                                        >FCFA</span
+                                    >
                                 </td>
                             </tr>
                             <tr
@@ -317,7 +337,7 @@ const submitEditPackage = (id: number) => {
                                 "
                             >
                                 <td colspan="4" :class="table.empty">
-                                    No active subscriptions for this service.
+                                    No clients use this service right now.
                                 </td>
                             </tr>
                         </tbody>
@@ -336,9 +356,7 @@ const submitEditPackage = (id: number) => {
                     <div
                         class="border-border flex items-center justify-between border-b p-4"
                     >
-                        <h3 class="text-foreground font-semibold">
-                            Service Modules
-                        </h3>
+                        <h3 :class="card.title">Modules</h3>
                     </div>
                     <div class="flex-1 p-4">
                         <ul class="space-y-3">
@@ -373,14 +391,22 @@ const submitEditPackage = (id: number) => {
                                         <button
                                             v-if="canEditModules"
                                             @click="startEditModule(mod)"
-                                            class="border-primary/30 bg-primary/10 text-primary hover:bg-primary inline-flex items-center rounded border px-2 py-1 text-xs font-medium transition-colors hover:text-white"
+                                            :class="
+                                                rowActionVariants({
+                                                    tone: 'primary',
+                                                })
+                                            "
                                         >
                                             Edit
                                         </button>
                                         <button
                                             v-if="canDeleteModules"
                                             @click="deleteModule(mod.id)"
-                                            class="border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive inline-flex items-center rounded border px-2 py-1 text-xs font-medium transition-colors hover:text-white"
+                                            :class="
+                                                rowActionVariants({
+                                                    tone: 'danger',
+                                                })
+                                            "
                                         >
                                             Delete
                                         </button>
@@ -398,14 +424,14 @@ const submitEditPackage = (id: number) => {
                                             type="text"
                                             required
                                             placeholder="Module name"
-                                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex-1 rounded-md px-3 py-1.5 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex-1 rounded-md border px-3 py-1.5 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                         />
                                     </div>
                                     <input
                                         v-model="editModuleForm.description"
                                         type="text"
                                         placeholder="Description (optional)"
-                                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-1.5 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-1.5 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                     />
                                     <p
                                         v-if="editModuleForm.errors.name"
@@ -417,7 +443,12 @@ const submitEditPackage = (id: number) => {
                                         <button
                                             type="button"
                                             @click="cancelEditModule"
-                                            class="border-border text-muted-foreground hover:bg-muted inline-flex items-center rounded border px-3 py-1 text-xs font-medium transition-colors"
+                                            :class="
+                                                buttonVariants({
+                                                    variant: 'outline',
+                                                    size: 'sm',
+                                                })
+                                            "
                                         >
                                             Cancel
                                         </button>
@@ -426,7 +457,12 @@ const submitEditPackage = (id: number) => {
                                             :disabled="
                                                 editModuleForm.processing
                                             "
-                                            class="border-primary bg-primary hover:bg-primary/90 inline-flex items-center rounded border px-3 py-1 text-xs font-medium text-white transition-colors"
+                                            :class="
+                                                buttonVariants({
+                                                    variant: 'default',
+                                                    size: 'sm',
+                                                })
+                                            "
                                         >
                                             Save
                                         </button>
@@ -446,19 +482,19 @@ const submitEditPackage = (id: number) => {
                     </div>
                     <div
                         v-if="canCreateModules"
-                        class="border-border bg-muted/30 rounded-b-2xl border-t p-4"
+                        class="border-border bg-muted/30 rounded-b-xl border-t p-4"
                     >
                         <form @submit.prevent="submitModule" class="space-y-3">
                             <h4 class="text-foreground text-sm font-medium">
-                                Add New Module
+                                Add a module
                             </h4>
                             <div>
                                 <input
                                     v-model="moduleForm.name"
                                     type="text"
-                                    placeholder="Module Name"
+                                    placeholder="Module name"
                                     required
-                                    class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                    class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                 />
                                 <p
                                     v-if="moduleForm.errors.name"
@@ -471,8 +507,8 @@ const submitEditPackage = (id: number) => {
                                 <input
                                     v-model="moduleForm.description"
                                     type="text"
-                                    placeholder="Description (Optional)"
-                                    class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                    placeholder="Description (optional)"
+                                    class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                 />
                             </div>
                             <div
@@ -507,9 +543,7 @@ const submitEditPackage = (id: number) => {
                     <div
                         class="border-border flex items-center justify-between border-b p-4"
                     >
-                        <h3 class="text-foreground font-semibold">
-                            Subscription Packages
-                        </h3>
+                        <h3 :class="card.title">Packages</h3>
                     </div>
                     <div class="flex-1 p-4">
                         <ul class="space-y-4">
@@ -545,7 +579,7 @@ const submitEditPackage = (id: number) => {
                                             class="mt-1 flex flex-col items-end gap-1"
                                         >
                                             <span
-                                                class="inline-flex items-center rounded-md bg-orange-500/10 px-2.5 py-1 text-xs font-semibold text-orange-600 ring-1 ring-orange-500/20 ring-inset dark:text-orange-400"
+                                                class="bg-primary/10 text-primary inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold tabular-nums"
                                             >
                                                 {{
                                                     pkg.price
@@ -623,14 +657,22 @@ const submitEditPackage = (id: number) => {
                                         <button
                                             v-if="canEditPackages"
                                             @click="startEditPackage(pkg)"
-                                            class="border-primary/30 bg-primary/10 text-primary hover:bg-primary inline-flex items-center rounded border px-2 py-1 text-xs font-medium transition-colors hover:text-white"
+                                            :class="
+                                                rowActionVariants({
+                                                    tone: 'primary',
+                                                })
+                                            "
                                         >
                                             Edit
                                         </button>
                                         <button
                                             v-if="canDeletePackages"
                                             @click="deletePackage(pkg.id)"
-                                            class="border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive inline-flex items-center rounded border px-2 py-1 text-xs font-medium transition-colors hover:text-white"
+                                            :class="
+                                                rowActionVariants({
+                                                    tone: 'danger',
+                                                })
+                                            "
                                         >
                                             Delete
                                         </button>
@@ -645,15 +687,15 @@ const submitEditPackage = (id: number) => {
                                     <h4
                                         class="text-foreground text-sm font-medium"
                                     >
-                                        Edit Package
+                                        Edit package
                                     </h4>
                                     <div>
                                         <input
                                             v-model="editPackageForm.name"
                                             type="text"
                                             required
-                                            placeholder="Package Name"
-                                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                            placeholder="Package name"
+                                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                         />
                                         <p
                                             v-if="editPackageForm.errors.name"
@@ -665,8 +707,8 @@ const submitEditPackage = (id: number) => {
                                     <input
                                         v-model="editPackageForm.description"
                                         type="text"
-                                        placeholder="Description (Optional)"
-                                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                        placeholder="Description (optional)"
+                                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                     />
 
                                     <div
@@ -675,19 +717,19 @@ const submitEditPackage = (id: number) => {
                                         <div>
                                             <label
                                                 class="text-foreground mb-1 block text-xs font-medium"
-                                                >Pricing Model</label
+                                                >Pricing model</label
                                             >
                                             <select
                                                 v-model="
                                                     editPackageForm.pricing_model
                                                 "
-                                                class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                                class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                             >
                                                 <option value="flat">
-                                                    Flat Monthly Fee
+                                                    Flat monthly fee
                                                 </option>
                                                 <option value="per_student">
-                                                    Per-Student Annual Fee
+                                                    Per-student annual fee
                                                 </option>
                                             </select>
                                         </div>
@@ -705,11 +747,11 @@ const submitEditPackage = (id: number) => {
                                                 v-model="
                                                     editPackageForm.payer_type
                                                 "
-                                                class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                                class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                             >
                                                 <option value="school">
-                                                    School (Institutional
-                                                    Invoice)
+                                                    School (institutional
+                                                    invoice)
                                                 </option>
                                                 <option value="student_momo">
                                                     Students (Mobile Money)
@@ -725,8 +767,8 @@ const submitEditPackage = (id: number) => {
                                             {{
                                                 editPackageForm.pricing_model ===
                                                 'per_student'
-                                                    ? 'Rate per Student (FCFA)'
-                                                    : 'Monthly Price (FCFA)'
+                                                    ? 'Price per student (FCFA)'
+                                                    : 'Monthly price (FCFA)'
                                             }}
                                         </label>
                                         <input
@@ -734,14 +776,14 @@ const submitEditPackage = (id: number) => {
                                             type="number"
                                             step="0.01"
                                             required
-                                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                         />
                                     </div>
 
                                     <div>
                                         <label
                                             class="text-foreground mt-2 mb-1.5 block text-xs font-medium"
-                                            >Supported Modes</label
+                                            >Supported modes</label
                                         >
                                         <div class="flex flex-wrap gap-3">
                                             <label
@@ -753,7 +795,7 @@ const submitEditPackage = (id: number) => {
                                                     v-model="
                                                         editPackageForm.supported_modes
                                                     "
-                                                    class="border-input bg-background text-primary rounded"
+                                                    class="border-input text-primary size-4 rounded border"
                                                 />
                                                 <span class="text-foreground"
                                                     >Online</span
@@ -768,7 +810,7 @@ const submitEditPackage = (id: number) => {
                                                     v-model="
                                                         editPackageForm.supported_modes
                                                     "
-                                                    class="border-input bg-background text-primary rounded"
+                                                    class="border-input text-primary size-4 rounded border"
                                                 />
                                                 <span class="text-foreground"
                                                     >Offline</span
@@ -783,7 +825,7 @@ const submitEditPackage = (id: number) => {
                                                     v-model="
                                                         editPackageForm.supported_modes
                                                     "
-                                                    class="border-input bg-background text-primary rounded"
+                                                    class="border-input text-primary size-4 rounded border"
                                                 />
                                                 <span class="text-foreground"
                                                     >Hybrid</span
@@ -815,7 +857,7 @@ const submitEditPackage = (id: number) => {
                                                     v-model="
                                                         editPackageForm.modules
                                                     "
-                                                    class="border-input bg-background text-primary rounded"
+                                                    class="border-input text-primary size-4 rounded border"
                                                 />
                                                 <span class="text-foreground">{{
                                                     mod.name
@@ -827,7 +869,12 @@ const submitEditPackage = (id: number) => {
                                         <button
                                             type="button"
                                             @click="cancelEditPackage"
-                                            class="border-border text-muted-foreground hover:bg-muted inline-flex items-center rounded border px-3 py-1.5 text-xs font-medium transition-colors"
+                                            :class="
+                                                buttonVariants({
+                                                    variant: 'outline',
+                                                    size: 'sm',
+                                                })
+                                            "
                                         >
                                             Cancel
                                         </button>
@@ -836,7 +883,12 @@ const submitEditPackage = (id: number) => {
                                             :disabled="
                                                 editPackageForm.processing
                                             "
-                                            class="border-primary bg-primary hover:bg-primary/90 inline-flex items-center rounded border px-3 py-1.5 text-xs font-medium text-white transition-colors"
+                                            :class="
+                                                buttonVariants({
+                                                    variant: 'default',
+                                                    size: 'sm',
+                                                })
+                                            "
                                         >
                                             Save changes
                                         </button>
@@ -856,11 +908,11 @@ const submitEditPackage = (id: number) => {
                     </div>
                     <div
                         v-if="canCreatePackages"
-                        class="border-border bg-muted/30 rounded-b-2xl border-t p-4"
+                        class="border-border bg-muted/30 rounded-b-xl border-t p-4"
                     >
                         <form @submit.prevent="submitPackage" class="space-y-3">
                             <h4 class="text-foreground text-sm font-medium">
-                                Create New Package
+                                Add a package
                             </h4>
                             <div
                                 v-if="deletePackageForm.hasErrors"
@@ -875,9 +927,9 @@ const submitEditPackage = (id: number) => {
                                 <input
                                     v-model="packageForm.name"
                                     type="text"
-                                    placeholder="Package Name"
+                                    placeholder="Package name"
                                     required
-                                    class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                    class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                 />
                                 <p
                                     v-if="packageForm.errors.name"
@@ -890,8 +942,8 @@ const submitEditPackage = (id: number) => {
                                 <input
                                     v-model="packageForm.description"
                                     type="text"
-                                    placeholder="Description (Optional)"
-                                    class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                    placeholder="Description (optional)"
+                                    class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                 />
                             </div>
 
@@ -899,17 +951,17 @@ const submitEditPackage = (id: number) => {
                                 <div>
                                     <label
                                         class="text-foreground mb-1 block text-xs font-medium"
-                                        >Pricing Model</label
+                                        >Pricing model</label
                                     >
                                     <select
                                         v-model="packageForm.pricing_model"
-                                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                     >
                                         <option value="flat">
-                                            Flat Monthly Fee
+                                            Flat monthly fee
                                         </option>
                                         <option value="per_student">
-                                            Per-Student Annual Fee
+                                            Per-student annual fee
                                         </option>
                                     </select>
                                 </div>
@@ -925,10 +977,10 @@ const submitEditPackage = (id: number) => {
                                     >
                                     <select
                                         v-model="packageForm.payer_type"
-                                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                     >
                                         <option value="school">
-                                            School (Institutional Invoice)
+                                            School (institutional invoice)
                                         </option>
                                         <option value="student_momo">
                                             Students (Mobile Money)
@@ -944,8 +996,8 @@ const submitEditPackage = (id: number) => {
                                     {{
                                         packageForm.pricing_model ===
                                         'per_student'
-                                            ? 'Rate per Student (FCFA)'
-                                            : 'Monthly Price (FCFA)'
+                                            ? 'Price per student (FCFA)'
+                                            : 'Monthly price (FCFA)'
                                     }}
                                 </label>
                                 <input
@@ -953,14 +1005,14 @@ const submitEditPackage = (id: number) => {
                                     type="number"
                                     step="0.01"
                                     required
-                                    class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                                    class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                                 />
                             </div>
 
                             <div>
                                 <label
                                     class="text-foreground mt-2 mb-1.5 block text-xs font-medium"
-                                    >Supported Modes</label
+                                    >Supported modes</label
                                 >
                                 <div class="flex flex-wrap gap-3">
                                     <label
@@ -972,7 +1024,7 @@ const submitEditPackage = (id: number) => {
                                             v-model="
                                                 packageForm.supported_modes
                                             "
-                                            class="border-input bg-background text-primary rounded"
+                                            class="border-input text-primary size-4 rounded border"
                                         />
                                         <span class="text-foreground"
                                             >Online</span
@@ -987,7 +1039,7 @@ const submitEditPackage = (id: number) => {
                                             v-model="
                                                 packageForm.supported_modes
                                             "
-                                            class="border-input bg-background text-primary rounded"
+                                            class="border-input text-primary size-4 rounded border"
                                         />
                                         <span class="text-foreground"
                                             >Offline</span
@@ -1002,7 +1054,7 @@ const submitEditPackage = (id: number) => {
                                             v-model="
                                                 packageForm.supported_modes
                                             "
-                                            class="border-input bg-background text-primary rounded"
+                                            class="border-input text-primary size-4 rounded border"
                                         />
                                         <span class="text-foreground"
                                             >Hybrid</span
@@ -1019,7 +1071,7 @@ const submitEditPackage = (id: number) => {
                             >
                                 <label
                                     class="text-foreground mt-3 mb-1.5 block text-xs font-medium"
-                                    >Select Modules for Package</label
+                                    >Modules in this package</label
                                 >
                                 <div
                                     class="border-border bg-background max-h-32 space-y-1 overflow-y-auto rounded-md border p-2"
@@ -1033,7 +1085,7 @@ const submitEditPackage = (id: number) => {
                                             type="checkbox"
                                             :value="mod.id"
                                             v-model="packageForm.modules"
-                                            class="border-input bg-background text-primary focus:ring-primary rounded"
+                                            class="border-input text-primary size-4 rounded border"
                                         />
                                         <span class="text-foreground">{{
                                             mod.name

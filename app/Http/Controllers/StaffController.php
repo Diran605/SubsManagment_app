@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -110,7 +111,16 @@ class StaffController extends Controller
 
     public function show(User $staff): Response
     {
-        $staff->load(['businesses', 'services', 'subscriptions']);
+        $staff->load([
+            'businesses' => fn ($query) => $query->latest(),
+            'services',
+            'subscriptions' => fn ($query) => $query->withExists('renewals')->latest('start_date'),
+            'subscriptions.business:id,name',
+            'subscriptions.service:id,name',
+        ]);
+        $staff->subscriptions->each(
+            fn (Subscription $subscription) => $subscription->setAttribute('status_badge', $subscription->statusBadge())
+        );
 
         return Inertia::render('Staff/Show', [
             'staff' => $staff,

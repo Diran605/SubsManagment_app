@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import servicesRoutes from '@/routes/services';
-import { Head, useForm, Link } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
-import { buttonVariants } from '@/components/ui/button';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Info } from '@lucide/vue';
+import FormField from '@/components/FormField.vue';
+import PageHeader from '@/components/PageHeader.vue';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { selectClass, textareaClass } from '@/lib/ui';
 
 const props = defineProps<{
     service?: any;
@@ -16,6 +20,10 @@ const form = useForm({
     description: props.service?.description || '',
 });
 
+const backHref = isEditing
+    ? servicesRoutes.show.url(props.service.id)
+    : servicesRoutes.index.url();
+
 const submit = () => {
     if (isEditing) {
         form.put(servicesRoutes.update.url(props.service.id));
@@ -26,119 +34,94 @@ const submit = () => {
 </script>
 
 <template>
-    <Head :title="isEditing ? 'Edit Service' : 'Create Service'" />
+    <Head :title="isEditing ? 'Edit service' : 'Add service'" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h1
-                    class="text-foreground text-2xl font-semibold tracking-tight md:text-3xl"
-                >
-                    {{ isEditing ? 'Edit Service' : 'Create Service' }}
-                </h1>
-            </div>
-            <Link
-                :href="servicesRoutes.index.url()"
-                class="text-muted-foreground hover:text-foreground text-sm font-medium"
-            >
-                &larr; Back to List
-            </Link>
-        </div>
+        <PageHeader
+            :title="isEditing ? 'Edit service' : 'Add service'"
+            :description="
+                isEditing
+                    ? 'Update the name, category or description.'
+                    : 'A product you sell. Modules and packages are added next.'
+            "
+            :back-href="backHref"
+            :back-label="isEditing ? 'Back to service' : 'Back to services'"
+        />
 
-        <div
-            class="border-border bg-card rounded-xl border p-6 shadow-sm md:p-8"
+        <form
+            @submit.prevent="submit"
+            class="border-border bg-card overflow-hidden rounded-xl border shadow-xs"
         >
-            <form @submit.prevent="submit" class="space-y-6">
-                <!-- Basic Info -->
-                <div class="space-y-4">
-                    <div>
-                        <label
-                            class="text-foreground mb-1 block text-sm font-medium"
-                            >Service Name
-                            <span class="text-destructive">*</span></label
-                        >
-                        <input
-                            v-model="form.name"
-                            type="text"
-                            required
-                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
-                        />
-                        <p
-                            v-if="form.errors.name"
-                            class="text-destructive mt-1 text-sm"
-                        >
-                            {{ form.errors.name }}
-                        </p>
-                    </div>
+            <div class="space-y-5 p-6">
+                <FormField
+                    label="Service name"
+                    for="name"
+                    required
+                    :error="form.errors.name"
+                >
+                    <Input id="name" v-model="form.name" required autofocus />
+                </FormField>
 
-                    <div>
-                        <label
-                            class="text-foreground mb-1 block text-sm font-medium"
-                            >Service Category
-                            <span class="text-destructive">*</span></label
-                        >
-                        <select
-                            v-model="form.category"
-                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
-                        >
-                            <option value="standard">
-                                Standard Business SaaS (Flat Rate / Month)
-                            </option>
-                            <option value="education">
-                                🎓 School / Educational System (Student-Based
-                                Tiers & MoMo Collections)
-                            </option>
-                        </select>
-                        <p
-                            v-if="form.errors.category"
-                            class="text-destructive mt-1 text-sm"
-                        >
-                            {{ form.errors.category }}
-                        </p>
-                    </div>
+                <FormField
+                    label="Category"
+                    for="category"
+                    required
+                    :error="form.errors.category"
+                    hint="Education services are priced per student and can be paid by students via MoMo."
+                >
+                    <select
+                        id="category"
+                        v-model="form.category"
+                        :class="selectClass"
+                    >
+                        <option value="standard">
+                            Standard: flat monthly price
+                        </option>
+                        <option value="education">
+                            Education: priced per student, MoMo collections
+                        </option>
+                    </select>
+                </FormField>
 
-                    <div>
-                        <label
-                            class="text-foreground mb-1 block text-sm font-medium"
-                            >Description</label
-                        >
-                        <textarea
-                            v-model="form.description"
-                            rows="3"
-                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
-                        ></textarea>
-                        <p
-                            v-if="form.errors.description"
-                            class="text-destructive mt-1 text-sm"
-                        >
-                            {{ form.errors.description }}
-                        </p>
-                    </div>
-                </div>
+                <FormField
+                    label="Description"
+                    for="description"
+                    :error="form.errors.description"
+                >
+                    <textarea
+                        id="description"
+                        v-model="form.description"
+                        rows="3"
+                        :class="textareaClass"
+                    ></textarea>
+                </FormField>
 
                 <div
                     v-if="!isEditing"
-                    class="border-primary/20 bg-primary/10 rounded-xl border p-4"
+                    class="border-info/20 bg-info/5 text-foreground flex gap-3 rounded-lg border p-4 text-sm"
                 >
-                    <p class="text-primary text-sm">
-                        <strong>Tip:</strong> After saving this service, you'll
-                        be taken to the service detail page where you can add
-                        <strong>Modules</strong> (features) and bundle them into
-                        <strong>Packages</strong>.
+                    <Info class="text-info mt-0.5 size-4 shrink-0" />
+                    <p>
+                        After saving you'll go to the service page, where you
+                        can add <strong>modules</strong> (features) and bundle
+                        them into <strong>packages</strong>.
                     </p>
                 </div>
+            </div>
 
-                <div class="flex justify-end pt-4">
-                    <button
-                        type="submit"
-                        :disabled="form.processing"
-                        :class="buttonVariants({ variant: 'default' })"
-                        class="disabled:opacity-50"
-                    >
-                        {{ isEditing ? 'Update Service' : 'Save Service' }}
-                    </button>
-                </div>
-            </form>
-        </div>
+            <div
+                class="border-border bg-muted/30 flex justify-end gap-2 border-t px-6 py-4"
+            >
+                <Link
+                    :href="backHref"
+                    :class="buttonVariants({ variant: 'outline' })"
+                >
+                    Cancel
+                </Link>
+                <Button type="submit" :disabled="form.processing">
+                    {{ isEditing ? 'Save changes' : 'Add service' }}
+                </Button>
+            </div>
+        </form>
     </div>
 </template>

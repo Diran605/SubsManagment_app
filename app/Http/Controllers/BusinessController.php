@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Business;
+use App\Models\Subscription;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -58,7 +59,16 @@ class BusinessController extends Controller implements HasMiddleware
 
     public function show(Business $business): Response
     {
-        $business->load(['subscriptions.service', 'subscriptions.package', 'subscriptions.modules', 'creator']);
+        $business->load([
+            'subscriptions' => fn ($query) => $query->withExists('renewals')->latest('start_date'),
+            'subscriptions.service:id,name',
+            'subscriptions.package:id,name',
+            'subscriptions.modules:id,name',
+            'creator:id,name',
+        ]);
+        $business->subscriptions->each(
+            fn (Subscription $subscription) => $subscription->setAttribute('status_badge', $subscription->statusBadge())
+        );
 
         return Inertia::render('Businesses/Show', [
             'business' => $business,
