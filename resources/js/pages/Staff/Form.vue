@@ -166,7 +166,7 @@ const checkboxClass =
                     <label
                         v-for="role in roles"
                         :key="role.id"
-                        class="border-border hover:bg-muted/40 has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors"
+                        class="border-border hover:bg-muted/40 has-checked:border-primary/40 has-checked:bg-primary/5 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors"
                     >
                         <input
                             type="checkbox"

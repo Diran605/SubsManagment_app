@@ -387,7 +387,7 @@ const checkboxClass =
                             <label
                                 v-for="mod in availableModules"
                                 :key="mod.id"
-                                class="border-border hover:bg-muted/40 has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
+                                class="border-border hover:bg-muted/40 has-checked:border-primary/40 has-checked:bg-primary/5 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
                             >
                                 <input
                                     type="checkbox"

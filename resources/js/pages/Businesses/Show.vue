@@ -159,7 +159,7 @@ const openSubscription = (id: number) =>
                         <dt class="text-muted-foreground text-xs">
                             {{ row.label }}
                         </dt>
-                        <dd class="text-foreground mt-0.5 break-words">
+                        <dd class="text-foreground mt-0.5 wrap-break-word">
                             {{ row.value }}
                         </dd>
                     </div>
