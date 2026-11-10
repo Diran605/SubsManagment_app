@@ -49,24 +49,48 @@ const mainNavItems = computed(() => {
     ];
 
     const perms = page.props.auth?.user?.permissions || [];
-    
+
     if (perms.includes('view businesses')) {
-        items.push({ title: 'Businesses', href: businessesRoutes.index.url(), icon: Building2 });
+        items.push({
+            title: 'Businesses',
+            href: businessesRoutes.index.url(),
+            icon: Building2,
+        });
     }
     if (perms.includes('view services')) {
-        items.push({ title: 'Services', href: servicesRoutes.index.url(), icon: Briefcase });
+        items.push({
+            title: 'Services',
+            href: servicesRoutes.index.url(),
+            icon: Briefcase,
+        });
     }
     if (perms.includes('view subscriptions')) {
-        items.push({ title: 'Subscriptions', href: subscriptionsRoutes.index.url(), icon: BookOpen });
+        items.push({
+            title: 'Subscriptions',
+            href: subscriptionsRoutes.index.url(),
+            icon: BookOpen,
+        });
     }
     if (perms.includes('view reports')) {
-        items.push({ title: 'Reports', href: reportsRoutes.index.url(), icon: BarChart3 });
-        items.push({ title: 'Budget', href: budgetsRoutes.index.url(), icon: PiggyBank });
+        items.push({
+            title: 'Reports',
+            href: reportsRoutes.index.url(),
+            icon: BarChart3,
+        });
+        items.push({
+            title: 'Budget',
+            href: budgetsRoutes.index.url(),
+            icon: PiggyBank,
+        });
     }
-    
+
     // Must match the route middleware in routes/web.php.
     if (perms.includes('manage settings')) {
-        items.push({ title: 'Audit Logs', href: auditLogsRoutes.index.url(), icon: Activity });
+        items.push({
+            title: 'Audit Logs',
+            href: auditLogsRoutes.index.url(),
+            icon: Activity,
+        });
     }
 
     // Staff routes are restricted to the Admin role (routes/web.php).

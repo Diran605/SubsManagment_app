@@ -16,7 +16,10 @@ const props = defineProps<{
     <Head title="Staff Accounts" />
 
     <div class="flex h-full flex-col gap-6 p-4 md:p-8">
-        <PageHeader title="Staff Accounts" description="Manage user access and accounts.">
+        <PageHeader
+            title="Staff Accounts"
+            description="Manage user access and accounts."
+        >
             <template #actions>
                 <Link
                     :href="staffRoutes.create.url()"
@@ -28,13 +31,11 @@ const props = defineProps<{
         </PageHeader>
 
         <div
-            class="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-xs"
+            class="border-border bg-card flex flex-1 flex-col overflow-hidden rounded-xl border shadow-xs"
         >
             <div class="flex-1 overflow-x-auto">
                 <table class="w-full text-left text-sm">
-                    <thead
-                        :class="table.head"
-                >
+                    <thead :class="table.head">
                         <tr>
                             <th class="px-4 py-3 font-medium">Name</th>
                             <th class="px-4 py-3 font-medium">Email</th>
@@ -44,32 +45,49 @@ const props = defineProps<{
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-border">
+                    <tbody class="divide-border divide-y">
                         <tr
                             v-for="user in props.staff"
                             :key="user.id"
                             :class="table.row"
                         >
-                            <td class="px-4 py-3 font-medium text-foreground">
+                            <td class="text-foreground px-4 py-3 font-medium">
                                 {{ user.name }}
                             </td>
-                            <td class="px-4 py-3 text-muted-foreground">
+                            <td class="text-muted-foreground px-4 py-3">
                                 {{ user.email }}
                             </td>
                             <td class="px-4 py-3">
-                                <Badge :variant="user.is_active ? 'success' : 'muted'">{{ user.is_active ? 'Active' : 'Inactive' }}</Badge>
+                                <Badge
+                                    :variant="
+                                        user.is_active ? 'success' : 'muted'
+                                    "
+                                    >{{
+                                        user.is_active ? 'Active' : 'Inactive'
+                                    }}</Badge
+                                >
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <div class="flex items-center justify-end gap-1.5">
+                                <div
+                                    class="flex items-center justify-end gap-1.5"
+                                >
                                     <Link
                                         :href="staffRoutes.show.url(user.id)"
-                                        :class="rowActionVariants({ tone: 'neutral' })"
+                                        :class="
+                                            rowActionVariants({
+                                                tone: 'neutral',
+                                            })
+                                        "
                                     >
                                         View
                                     </Link>
                                     <Link
                                         :href="staffRoutes.edit.url(user.id)"
-                                        :class="rowActionVariants({ tone: 'primary' })"
+                                        :class="
+                                            rowActionVariants({
+                                                tone: 'primary',
+                                            })
+                                        "
                                     >
                                         Edit
                                     </Link>
@@ -77,18 +95,23 @@ const props = defineProps<{
                                         :href="staffRoutes.toggle.url(user.id)"
                                         method="patch"
                                         as="button"
-                                        :class="rowActionVariants({ tone: 'warning' })"
+                                        :class="
+                                            rowActionVariants({
+                                                tone: 'warning',
+                                            })
+                                        "
                                     >
-                                        {{ user.is_active ? 'Deactivate' : 'Activate' }}
+                                        {{
+                                            user.is_active
+                                                ? 'Deactivate'
+                                                : 'Activate'
+                                        }}
                                     </Link>
                                 </div>
                             </td>
                         </tr>
                         <tr v-if="props.staff.length === 0">
-                            <td
-                                colspan="4"
-                                :class="table.empty"
-                            >
+                            <td colspan="4" :class="table.empty">
                                 No staff found.
                             </td>
                         </tr>

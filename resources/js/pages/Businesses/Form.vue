@@ -39,22 +39,27 @@ const submit = () => {
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+                <h1
+                    class="text-foreground text-2xl font-semibold tracking-tight md:text-3xl"
+                >
                     {{ isEditing ? 'Edit Business' : 'Create Business' }}
                 </h1>
             </div>
             <Link
                 :href="businessesRoutes.index.url()"
-                class="text-sm font-medium text-muted-foreground hover:text-foreground"
+                class="text-muted-foreground hover:text-foreground text-sm font-medium"
             >
                 &larr; Back to List
             </Link>
         </div>
 
-        <div class="rounded-xl border border-border bg-card p-6 md:p-8 shadow-sm">
+        <div
+            class="border-border bg-card rounded-xl border p-6 shadow-sm md:p-8"
+        >
             <form @submit.prevent="submit" class="space-y-4">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-foreground"
+                    <label
+                        class="text-foreground mb-1 block text-sm font-medium"
                         >Business Name
                         <span class="text-destructive">*</span></label
                     >
@@ -62,11 +67,11 @@ const submit = () => {
                         v-model="form.name"
                         type="text"
                         required
-                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
+                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                     />
                     <p
                         v-if="form.errors.name"
-                        class="mt-1 text-sm text-destructive"
+                        class="text-destructive mt-1 text-sm"
                     >
                         {{ form.errors.name }}
                     </p>
@@ -75,34 +80,34 @@ const submit = () => {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
+                            class="text-foreground mb-1 block text-sm font-medium"
                             >Contact Person</label
                         >
                         <input
                             v-model="form.contact_person"
                             type="text"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                         />
                         <p
                             v-if="form.errors.contact_person"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.contact_person }}
                         </p>
                     </div>
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
+                            class="text-foreground mb-1 block text-sm font-medium"
                             >Phone</label
                         >
                         <input
                             v-model="form.phone"
                             type="text"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                         />
                         <p
                             v-if="form.errors.phone"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.phone }}
                         </p>
@@ -110,34 +115,36 @@ const submit = () => {
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-foreground"
+                    <label
+                        class="text-foreground mb-1 block text-sm font-medium"
                         >Email</label
                     >
                     <input
                         v-model="form.email"
                         type="email"
-                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
+                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                     />
                     <p
                         v-if="form.errors.email"
-                        class="mt-1 text-sm text-destructive"
+                        class="text-destructive mt-1 text-sm"
                     >
                         {{ form.errors.email }}
                     </p>
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-foreground"
+                    <label
+                        class="text-foreground mb-1 block text-sm font-medium"
                         >Address</label
                     >
                     <textarea
                         v-model="form.address"
                         rows="3"
-                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:text-sm"
+                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                     ></textarea>
                     <p
                         v-if="form.errors.address"
-                        class="mt-1 text-sm text-destructive"
+                        class="text-destructive mt-1 text-sm"
                     >
                         {{ form.errors.address }}
                     </p>

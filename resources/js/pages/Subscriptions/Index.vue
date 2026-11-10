@@ -11,10 +11,18 @@ import { fieldClass, rowActionVariants, table } from '@/lib/ui';
 import { Plus, Search } from '@lucide/vue';
 
 const page = usePage<any>();
-const canCreate = computed(() => page.props.auth?.user?.permissions?.includes('create subscriptions'));
-const canEdit = computed(() => page.props.auth?.user?.permissions?.includes('edit subscriptions'));
-const canDelete = computed(() => page.props.auth?.user?.permissions?.includes('delete subscriptions'));
-const canRestore = computed(() => page.props.auth?.user?.permissions?.includes('restore subscriptions'));
+const canCreate = computed(() =>
+    page.props.auth?.user?.permissions?.includes('create subscriptions'),
+);
+const canEdit = computed(() =>
+    page.props.auth?.user?.permissions?.includes('edit subscriptions'),
+);
+const canDelete = computed(() =>
+    page.props.auth?.user?.permissions?.includes('delete subscriptions'),
+);
+const canRestore = computed(() =>
+    page.props.auth?.user?.permissions?.includes('restore subscriptions'),
+);
 
 const props = defineProps<{
     subscriptions: any;
@@ -34,7 +42,12 @@ const dateTo = ref(props.filters?.date_to || '');
 const applyFilters = () => {
     router.get(
         subscriptionsRoutes.index.url(),
-        { search: search.value, status: status.value, date_from: dateFrom.value, date_to: dateTo.value },
+        {
+            search: search.value,
+            status: status.value,
+            date_from: dateFrom.value,
+            date_to: dateTo.value,
+        },
         { preserveState: true, preserveScroll: true, replace: true },
     );
 };
@@ -48,7 +61,7 @@ const deleteForm = useForm({});
 const confirmDelete = (id: number) => {
     if (confirm('Are you sure you want to delete this subscription?')) {
         deleteForm.delete(subscriptionsRoutes.destroy.url(id), {
-            preserveScroll: true
+            preserveScroll: true,
         });
     }
 };
@@ -56,7 +69,7 @@ const confirmDelete = (id: number) => {
 const confirmRestore = (id: number) => {
     if (confirm('Are you sure you want to restore this subscription?')) {
         deleteForm.post(subscriptionsRoutes.restore.url(id), {
-            preserveScroll: true
+            preserveScroll: true,
         });
     }
 };
@@ -66,9 +79,16 @@ const confirmRestore = (id: number) => {
     <Head title="Subscriptions" />
 
     <div class="flex h-full flex-col gap-6 p-4 md:p-8">
-        <PageHeader title="Subscriptions" description="Every subscription across all businesses.">
+        <PageHeader
+            title="Subscriptions"
+            description="Every subscription across all businesses."
+        >
             <template #actions>
-                <Link v-if="canCreate" :href="subscriptionsRoutes.create.url()" :class="buttonVariants()">
+                <Link
+                    v-if="canCreate"
+                    :href="subscriptionsRoutes.create.url()"
+                    :class="buttonVariants()"
+                >
                     <Plus class="size-4" /> New subscription
                 </Link>
             </template>
@@ -77,7 +97,9 @@ const confirmRestore = (id: number) => {
         <div :class="table.wrapper">
             <div :class="table.toolbar">
                 <div class="relative w-full lg:w-64">
-                    <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search
+                        class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                    />
                     <input
                         v-model="search"
                         type="search"
@@ -86,7 +108,11 @@ const confirmRestore = (id: number) => {
                         :class="[fieldClass, 'w-full pl-9']"
                     />
                 </div>
-                <select v-model="status" aria-label="Filter by status" :class="fieldClass">
+                <select
+                    v-model="status"
+                    aria-label="Filter by status"
+                    :class="fieldClass"
+                >
                     <option value="all">All statuses</option>
                     <option value="active">Active</option>
                     <option value="expiring_soon">Expiring soon</option>
@@ -94,11 +120,15 @@ const confirmRestore = (id: number) => {
                     <option value="renewed">Renewed</option>
                     <option value="trashed">Deleted</option>
                 </select>
-                <label class="flex items-center gap-2 text-sm text-muted-foreground">
+                <label
+                    class="text-muted-foreground flex items-center gap-2 text-sm"
+                >
                     From
                     <input v-model="dateFrom" type="date" :class="fieldClass" />
                 </label>
-                <label class="flex items-center gap-2 text-sm text-muted-foreground">
+                <label
+                    class="text-muted-foreground flex items-center gap-2 text-sm"
+                >
                     To
                     <input v-model="dateTo" type="date" :class="fieldClass" />
                 </label>
@@ -115,58 +145,175 @@ const confirmRestore = (id: number) => {
                             <th :class="table.th">Period</th>
                             <th :class="table.th">Added by</th>
                             <th :class="table.th">Status</th>
-                            <th :class="[table.th, 'text-right']"><span class="sr-only">Actions</span></th>
+                            <th :class="[table.th, 'text-right']">
+                                <span class="sr-only">Actions</span>
+                            </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-border">
-                        <tr v-for="sub in props.subscriptions.data" :key="sub.id" :class="table.row">
-                            <td class="px-4 py-3 font-medium text-foreground">
-                                <Link :href="businessesRoutes.show.url(sub.business_id)" class="hover:underline">
+                    <tbody class="divide-border divide-y">
+                        <tr
+                            v-for="sub in props.subscriptions.data"
+                            :key="sub.id"
+                            :class="table.row"
+                        >
+                            <td class="text-foreground px-4 py-3 font-medium">
+                                <Link
+                                    :href="
+                                        businessesRoutes.show.url(
+                                            sub.business_id,
+                                        )
+                                    "
+                                    class="hover:underline"
+                                >
                                     {{ sub.business?.name }}
                                 </Link>
                             </td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ sub.service?.name }}</td>
-                            <td class="px-4 py-3 capitalize text-muted-foreground">{{ sub.mode }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums text-foreground">
-                                {{ Number(sub.amount).toLocaleString('en-US') }} <span class="text-xs text-muted-foreground">FCFA</span>
+                            <td class="text-muted-foreground px-4 py-3">
+                                {{ sub.service?.name }}
                             </td>
-                            <td class="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
-                                {{ new Date(sub.start_date).toLocaleDateString() }} – {{ new Date(sub.end_date).toLocaleDateString() }}
+                            <td
+                                class="text-muted-foreground px-4 py-3 capitalize"
+                            >
+                                {{ sub.mode }}
                             </td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ sub.creator?.name || 'System' }}</td>
-                            <td class="px-4 py-3"><StatusBadge :status="sub.status_badge" /></td>
+                            <td
+                                class="text-foreground px-4 py-3 text-right font-medium whitespace-nowrap tabular-nums"
+                            >
+                                {{ Number(sub.amount).toLocaleString('en-US') }}
+                                <span class="text-muted-foreground text-xs"
+                                    >FCFA</span
+                                >
+                            </td>
+                            <td
+                                class="text-muted-foreground px-4 py-3 text-xs whitespace-nowrap"
+                            >
+                                {{
+                                    new Date(
+                                        sub.start_date,
+                                    ).toLocaleDateString()
+                                }}
+                                –
+                                {{
+                                    new Date(sub.end_date).toLocaleDateString()
+                                }}
+                            </td>
+                            <td class="text-muted-foreground px-4 py-3">
+                                {{ sub.creator?.name || 'System' }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <StatusBadge :status="sub.status_badge" />
+                            </td>
                             <td class="px-4 py-3 text-right">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <Link :href="subscriptionsRoutes.show.url(sub.id)" :class="rowActionVariants({ tone: 'neutral' })">View</Link>
-                                    <template v-if="sub.status_badge !== 'trashed'">
+                                <div
+                                    class="flex items-center justify-end gap-1.5"
+                                >
+                                    <Link
+                                        :href="
+                                            subscriptionsRoutes.show.url(sub.id)
+                                        "
+                                        :class="
+                                            rowActionVariants({
+                                                tone: 'neutral',
+                                            })
+                                        "
+                                        >View</Link
+                                    >
+                                    <template
+                                        v-if="sub.status_badge !== 'trashed'"
+                                    >
                                         <Link
-                                            v-if="canCreate && sub.status_badge !== 'active' && sub.status_badge !== 'renewed'"
-                                            :href="subscriptionsRoutes.createRenewal.url(sub.id)"
-                                            :class="rowActionVariants({ tone: 'success' })"
-                                        >Renew</Link>
-                                        <Link v-if="canEdit" :href="subscriptionsRoutes.edit.url(sub.id)" :class="rowActionVariants({ tone: 'primary' })">Edit</Link>
-                                        <button v-if="canDelete" type="button" @click="confirmDelete(sub.id)" :class="rowActionVariants({ tone: 'danger' })">Delete</button>
+                                            v-if="
+                                                canCreate &&
+                                                sub.status_badge !== 'active' &&
+                                                sub.status_badge !== 'renewed'
+                                            "
+                                            :href="
+                                                subscriptionsRoutes.createRenewal.url(
+                                                    sub.id,
+                                                )
+                                            "
+                                            :class="
+                                                rowActionVariants({
+                                                    tone: 'success',
+                                                })
+                                            "
+                                            >Renew</Link
+                                        >
+                                        <Link
+                                            v-if="canEdit"
+                                            :href="
+                                                subscriptionsRoutes.edit.url(
+                                                    sub.id,
+                                                )
+                                            "
+                                            :class="
+                                                rowActionVariants({
+                                                    tone: 'primary',
+                                                })
+                                            "
+                                            >Edit</Link
+                                        >
+                                        <button
+                                            v-if="canDelete"
+                                            type="button"
+                                            @click="confirmDelete(sub.id)"
+                                            :class="
+                                                rowActionVariants({
+                                                    tone: 'danger',
+                                                })
+                                            "
+                                        >
+                                            Delete
+                                        </button>
                                     </template>
-                                    <button v-else-if="canRestore" type="button" @click="confirmRestore(sub.id)" :class="rowActionVariants({ tone: 'warning' })">Restore</button>
+                                    <button
+                                        v-else-if="canRestore"
+                                        type="button"
+                                        @click="confirmRestore(sub.id)"
+                                        :class="
+                                            rowActionVariants({
+                                                tone: 'warning',
+                                            })
+                                        "
+                                    >
+                                        Restore
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                         <tr v-if="props.subscriptions.data.length === 0">
-                            <td colspan="8" :class="table.empty">No subscriptions match these filters.</td>
+                            <td colspan="8" :class="table.empty">
+                                No subscriptions match these filters.
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
             <div
-                v-if="props.subscriptions.links && props.subscriptions.links.length > 3"
-                class="flex flex-col items-center justify-between gap-3 border-t border-border px-4 py-3 sm:flex-row"
+                v-if="
+                    props.subscriptions.links &&
+                    props.subscriptions.links.length > 3
+                "
+                class="border-border flex flex-col items-center justify-between gap-3 border-t px-4 py-3 sm:flex-row"
             >
-                <p class="text-sm text-muted-foreground">
-                    Showing <span class="font-medium text-foreground">{{ props.subscriptions.from }}</span>–<span class="font-medium text-foreground">{{ props.subscriptions.to }}</span>
-                    of <span class="font-medium text-foreground">{{ props.subscriptions.total }}</span>
+                <p class="text-muted-foreground text-sm">
+                    Showing
+                    <span class="text-foreground font-medium">{{
+                        props.subscriptions.from
+                    }}</span
+                    >–<span class="text-foreground font-medium">{{
+                        props.subscriptions.to
+                    }}</span>
+                    of
+                    <span class="text-foreground font-medium">{{
+                        props.subscriptions.total
+                    }}</span>
                 </p>
-                <nav class="flex flex-wrap items-center gap-1" aria-label="Pagination">
+                <nav
+                    class="flex flex-wrap items-center gap-1"
+                    aria-label="Pagination"
+                >
                     <Link
                         v-for="(link, key) in props.subscriptions.links"
                         :key="key"
@@ -176,7 +323,9 @@ const confirmRestore = (id: number) => {
                         :aria-current="link.active ? 'page' : undefined"
                         class="inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2.5 text-sm font-medium transition-colors"
                         :class="[
-                            link.active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                            link.active
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                             !link.url ? 'pointer-events-none opacity-40' : '',
                         ]"
                     />

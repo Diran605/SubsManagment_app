@@ -4,7 +4,10 @@ import { Badge } from '@/components/ui/badge';
 
 const props = defineProps<{ status: string }>();
 
-const variants: Record<string, 'success' | 'warning' | 'danger' | 'muted' | 'info'> = {
+const variants: Record<
+    string,
+    'success' | 'warning' | 'danger' | 'muted' | 'info'
+> = {
     active: 'success',
     expiring_soon: 'warning',
     expired: 'danger',
@@ -21,7 +24,9 @@ const labels: Record<string, string> = {
 };
 
 const variant = computed(() => variants[props.status] ?? 'muted');
-const label = computed(() => labels[props.status] ?? props.status.replace(/_/g, ' '));
+const label = computed(
+    () => labels[props.status] ?? props.status.replace(/_/g, ' '),
+);
 </script>
 
 <template>

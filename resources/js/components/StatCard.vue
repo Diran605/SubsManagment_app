@@ -20,12 +20,23 @@ const toneClasses: Record<string, string> = {
 </script>
 
 <template>
-    <div class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-xs">
+    <div
+        class="border-border bg-card flex flex-col rounded-xl border p-5 shadow-xs"
+    >
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-                <p class="text-sm font-medium text-muted-foreground">{{ label }}</p>
-                <p class="mt-2 truncate text-2xl font-semibold tracking-tight text-foreground tabular-nums md:text-3xl">
-                    {{ value }}<span v-if="unit" class="ml-1 text-base font-medium text-muted-foreground">{{ unit }}</span>
+                <p class="text-muted-foreground text-sm font-medium">
+                    {{ label }}
+                </p>
+                <p
+                    class="text-foreground mt-2 truncate text-2xl font-semibold tracking-tight tabular-nums md:text-3xl"
+                >
+                    {{ value
+                    }}<span
+                        v-if="unit"
+                        class="text-muted-foreground ml-1 text-base font-medium"
+                        >{{ unit }}</span
+                    >
                 </p>
             </div>
             <div
@@ -37,7 +48,10 @@ const toneClasses: Record<string, string> = {
                 <slot name="icon" />
             </div>
         </div>
-        <div v-if="hint || $slots.default" class="mt-auto pt-3 text-xs text-muted-foreground">
+        <div
+            v-if="hint || $slots.default"
+            class="text-muted-foreground mt-auto pt-3 text-xs"
+        >
             <slot>{{ hint }}</slot>
         </div>
     </div>

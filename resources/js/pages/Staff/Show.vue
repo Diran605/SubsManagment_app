@@ -15,10 +15,12 @@ const props = defineProps<{
     <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-8">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+                <h1
+                    class="text-foreground text-2xl font-semibold tracking-tight md:text-3xl"
+                >
                     {{ staff.name }}
                 </h1>
-                <p class="mt-1 text-sm text-muted-foreground">
+                <p class="text-muted-foreground mt-1 text-sm">
                     Staff Details & Audit Log
                 </p>
             </div>
@@ -40,7 +42,7 @@ const props = defineProps<{
                     method="patch"
                     as="button"
                     :class="buttonVariants({ variant: 'secondary' })"
-                    class="font-medium text-warning hover:bg-warning/10"
+                    class="text-warning hover:bg-warning/10 font-medium"
                 >
                     {{ staff.is_active ? 'Deactivate' : 'Activate' }}
                 </Link>
@@ -49,22 +51,28 @@ const props = defineProps<{
 
         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div
-                class="col-span-1 h-fit space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm"
+                class="border-border bg-card col-span-1 h-fit space-y-6 rounded-xl border p-6 shadow-sm"
             >
                 <dl class="space-y-4">
                     <div>
-                        <dt class="text-sm font-medium text-muted-foreground">Email</dt>
-                        <dd class="mt-1 text-sm text-foreground">{{ staff.email }}</dd>
+                        <dt class="text-muted-foreground text-sm font-medium">
+                            Email
+                        </dt>
+                        <dd class="text-foreground mt-1 text-sm">
+                            {{ staff.email }}
+                        </dd>
                     </div>
                     <div>
-                        <dt class="text-sm font-medium text-muted-foreground">Status</dt>
+                        <dt class="text-muted-foreground text-sm font-medium">
+                            Status
+                        </dt>
                         <dd class="mt-1">
                             <span
                                 :class="[
                                     'rounded-md border px-2 py-1 text-xs font-medium ring-1 ring-inset',
                                     staff.is_active
-                                        ? 'border-transparent bg-success/10 text-success ring-success/20'
-                                        : 'border-transparent bg-destructive/10 text-destructive ring-destructive/20',
+                                        ? 'bg-success/10 text-success ring-success/20 border-transparent'
+                                        : 'bg-destructive/10 text-destructive ring-destructive/20 border-transparent',
                                 ]"
                             >
                                 {{ staff.is_active ? 'Active' : 'Inactive' }}
@@ -72,44 +80,108 @@ const props = defineProps<{
                         </dd>
                     </div>
                     <div>
-                        <dt class="text-sm font-medium text-muted-foreground">Joined</dt>
-                        <dd class="mt-1 text-sm text-foreground">{{ new Date(staff.created_at).toLocaleDateString() }}</dd>
+                        <dt class="text-muted-foreground text-sm font-medium">
+                            Joined
+                        </dt>
+                        <dd class="text-foreground mt-1 text-sm">
+                            {{
+                                new Date(staff.created_at).toLocaleDateString()
+                            }}
+                        </dd>
                     </div>
                 </dl>
             </div>
 
             <div class="col-span-2 space-y-6">
                 <!-- Businesses Created -->
-                <div class="flex flex-col rounded-xl border border-border bg-card shadow-xs">
-                    <div class="border-b border-border p-4 bg-muted/20">
-                        <h3 class="font-semibold text-foreground">Businesses Added</h3>
+                <div
+                    class="border-border bg-card flex flex-col rounded-xl border shadow-xs"
+                >
+                    <div class="border-border bg-muted/20 border-b p-4">
+                        <h3 class="text-foreground font-semibold">
+                            Businesses Added
+                        </h3>
                     </div>
                     <div class="p-4" v-if="staff.businesses?.length === 0">
-                        <p class="text-sm text-muted-foreground">No businesses added by this staff member.</p>
+                        <p class="text-muted-foreground text-sm">
+                            No businesses added by this staff member.
+                        </p>
                     </div>
-                    <ul class="divide-y divide-border" v-else>
-                        <li v-for="b in staff.businesses" :key="b.id" class="p-4 transition-colors hover:bg-muted/50">
-                            <Link :href="businessesRoutes.show.url(b.id)" class="text-sm font-medium text-primary hover:underline">{{ b.name }}</Link>
-                            <span class="ml-2 text-xs text-muted-foreground">on {{ new Date(b.created_at).toLocaleDateString() }}</span>
+                    <ul class="divide-border divide-y" v-else>
+                        <li
+                            v-for="b in staff.businesses"
+                            :key="b.id"
+                            class="hover:bg-muted/50 p-4 transition-colors"
+                        >
+                            <Link
+                                :href="businessesRoutes.show.url(b.id)"
+                                class="text-primary text-sm font-medium hover:underline"
+                                >{{ b.name }}</Link
+                            >
+                            <span class="text-muted-foreground ml-2 text-xs"
+                                >on
+                                {{
+                                    new Date(b.created_at).toLocaleDateString()
+                                }}</span
+                            >
                         </li>
                     </ul>
                 </div>
 
                 <!-- Subscriptions Created -->
-                <div class="flex flex-col rounded-xl border border-border bg-card shadow-xs">
-                    <div class="border-b border-border p-4 bg-muted/20">
-                        <h3 class="font-semibold text-foreground">Subscriptions Handled</h3>
+                <div
+                    class="border-border bg-card flex flex-col rounded-xl border shadow-xs"
+                >
+                    <div class="border-border bg-muted/20 border-b p-4">
+                        <h3 class="text-foreground font-semibold">
+                            Subscriptions Handled
+                        </h3>
                     </div>
                     <div class="p-4" v-if="staff.subscriptions?.length === 0">
-                        <p class="text-sm text-muted-foreground">No subscriptions handled by this staff member.</p>
+                        <p class="text-muted-foreground text-sm">
+                            No subscriptions handled by this staff member.
+                        </p>
                     </div>
-                    <ul class="divide-y divide-border" v-else>
-                        <li v-for="sub in staff.subscriptions" :key="sub.id" class="p-4 flex items-center justify-between transition-colors hover:bg-muted/50">
+                    <ul class="divide-border divide-y" v-else>
+                        <li
+                            v-for="sub in staff.subscriptions"
+                            :key="sub.id"
+                            class="hover:bg-muted/50 flex items-center justify-between p-4 transition-colors"
+                        >
                             <div>
-                                <span class="text-sm font-medium text-foreground capitalize">{{ sub.mode }}</span>
-                                <span class="ml-2 text-xs text-muted-foreground">from {{ new Date(sub.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }} to {{ new Date(sub.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }}</span>
+                                <span
+                                    class="text-foreground text-sm font-medium capitalize"
+                                    >{{ sub.mode }}</span
+                                >
+                                <span class="text-muted-foreground ml-2 text-xs"
+                                    >from
+                                    {{
+                                        new Date(
+                                            sub.start_date,
+                                        ).toLocaleDateString('en-GB', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric',
+                                        })
+                                    }}
+                                    to
+                                    {{
+                                        new Date(
+                                            sub.end_date,
+                                        ).toLocaleDateString('en-GB', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric',
+                                        })
+                                    }}</span
+                                >
                             </div>
-                            <span class="text-sm font-medium text-foreground">{{ Number(sub.amount).toLocaleString('en-US') }} FCFA</span>
+                            <span class="text-foreground text-sm font-medium"
+                                >{{
+                                    Number(sub.amount).toLocaleString('en-US')
+                                }}
+                                FCFA</span
+                            >
                         </li>
                     </ul>
                 </div>

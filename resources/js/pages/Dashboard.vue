@@ -17,11 +17,25 @@ import { buttonVariants } from '@/components/ui/button';
 import PageHeader from '@/components/PageHeader.vue';
 import StatCard from '@/components/StatCard.vue';
 import { rowActionVariants } from '@/lib/ui';
-import { AlertTriangle, Banknote, Building2, Layers, Plus, Smartphone } from '@lucide/vue';
+import {
+    AlertTriangle,
+    Banknote,
+    Building2,
+    Layers,
+    Plus,
+    Smartphone,
+} from '@lucide/vue';
 import { useAppearance } from '@/composables/useAppearance';
 import { wrappedTickCallback } from '@/lib/charts';
 
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
+ChartJS.register(
+    Title,
+    Tooltip,
+    Legend,
+    BarElement,
+    CategoryScale,
+    LinearScale,
+);
 
 const props = defineProps<{
     canViewSubscriptions: boolean;
@@ -66,7 +80,10 @@ const getBarChartData = (
 
 const momoPercent = computed(() =>
     props.momo.target > 0
-        ? Math.min(100, Math.round((props.momo.collected / props.momo.target) * 100))
+        ? Math.min(
+              100,
+              Math.round((props.momo.collected / props.momo.target) * 100),
+          )
         : 0,
 );
 
@@ -96,7 +113,9 @@ const barChartOptions = computed(() => ({
         },
         y: {
             grid: {
-                color: isDark.value ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                color: isDark.value
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : 'rgba(0, 0, 0, 0.05)',
             },
             ticks: {
                 stepSize: 1,
@@ -112,12 +131,23 @@ const barChartOptions = computed(() => ({
     <Head title="Dashboard" />
 
     <div class="flex flex-col gap-6 p-4 md:p-8">
-        <PageHeader title="Dashboard" description="Active subscriptions and revenue at a glance.">
+        <PageHeader
+            title="Dashboard"
+            description="Active subscriptions and revenue at a glance."
+        >
             <template #actions>
-                <Link v-if="can('create businesses')" :href="businessesRoutes.create.url()" :class="buttonVariants({ variant: 'outline' })">
+                <Link
+                    v-if="can('create businesses')"
+                    :href="businessesRoutes.create.url()"
+                    :class="buttonVariants({ variant: 'outline' })"
+                >
                     Add business
                 </Link>
-                <Link v-if="can('create subscriptions')" :href="subscriptionsRoutes.create.url()" :class="buttonVariants()">
+                <Link
+                    v-if="can('create subscriptions')"
+                    :href="subscriptionsRoutes.create.url()"
+                    :class="buttonVariants()"
+                >
                     <Plus class="size-4" /> New subscription
                 </Link>
             </template>
@@ -125,9 +155,10 @@ const barChartOptions = computed(() => ({
 
         <div
             v-if="!props.canViewSubscriptions"
-            class="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-xs"
+            class="border-border bg-card text-muted-foreground rounded-xl border p-6 text-sm shadow-xs"
         >
-            Your account does not have access to subscription data. Ask an administrator if you need it.
+            Your account does not have access to subscription data. Ask an
+            administrator if you need it.
         </div>
 
         <template v-else>
@@ -135,17 +166,27 @@ const barChartOptions = computed(() => ({
             <div
                 v-if="props.expiringSubscriptions.length > 0"
                 role="status"
-                class="flex flex-col gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4 sm:flex-row sm:items-center"
+                class="border-warning/30 bg-warning/10 flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center"
             >
-                <AlertTriangle class="size-5 shrink-0 text-warning" aria-hidden="true" />
+                <AlertTriangle
+                    class="text-warning size-5 shrink-0"
+                    aria-hidden="true"
+                />
                 <div class="flex-1 text-sm">
-                    <p class="font-medium text-foreground">Renewals coming up</p>
+                    <p class="text-foreground font-medium">
+                        Renewals coming up
+                    </p>
                     <p class="text-muted-foreground">
-                        {{ props.expiringSubscriptions.length }} subscription(s) end within the next {{ props.expiringThreshold }} days.
+                        {{ props.expiringSubscriptions.length }} subscription(s)
+                        end within the next {{ props.expiringThreshold }} days.
                     </p>
                 </div>
                 <Link
-                    :href="subscriptionsRoutes.index.url({ query: { status: 'expiring_soon' } })"
+                    :href="
+                        subscriptionsRoutes.index.url({
+                            query: { status: 'expiring_soon' },
+                        })
+                    "
                     :class="rowActionVariants({ tone: 'warning' })"
                 >
                     Review them
@@ -153,7 +194,12 @@ const barChartOptions = computed(() => ({
             </div>
 
             <!-- Metrics -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2" :class="props.momo.count > 0 ? 'xl:grid-cols-4' : 'xl:grid-cols-3'">
+            <div
+                class="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                :class="
+                    props.momo.count > 0 ? 'xl:grid-cols-4' : 'xl:grid-cols-3'
+                "
+            >
                 <StatCard
                     label="Active revenue"
                     :value="Number(props.totalRevenue).toLocaleString('en-US')"
@@ -167,57 +213,103 @@ const barChartOptions = computed(() => ({
                 <StatCard
                     v-if="props.momo.count > 0"
                     label="Student MoMo collected"
-                    :value="Number(props.momo.collected).toLocaleString('en-US')"
+                    :value="
+                        Number(props.momo.collected).toLocaleString('en-US')
+                    "
                     unit="FCFA"
                     tone="info"
                 >
                     <template #icon><Smartphone /></template>
                     <div
-                        class="h-1.5 w-full overflow-hidden rounded-full bg-info/15"
+                        class="bg-info/15 h-1.5 w-full overflow-hidden rounded-full"
                         role="progressbar"
                         :aria-valuenow="momoPercent"
                         aria-valuemin="0"
                         aria-valuemax="100"
                         aria-label="MoMo collected against target"
                     >
-                        <div class="h-full rounded-full bg-info transition-[width]" :style="{ width: momoPercent + '%' }" />
+                        <div
+                            class="bg-info h-full rounded-full transition-[width]"
+                            :style="{ width: momoPercent + '%' }"
+                        />
                     </div>
                     <p class="mt-2">
-                        {{ momoPercent }}% of {{ Number(props.momo.target).toLocaleString('en-US') }} FCFA target ·
-                        {{ props.momo.count }} subscription(s)
+                        {{ momoPercent }}% of
+                        {{ Number(props.momo.target).toLocaleString('en-US') }}
+                        FCFA target · {{ props.momo.count }} subscription(s)
                     </p>
                 </StatCard>
 
-                <StatCard label="Businesses" :value="props.totalBusinesses" hint="Clients on the platform" tone="primary">
+                <StatCard
+                    label="Businesses"
+                    :value="props.totalBusinesses"
+                    hint="Clients on the platform"
+                    tone="primary"
+                >
                     <template #icon><Building2 /></template>
                 </StatCard>
 
-                <StatCard label="Services" :value="props.totalServices" hint="Available to subscribe to" tone="primary">
+                <StatCard
+                    label="Services"
+                    :value="props.totalServices"
+                    hint="Available to subscribe to"
+                    tone="primary"
+                >
                     <template #icon><Layers /></template>
                 </StatCard>
             </div>
 
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <!-- Subscriptions by service -->
-                <section class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-xs lg:col-span-2">
-                    <h2 class="text-base font-semibold text-foreground">Active subscriptions by service</h2>
+                <section
+                    class="border-border bg-card flex flex-col rounded-xl border p-5 shadow-xs lg:col-span-2"
+                >
+                    <h2 class="text-foreground text-base font-semibold">
+                        Active subscriptions by service
+                    </h2>
                     <div class="mt-4 overflow-x-auto">
-                        <div class="h-56" :style="{ minWidth: minChartWidth(props.subscriptionsByService, 5) }">
+                        <div
+                            class="h-56"
+                            :style="{
+                                minWidth: minChartWidth(
+                                    props.subscriptionsByService,
+                                    5,
+                                ),
+                            }"
+                        >
                             <Bar
-                                v-if="Object.keys(props.subscriptionsByService || {}).length"
-                                :data="getBarChartData(props.subscriptionsByService, serviceColor, isDark)"
+                                v-if="
+                                    Object.keys(
+                                        props.subscriptionsByService || {},
+                                    ).length
+                                "
+                                :data="
+                                    getBarChartData(
+                                        props.subscriptionsByService,
+                                        serviceColor,
+                                        isDark,
+                                    )
+                                "
                                 :options="barChartOptions"
                             />
-                            <p v-else class="text-sm text-muted-foreground">No active subscriptions yet.</p>
+                            <p v-else class="text-muted-foreground text-sm">
+                                No active subscriptions yet.
+                            </p>
                         </div>
                     </div>
                 </section>
 
                 <!-- Expiring soon -->
-                <section class="flex max-h-80 flex-col rounded-xl border border-border bg-card p-5 shadow-xs">
+                <section
+                    class="border-border bg-card flex max-h-80 flex-col rounded-xl border p-5 shadow-xs"
+                >
                     <div class="mb-4 flex items-center justify-between">
-                        <h2 class="text-base font-semibold text-foreground">Expiring soon</h2>
-                        <span class="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning tabular-nums">
+                        <h2 class="text-foreground text-base font-semibold">
+                            Expiring soon
+                        </h2>
+                        <span
+                            class="bg-warning/10 text-warning rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums"
+                        >
                             {{ props.expiringSubscriptions.length }}
                         </span>
                     </div>
@@ -226,21 +318,40 @@ const barChartOptions = computed(() => ({
                         <li
                             v-for="sub in props.expiringSubscriptions"
                             :key="sub.id"
-                            class="flex items-center justify-between gap-3 rounded-lg p-2.5 transition-colors hover:bg-muted/60"
+                            class="hover:bg-muted/60 flex items-center justify-between gap-3 rounded-lg p-2.5 transition-colors"
                         >
                             <div class="min-w-0">
-                                <p class="truncate text-sm font-medium text-foreground">{{ sub.business?.name }}</p>
-                                <p class="truncate text-xs text-muted-foreground">
-                                    {{ sub.service?.name }} · ends {{ new Date(sub.end_date).toLocaleDateString() }}
+                                <p
+                                    class="text-foreground truncate text-sm font-medium"
+                                >
+                                    {{ sub.business?.name }}
+                                </p>
+                                <p
+                                    class="text-muted-foreground truncate text-xs"
+                                >
+                                    {{ sub.service?.name }} · ends
+                                    {{
+                                        new Date(
+                                            sub.end_date,
+                                        ).toLocaleDateString()
+                                    }}
                                 </p>
                             </div>
                             <Link
                                 v-if="can('create subscriptions')"
-                                :href="subscriptionsRoutes.createRenewal.url(sub.id)"
+                                :href="
+                                    subscriptionsRoutes.createRenewal.url(
+                                        sub.id,
+                                    )
+                                "
                                 :class="rowActionVariants({ tone: 'success' })"
-                            >Renew</Link>
+                                >Renew</Link
+                            >
                         </li>
-                        <li v-if="props.expiringSubscriptions.length === 0" class="py-6 text-center text-sm text-muted-foreground">
+                        <li
+                            v-if="props.expiringSubscriptions.length === 0"
+                            class="text-muted-foreground py-6 text-center text-sm"
+                        >
                             Nothing expiring soon.
                         </li>
                     </ul>
@@ -248,16 +359,39 @@ const barChartOptions = computed(() => ({
             </div>
 
             <!-- Subscriptions by business -->
-            <section class="rounded-xl border border-border bg-card p-5 shadow-xs">
-                <h2 class="text-base font-semibold text-foreground">Top businesses by active subscriptions</h2>
+            <section
+                class="border-border bg-card rounded-xl border p-5 shadow-xs"
+            >
+                <h2 class="text-foreground text-base font-semibold">
+                    Top businesses by active subscriptions
+                </h2>
                 <div class="mt-4 overflow-x-auto">
-                    <div class="h-80" :style="{ minWidth: minChartWidth(props.subscriptionsByBusiness, 7) }">
+                    <div
+                        class="h-80"
+                        :style="{
+                            minWidth: minChartWidth(
+                                props.subscriptionsByBusiness,
+                                7,
+                            ),
+                        }"
+                    >
                         <Bar
-                            v-if="Object.keys(props.subscriptionsByBusiness || {}).length"
-                            :data="getBarChartData(props.subscriptionsByBusiness, businessColor, isDark)"
+                            v-if="
+                                Object.keys(props.subscriptionsByBusiness || {})
+                                    .length
+                            "
+                            :data="
+                                getBarChartData(
+                                    props.subscriptionsByBusiness,
+                                    businessColor,
+                                    isDark,
+                                )
+                            "
                             :options="barChartOptions"
                         />
-                        <p v-else class="text-sm text-muted-foreground">No active subscriptions yet.</p>
+                        <p v-else class="text-muted-foreground text-sm">
+                            No active subscriptions yet.
+                        </p>
                     </div>
                 </div>
             </section>
