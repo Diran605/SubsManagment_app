@@ -14,7 +14,9 @@ const toDate = (value: string): Date | null => {
         return null;
     }
 
-    return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+    return new Date(
+        Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
+    );
 };
 
 const toIso = (date: Date) =>

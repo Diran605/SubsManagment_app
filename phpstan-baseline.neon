@@ -1,0 +1,919 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property App\\Models\\Budget\:\:\$budgetPackages\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/BudgetController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\BudgetController\:\:create\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/BudgetController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\BudgetController\:\:index\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/BudgetController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\BudgetController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/BudgetController.php
+
+		-
+			message: '#^Property App\\Models\\Budget\:\:\$created_by \(int\<0, max\>\|null\) does not accept int\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Http/Controllers/BudgetController.php
+
+		-
+			message: '#^Relation ''budgetPackages'' is not found in App\\Models\\Budget model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/BudgetController.php
+
+		-
+			message: '#^Relation ''packages'' is not found in App\\Models\\Service model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/BudgetController.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 2
+			path: app/Http/Controllers/BudgetController.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 2
+			path: app/Http/Controllers/BudgetController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\BusinessController\:\:create\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/BusinessController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\BusinessController\:\:destroy\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/BusinessController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\BusinessController\:\:edit\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/BusinessController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\BusinessController\:\:index\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/BusinessController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\BusinessController\:\:show\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/BusinessController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\BusinessController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/BusinessController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\BusinessController\:\:update\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/BusinessController.php
+
+		-
+			message: '#^Relation ''creator'' is not found in App\\Models\\Business model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/BusinessController.php
+
+		-
+			message: '#^Relation ''subscriptions'' is not found in App\\Models\\Business model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/BusinessController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\DashboardController\:\:index\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Relation ''business'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Relation ''collections'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Relation ''package'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Relation ''service'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Unable to resolve the template type TGroupKey in call to method Illuminate\\Support\\Collection\<int,App\\Models\\Subscription\>\:\:groupBy\(\)$#'
+			identifier: argument.templateType
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ModuleController\:\:destroy\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ModuleController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ModuleController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ModuleController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ModuleController\:\:update\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ModuleController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\PackageController\:\:destroy\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/PackageController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\PackageController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/PackageController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\PackageController\:\:update\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/PackageController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$business\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$collections\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$renewals\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ReportController\:\:index\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Relation ''business'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Relation ''collections'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Relation ''package'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Relation ''renewals'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Relation ''service'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Unable to resolve the template type TFlatMapKey in call to method Illuminate\\Support\\Collection\<int,App\\Models\\Subscription\>\:\:flatMap\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Unable to resolve the template type TFlatMapValue in call to method Illuminate\\Support\\Collection\<int,App\\Models\\Subscription\>\:\:flatMap\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Unable to resolve the template type TGroupKey in call to method Illuminate\\Support\\Collection\<int,App\\Models\\Subscription\>\:\:groupBy\(\)$#'
+			identifier: argument.templateType
+			count: 2
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ServiceController\:\:create\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ServiceController\:\:destroy\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ServiceController\:\:edit\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ServiceController\:\:index\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ServiceController\:\:show\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ServiceController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ServiceController\:\:update\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Relation ''creator'' is not found in App\\Models\\Service model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Relation ''modules'' is not found in App\\Models\\Service model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Relation ''packages'' is not found in App\\Models\\Service model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Relation ''subscriptions'' is not found in App\\Models\\Service model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ServiceController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Settings\\RoleController\:\:destroy\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Settings/RoleController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Settings\\RoleController\:\:index\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Settings/RoleController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Settings\\RoleController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Settings/RoleController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Settings\\RoleController\:\:update\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Settings/RoleController.php
+
+		-
+			message: '#^Parameter \#1 \$role of method App\\Http\\Controllers\\Settings\\RoleController\:\:logRoleActivity\(\) expects Spatie\\Permission\\Models\\Role, Spatie\\Permission\\Contracts\\Role given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Settings/RoleController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\StaffController\:\:create\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/StaffController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\StaffController\:\:edit\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/StaffController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\StaffController\:\:index\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/StaffController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\StaffController\:\:show\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/StaffController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\StaffController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/StaffController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\StaffController\:\:toggleActive\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/StaffController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\StaffController\:\:update\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/StaffController.php
+
+		-
+			message: '#^Relation ''businesses'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/StaffController.php
+
+		-
+			message: '#^Relation ''services'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/StaffController.php
+
+		-
+			message: '#^Relation ''subscriptions'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/StaffController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$package\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SubscriptionCollectionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionCollectionController\:\:destroy\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionCollectionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionCollectionController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionCollectionController.php
+
+		-
+			message: '#^Relation ''package'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/SubscriptionCollectionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Package\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Package\>\:\:\$pricing_model\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$status_badge\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Subscription\>\:\:\$status_badge\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\Subscription\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Subscription\>\:\:restore\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\Subscription\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Subscription\>\:\:statusBadge\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:create\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:createRenewal\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:destroy\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:edit\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:index\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:renew\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:restore\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:restore\(\) has parameter \$id with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:show\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:show\(\) has parameter \$id with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SubscriptionController\:\:update\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Relation ''business'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Relation ''collections'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Relation ''creator'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Relation ''modules'' is not found in App\\Models\\Service model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Relation ''modules'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Relation ''package'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Relation ''packages'' is not found in App\\Models\\Service model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Relation ''renewals'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Relation ''service'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Method App\\Models\\Budget\:\:budgetPackages\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Budget.php
+
+		-
+			message: '#^Method App\\Models\\Budget\:\:creator\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Budget.php
+
+		-
+			message: '#^Method App\\Models\\BudgetPackage\:\:budget\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/BudgetPackage.php
+
+		-
+			message: '#^Method App\\Models\\BudgetPackage\:\:package\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/BudgetPackage.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>fiscal_year" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/BudgetPackage.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/BudgetPackage.php
+
+		-
+			message: '#^Method App\\Models\\Business\:\:creator\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Business.php
+
+		-
+			message: '#^Method App\\Models\\Business\:\:subscriptions\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Business.php
+
+		-
+			message: '#^Method App\\Models\\Module\:\:packages\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Module.php
+
+		-
+			message: '#^Method App\\Models\\Module\:\:service\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Module.php
+
+		-
+			message: '#^Method App\\Models\\Module\:\:subscriptions\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Module.php
+
+		-
+			message: '#^Method App\\Models\\Package\:\:modules\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Package.php
+
+		-
+			message: '#^Method App\\Models\\Package\:\:service\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Package.php
+
+		-
+			message: '#^Method App\\Models\\Package\:\:subscriptions\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Package.php
+
+		-
+			message: '#^Method App\\Models\\Service\:\:creator\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Method App\\Models\\Service\:\:modules\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Method App\\Models\\Service\:\:packages\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Method App\\Models\\Service\:\:subscriptions\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$collections\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$package\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$renewals\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Method App\\Models\\Subscription\:\:business\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Method App\\Models\\Subscription\:\:collections\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Method App\\Models\\Subscription\:\:creator\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Method App\\Models\\Subscription\:\:modules\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Method App\\Models\\Subscription\:\:package\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Method App\\Models\\Subscription\:\:renewals\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Method App\\Models\\Subscription\:\:renewedFrom\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Method App\\Models\\Subscription\:\:service\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Method App\\Models\\Subscription\:\:status\(\) return type with generic class Illuminate\\Database\\Eloquent\\Casts\\Attribute does not specify its types\: TGet, TSet$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Relation ''business'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Relation ''renewals'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Method App\\Models\\SubscriptionCollection\:\:recorder\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/SubscriptionCollection.php
+
+		-
+			message: '#^Method App\\Models\\SubscriptionCollection\:\:subscription\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/SubscriptionCollection.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:businesses\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:services\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:subscriptions\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Budget\:\:\$budgetPackages\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/BudgetReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Service\:\:\$packages\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/BudgetReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$collections\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/BudgetReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Subscription\:\:\$package\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/BudgetReportService.php
+
+		-
+			message: '#^Method App\\Services\\BudgetReportService\:\:generateReport\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/BudgetReportService.php
+
+		-
+			message: '#^Relation ''budgetPackages'' is not found in App\\Models\\Budget model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/BudgetReportService.php
+
+		-
+			message: '#^Relation ''collections'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/BudgetReportService.php
+
+		-
+			message: '#^Relation ''package'' is not found in App\\Models\\Subscription model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/BudgetReportService.php
+
+		-
+			message: '#^Relation ''packages'' is not found in App\\Models\\Service model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/BudgetReportService.php
+
+		-
+			message: '#^Method CreateActivityLogTable\:\:down\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: database/migrations/2026_11_06_144027_create_activity_log_table.php
+
+		-
+			message: '#^Method CreateActivityLogTable\:\:up\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: database/migrations/2026_11_06_144027_create_activity_log_table.php
+
+		-
+			message: '#^Method AddEventColumnToActivityLogTable\:\:down\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: database/migrations/2026_11_06_144028_add_event_column_to_activity_log_table.php
+
+		-
+			message: '#^Method AddEventColumnToActivityLogTable\:\:up\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: database/migrations/2026_11_06_144028_add_event_column_to_activity_log_table.php
+
+		-
+			message: '#^Method AddBatchUuidColumnToActivityLogTable\:\:down\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: database/migrations/2026_11_06_144029_add_batch_uuid_column_to_activity_log_table.php
+
+		-
+			message: '#^Method AddBatchUuidColumnToActivityLogTable\:\:up\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: database/migrations/2026_11_06_144029_add_batch_uuid_column_to_activity_log_table.php

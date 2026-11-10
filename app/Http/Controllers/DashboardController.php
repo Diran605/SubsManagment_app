@@ -22,6 +22,7 @@ class DashboardController extends Controller
                 'expiringSubscriptions' => [],
                 'expiringThreshold' => $threshold,
                 'totalRevenue' => 0,
+                'momo' => ['count' => 0, 'target' => 0, 'collected' => 0],
                 'subscriptionsByService' => [],
                 'subscriptionsByBusiness' => [],
                 'totalBusinesses' => 0,
@@ -30,8 +31,11 @@ class DashboardController extends Controller
         }
 
         $activeSubscriptions = Subscription::currentlyActive()
-            ->with(['business:id,name', 'service:id,name'])
-            ->get(['id', 'business_id', 'service_id', 'amount', 'end_date']);
+            ->with(['business:id,name', 'service:id,name', 'package:id,payer_type'])
+            ->withSum('collections', 'amount')
+            ->get(['id', 'business_id', 'service_id', 'package_id', 'amount', 'end_date']);
+
+        $studentFunded = $activeSubscriptions->filter->isStudentFunded();
 
         $subscriptionsByService = $activeSubscriptions
             ->groupBy(fn ($sub) => $sub->service->name ?? 'Unknown')
@@ -53,7 +57,12 @@ class DashboardController extends Controller
             'canViewSubscriptions' => true,
             'expiringSubscriptions' => $expiringSubscriptions,
             'expiringThreshold' => $threshold,
-            'totalRevenue' => $activeSubscriptions->sum('amount'),
+            'totalRevenue' => $activeSubscriptions->sum->realisedRevenue(),
+            'momo' => [
+                'count' => $studentFunded->count(),
+                'target' => (float) $studentFunded->sum('amount'),
+                'collected' => (float) $studentFunded->sum->realisedRevenue(),
+            ],
             'subscriptionsByService' => $subscriptionsByService,
             'subscriptionsByBusiness' => $subscriptionsByBusiness,
             'totalBusinesses' => Business::count(),

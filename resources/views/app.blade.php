@@ -35,9 +35,6 @@
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         @fonts
-        <script>
-            window.Ziggy = {!! json_encode(new \Tighten\Ziggy\Ziggy) !!};
-        </script>
 
         @vite(['resources/css/app.css', 'resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         <x-inertia::head>

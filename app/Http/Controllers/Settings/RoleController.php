@@ -31,6 +31,11 @@ class RoleController extends Controller
             $role->syncPermissions($validated['permissions']);
         }
 
+        $this->logRoleActivity($role, 'created', ['attributes' => [
+            'name' => $role->name,
+            'permissions' => $role->permissions()->pluck('name')->sort()->values()->all(),
+        ]]);
+
         return back()->with('success', 'Role created successfully.');
     }
 
@@ -54,9 +59,23 @@ class RoleController extends Controller
             return back()->with('success', 'The Admin role always keeps every permission.');
         }
 
+        $before = [
+            'name' => $role->name,
+            'permissions' => $role->permissions()->pluck('name')->sort()->values()->all(),
+        ];
+
         $role->update(['name' => $validated['name']]);
         if (isset($validated['permissions'])) {
             $role->syncPermissions($validated['permissions']);
+        }
+
+        $after = [
+            'name' => $role->name,
+            'permissions' => $role->permissions()->pluck('name')->sort()->values()->all(),
+        ];
+
+        if ($before !== $after) {
+            $this->logRoleActivity($role, 'updated', ['old' => $before, 'attributes' => $after]);
         }
 
         return back()->with('success', 'Role updated successfully.');
@@ -68,8 +87,23 @@ class RoleController extends Controller
             return back()->withErrors(['name' => 'Cannot delete the Admin role.']);
         }
 
+        $this->logRoleActivity($role, 'deleted', ['old' => ['name' => $role->name]]);
         $role->delete();
 
         return back()->with('success', 'Role deleted successfully.');
+    }
+
+    /**
+     * Roles come from spatie/laravel-permission, so their changes are logged by hand.
+     *
+     * @param  array<string, mixed>  $properties
+     */
+    private function logRoleActivity(Role $role, string $event, array $properties): void
+    {
+        activity('role')
+            ->performedOn($role)
+            ->event($event)
+            ->withProperties([...$properties, 'label' => "Role: {$role->name}"])
+            ->log($event);
     }
 }

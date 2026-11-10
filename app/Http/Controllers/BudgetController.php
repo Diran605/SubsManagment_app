@@ -50,6 +50,7 @@ class BudgetController extends Controller
                 $existingTargets[$bp->package_id] = [
                     'expected_licenses' => $bp->expected_licenses,
                     'avg_student_count' => $bp->avg_student_count ?? 0,
+                    'expected_months' => $bp->expected_months ?? 12,
                     'expected_amount' => floatval($bp->expected_amount),
                 ];
             }
@@ -71,6 +72,7 @@ class BudgetController extends Controller
             'packages.*.package_id' => 'required|exists:packages,id',
             'packages.*.expected_licenses' => 'required|integer|min:0',
             'packages.*.avg_student_count' => 'nullable|integer|min:0',
+            'packages.*.expected_months' => 'nullable|integer|min:1|max:12',
         ]);
 
         $packages = Package::whereIn('id', collect($validated['packages'])->pluck('package_id'))
@@ -82,17 +84,17 @@ class BudgetController extends Controller
         $targets = collect($validated['packages'])->map(function (array $row) use ($packages) {
             $package = $packages[$row['package_id']];
             $licenses = (int) $row['expected_licenses'];
-            $avgStudents = $package->pricing_model === 'per_student' ? (int) ($row['avg_student_count'] ?? 0) : null;
-
-            $expectedAmount = $package->pricing_model === 'per_student'
-                ? $licenses * $avgStudents * (float) $package->price
-                : $licenses * (float) $package->price;
+            $isPerStudent = $package->pricing_model === 'per_student';
+            $avgStudents = $isPerStudent ? (int) ($row['avg_student_count'] ?? 0) : null;
+            // Months only apply to flat (monthly) pricing.
+            $months = $isPerStudent ? 12 : (int) ($row['expected_months'] ?? 12);
 
             return [
                 'package_id' => $package->id,
                 'expected_licenses' => $licenses,
                 'avg_student_count' => $avgStudents,
-                'expected_amount' => round($expectedAmount, 2),
+                'expected_months' => $months,
+                'expected_amount' => BudgetPackage::calculateExpectedAmount($package, $licenses, $avgStudents, $months),
             ];
         });
 

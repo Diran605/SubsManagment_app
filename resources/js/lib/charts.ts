@@ -11,7 +11,10 @@ export function wrapLabel(label: unknown, maxLength = 12): string | string[] {
     let currentLine = '';
 
     label.split(' ').forEach((word) => {
-        if ((currentLine + word).length > maxLength && currentLine.trim().length > 0) {
+        if (
+            (currentLine + word).length > maxLength &&
+            currentLine.trim().length > 0
+        ) {
             lines.push(currentLine.trim());
             currentLine = '';
         }

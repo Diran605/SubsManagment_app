@@ -18,6 +18,7 @@
     --radius-sm: calc(var(--radius) - 4px);
 
     --color-background: var(--background);
+    --color-page: var(--page);
     --color-foreground: var(--foreground);
 
     --color-card: var(--card);
@@ -40,6 +41,13 @@
 
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
 
     --color-border: var(--border);
     --color-input: var(--input);
@@ -90,36 +98,43 @@
 }
 
 :root {
-    --background: hsl(0 0% 100%);             /* pure white background */
-    --foreground: hsl(220 60% 10%);           /* deep navy text */
-    --card: hsl(0 0% 100%);                   /* pure white cards */
+    --background: hsl(0 0% 100%); /* pure white background */
+    --page: hsl(220 33% 97%); /* faint grey-blue behind cards */
+    --foreground: hsl(220 60% 10%); /* deep navy text */
+    --card: hsl(0 0% 100%); /* pure white cards */
     --card-foreground: hsl(220 60% 10%);
     --popover: hsl(0 0% 100%);
     --popover-foreground: hsl(220 60% 10%);
-    --primary: hsl(224 84% 31%);              /* I-NNOVA deep royal blue #0A3094 */
+    --primary: hsl(224 84% 31%); /* I-NNOVA deep royal blue #0A3094 */
     --primary-foreground: hsl(0 0% 100%);
-    --secondary: hsl(22 100% 95%);            /* soft orange tint */
+    --secondary: hsl(22 100% 95%); /* soft orange tint */
     --secondary-foreground: hsl(224 84% 20%);
     --muted: hsl(210 40% 96%);
     --muted-foreground: hsl(215 20% 45%);
-    --accent: hsl(25 100% 50%);               /* I-NNOVA vibrant orange #FF6600 */
+    --accent: hsl(25 100% 50%); /* I-NNOVA vibrant orange #FF6600 */
     --accent-foreground: hsl(0 0% 100%);
     --destructive: hsl(0 84.2% 60.2%);
     --destructive-foreground: hsl(0 0% 98%);
+    --success: hsl(152 69% 31%);
+    --success-foreground: hsl(0 0% 100%);
+    --warning: hsl(32 95% 40%);
+    --warning-foreground: hsl(0 0% 100%);
+    --info: hsl(217 85% 48%);
+    --info-foreground: hsl(0 0% 100%);
     --border: hsl(220 30% 88%);
     --input: hsl(220 30% 88%);
     --ring: hsl(224 84% 31%);
-    --chart-1: hsl(224 84% 31%);              /* Royal Blue */
-    --chart-2: hsl(25 100% 50%);              /* Orange */
-    --chart-3: hsl(210 80% 50%);              /* Sky Blue */
-    --chart-4: hsl(173 58% 39%);              /* Teal */
-    --chart-5: hsl(43 74% 55%);              /* Amber */
+    --chart-1: hsl(224 84% 31%); /* Royal Blue */
+    --chart-2: hsl(25 100% 50%); /* Orange */
+    --chart-3: hsl(210 80% 50%); /* Sky Blue */
+    --chart-4: hsl(173 58% 39%); /* Teal */
+    --chart-5: hsl(43 74% 55%); /* Amber */
     --radius: 0.75rem;
-    --sidebar-background: hsl(224 84% 18%);   /* Deep navy sidebar */
+    --sidebar-background: hsl(224 84% 18%); /* Deep navy sidebar */
     --sidebar-foreground: hsl(210 40% 95%);
-    --sidebar-primary: hsl(25 100% 50%);      /* Orange active items */
+    --sidebar-primary: hsl(25 100% 50%); /* Orange active items */
     --sidebar-primary-foreground: hsl(0 0% 100%);
-    --sidebar-accent: hsl(224 84% 25%);       /* Slightly lighter navy for hover */
+    --sidebar-accent: hsl(224 84% 25%); /* Slightly lighter navy for hover */
     --sidebar-accent-foreground: hsl(210 40% 95%);
     --sidebar-border: hsl(224 84% 22%);
     --sidebar-ring: hsl(25 100% 50%);
@@ -128,6 +143,7 @@
 
 .dark {
     --background: hsl(224 71% 4%); /* Extremely dark navy #020817 */
+    --page: hsl(224 71% 4%);
     --foreground: hsl(210 40% 98%);
     --card: hsl(222 47% 11%); /* Elevated navy #0f172a */
     --card-foreground: hsl(210 40% 98%);
@@ -141,19 +157,25 @@
     --muted-foreground: hsl(215 20% 65%);
     --accent: hsl(217 33% 17%);
     --accent-foreground: hsl(210 40% 98%);
-    --destructive: hsl(0 62.8% 30.6%);
+    --destructive: hsl(0 72% 58%); /* bright enough to read as text on navy */
     --destructive-foreground: hsl(210 40% 98%);
+    --success: hsl(152 60% 52%);
+    --success-foreground: hsl(222 47% 8%);
+    --warning: hsl(38 92% 60%);
+    --warning-foreground: hsl(222 47% 8%);
+    --info: hsl(213 94% 68%);
+    --info-foreground: hsl(222 47% 8%);
     --border: hsl(217 33% 17%);
     --input: hsl(217 33% 17%);
     --ring: hsl(199 89% 48%);
-    
+
     /* Neon Chart Accents for Navy Theme */
     --chart-1: hsl(199 89% 48%); /* Sky */
     --chart-2: hsl(188 86% 53%); /* Cyan */
     --chart-3: hsl(171 100% 41%); /* Teal */
     --chart-4: hsl(217 91% 60%); /* Blue */
     --chart-5: hsl(243 75% 59%); /* Indigo */
-    
+
     --sidebar-background: hsl(224 71% 4%);
     --sidebar-foreground: hsl(210 40% 98%);
     --sidebar-primary: hsl(199 89% 48%);

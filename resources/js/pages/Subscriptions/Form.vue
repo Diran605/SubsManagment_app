@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import subscriptionsRoutes from '@/routes/subscriptions';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { computed, watch, ref } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
-import { addDays, monthsCovered, subscriptionEndDate, today } from '@/lib/dates';
+import {
+    addDays,
+    monthsCovered,
+    subscriptionEndDate,
+    today,
+} from '@/lib/dates';
 
 const props = defineProps<{
     subscription?: any;
@@ -37,7 +42,9 @@ const form = useForm({
     amount: sourceData.amount || '',
     student_count: sourceData.student_count || '',
     start_date: initialStartDate,
-    end_date: isEditing ? sourceData.end_date : subscriptionEndDate(initialStartDate, initialDuration),
+    end_date: isEditing
+        ? sourceData.end_date
+        : subscriptionEndDate(initialStartDate, initialDuration),
     notes: isRenewing ? '' : sourceData.notes || '',
 });
 
@@ -96,7 +103,9 @@ const calculateAmount = () => {
         const count = parseInt(form.student_count as any) || 0;
         form.amount = (parseFloat(pkg.price) * count).toString();
     } else {
-        form.amount = (parseFloat(pkg.price) * Number(duration.value)).toString();
+        form.amount = (
+            parseFloat(pkg.price) * Number(duration.value)
+        ).toString();
     }
 };
 
@@ -123,7 +132,9 @@ watch(
             return;
         }
 
-        const pkg = availablePackages.value.find((p: any) => p.id === newPackageId);
+        const pkg = availablePackages.value.find(
+            (p: any) => p.id === newPackageId,
+        );
 
         if (pkg?.modules) {
             const moduleIds = pkg.modules.map((m: any) => m.id);
@@ -138,17 +149,18 @@ watch(
 
 const submit = () => {
     if (isEditing) {
-        form.put(route('subscriptions.update', props.subscription.id));
+        form.put(subscriptionsRoutes.update.url(props.subscription.id));
     } else if (isRenewing) {
-        form.post(route('subscriptions.renew', props.renewing.id));
+        form.post(subscriptionsRoutes.renew.url(props.renewing.id));
     } else {
-        form.post(route('subscriptions.store'));
+        form.post(subscriptionsRoutes.store.url());
     }
 };
 
 const title = computed(() => {
     if (isEditing) return 'Edit Subscription';
-    if (isRenewing) return `Renew Subscription: ${props.renewing.business?.name}`;
+    if (isRenewing)
+        return `Renew Subscription: ${props.renewing.business?.name}`;
     return 'New Subscription';
 });
 </script>
@@ -157,32 +169,39 @@ const title = computed(() => {
     <Head :title="title" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ title }}</h1>
+                <h1
+                    class="text-foreground text-2xl font-semibold tracking-tight md:text-3xl"
+                >
+                    {{ title }}
+                </h1>
             </div>
             <Link
-                :href="route('subscriptions.index')"
-                class="text-sm font-medium text-muted-foreground hover:text-foreground"
+                :href="subscriptionsRoutes.index.url()"
+                class="text-muted-foreground hover:text-foreground text-sm font-medium"
             >
                 &larr; Back to Subscriptions
             </Link>
         </div>
 
-        <div class="rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
+        <div
+            class="border-border bg-card rounded-xl border p-6 shadow-sm md:p-8"
+        >
             <form @submit.prevent="submit" class="space-y-6">
                 <!-- Select Business & Service -->
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
-                            >Business <span class="text-destructive">*</span></label
+                            class="text-foreground mb-1 block text-sm font-medium"
+                            >Business
+                            <span class="text-destructive">*</span></label
                         >
                         <select
                             v-model="form.business_id"
                             required
                             :disabled="isRenewing"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary disabled:bg-muted disabled:opacity-50 sm:text-sm"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 disabled:bg-muted w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] disabled:opacity-50 sm:text-sm"
                         >
                             <option value="">Select Business</option>
                             <option
@@ -195,7 +214,7 @@ const title = computed(() => {
                         </select>
                         <p
                             v-if="form.errors.business_id"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.business_id }}
                         </p>
@@ -203,14 +222,15 @@ const title = computed(() => {
 
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
-                            >Service <span class="text-destructive">*</span></label
+                            class="text-foreground mb-1 block text-sm font-medium"
+                            >Service
+                            <span class="text-destructive">*</span></label
                         >
                         <select
                             v-model="form.service_id"
                             required
                             :disabled="isRenewing"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary disabled:bg-muted disabled:opacity-50 sm:text-sm"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 disabled:bg-muted w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] disabled:opacity-50 sm:text-sm"
                         >
                             <option value="">Select Service</option>
                             <option
@@ -223,7 +243,7 @@ const title = computed(() => {
                         </select>
                         <p
                             v-if="form.errors.service_id"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.service_id }}
                         </p>
@@ -233,44 +253,87 @@ const title = computed(() => {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
+                            class="text-foreground mb-1 block text-sm font-medium"
                             >Mode <span class="text-destructive">*</span></label
                         >
                         <select
                             v-model="form.mode"
                             required
                             :disabled="isRenewing"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary disabled:bg-muted disabled:opacity-50 sm:text-sm"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 disabled:bg-muted w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] disabled:opacity-50 sm:text-sm"
                         >
                             <option value="">Select Mode</option>
-                            <option v-for="m in availableModes" :key="m" :value="m" class="capitalize">{{ m }}</option>
+                            <option
+                                v-for="m in availableModes"
+                                :key="m"
+                                :value="m"
+                                class="capitalize"
+                            >
+                                {{ m }}
+                            </option>
                         </select>
                         <p
                             v-if="form.errors.mode"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.mode }}
                         </p>
                     </div>
                 </div>
 
-                <div v-if="form.service_id && (availablePackages.length > 0 || availableModules.length > 0)" class="rounded-xl border border-border bg-muted/30 p-4 space-y-4">
-                    <h3 class="text-sm font-semibold text-foreground">Service Configuration</h3>
-                    
+                <div
+                    v-if="
+                        form.service_id &&
+                        (availablePackages.length > 0 ||
+                            availableModules.length > 0)
+                    "
+                    class="border-border bg-muted/30 space-y-4 rounded-xl border p-4"
+                >
+                    <h3 class="text-foreground text-sm font-semibold">
+                        Service Configuration
+                    </h3>
+
                     <div v-if="availablePackages.length > 0">
-                        <label class="mb-1 block text-sm font-medium text-foreground">Select Package (Optional)</label>
-                        <select v-model="form.package_id" class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm">
+                        <label
+                            class="text-foreground mb-1 block text-sm font-medium"
+                            >Select Package (Optional)</label
+                        >
+                        <select
+                            v-model="form.package_id"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
+                        >
                             <option value="">No package (custom amount)</option>
-                            <option v-for="pkg in availablePackages" :key="pkg.id" :value="pkg.id">
-                                {{ pkg.name }} ({{ pkg.price ? Number(pkg.price).toLocaleString('en-US') + (pkg.pricing_model === 'per_student' ? ' FCFA/student' : ' FCFA/mo') : 'Free' }})
+                            <option
+                                v-for="pkg in availablePackages"
+                                :key="pkg.id"
+                                :value="pkg.id"
+                            >
+                                {{ pkg.name }} ({{
+                                    pkg.price
+                                        ? Number(pkg.price).toLocaleString(
+                                              'en-US',
+                                          ) +
+                                          (pkg.pricing_model === 'per_student'
+                                              ? ' FCFA/student'
+                                              : ' FCFA/mo')
+                                        : 'Free'
+                                }})
                             </option>
                         </select>
-                        <p v-if="form.errors.package_id" class="mt-1 text-sm text-destructive">{{ form.errors.package_id }}</p>
+                        <p
+                            v-if="form.errors.package_id"
+                            class="text-destructive mt-1 text-sm"
+                        >
+                            {{ form.errors.package_id }}
+                        </p>
 
                         <!-- Student Population Input for Per-Student Packages -->
                         <div v-if="isPerStudent" class="mt-3">
-                            <label class="mb-1 block text-sm font-medium text-foreground">
-                                Enrolled Student Population <span class="text-destructive">*</span>
+                            <label
+                                class="text-foreground mb-1 block text-sm font-medium"
+                            >
+                                Enrolled Student Population
+                                <span class="text-destructive">*</span>
                             </label>
                             <input
                                 v-model.number="form.student_count"
@@ -278,48 +341,84 @@ const title = computed(() => {
                                 min="1"
                                 required
                                 placeholder="e.g. 850"
-                                class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                                class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                             />
-                            <p class="mt-1 text-xs text-muted-foreground">
-                                Used to compute total contract value ({{ selectedPackage?.price ? Number(selectedPackage.price).toLocaleString('en-US') : 0 }} FCFA per student).
+                            <p class="text-muted-foreground mt-1 text-xs">
+                                Used to compute total contract value ({{
+                                    selectedPackage?.price
+                                        ? Number(
+                                              selectedPackage.price,
+                                          ).toLocaleString('en-US')
+                                        : 0
+                                }}
+                                FCFA per student).
                             </p>
-                            <p v-if="form.errors.student_count" class="mt-1 text-sm text-destructive">
+                            <p
+                                v-if="form.errors.student_count"
+                                class="text-destructive mt-1 text-sm"
+                            >
                                 {{ form.errors.student_count }}
                             </p>
                         </div>
 
                         <!-- Notice for Student-Funded MoMo Packages -->
-                        <div v-if="isStudentMoMo" class="mt-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 p-3 text-xs text-blue-700 dark:text-blue-300">
-                            <strong>📱 Student Mobile Money Tier:</strong> This subscription amount serves as the annual target. Collections from students will be recorded on the subscription details page as Mobile Money receipts arrive.
+                        <div
+                            v-if="isStudentMoMo"
+                            class="border-info/30 bg-info/10 text-info mt-3 rounded-lg border p-3 text-xs"
+                        >
+                            <strong>📱 Student Mobile Money Tier:</strong> This
+                            subscription amount serves as the annual target.
+                            Collections from students will be recorded on the
+                            subscription details page as Mobile Money receipts
+                            arrive.
                         </div>
                     </div>
 
                     <div v-if="availableModules.length > 0">
-                        <label class="mb-2 block text-sm font-medium text-foreground">Included Modules</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <label v-for="mod in availableModules" :key="mod.id" class="flex items-start space-x-3 rounded-lg border border-border bg-background p-3 hover:bg-muted cursor-pointer transition-colors">
+                        <label
+                            class="text-foreground mb-2 block text-sm font-medium"
+                            >Included Modules</label
+                        >
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <label
+                                v-for="mod in availableModules"
+                                :key="mod.id"
+                                class="border-border bg-background hover:bg-muted flex cursor-pointer items-start space-x-3 rounded-lg border p-3 transition-colors"
+                            >
                                 <div class="flex h-5 items-center">
-                                    <input 
-                                        type="checkbox" 
-                                        :value="mod.id" 
+                                    <input
+                                        type="checkbox"
+                                        :value="mod.id"
                                         v-model="form.modules"
-                                        class="h-4 w-4 rounded border-input bg-background text-primary focus:ring-primary" 
+                                        class="border-input bg-background text-primary focus:ring-primary h-4 w-4 rounded"
                                     />
                                 </div>
                                 <div class="flex flex-col">
-                                    <span class="text-sm font-medium text-foreground">{{ mod.name }}</span>
-                                    <span v-if="mod.description" class="text-xs text-muted-foreground">{{ mod.description }}</span>
+                                    <span
+                                        class="text-foreground text-sm font-medium"
+                                        >{{ mod.name }}</span
+                                    >
+                                    <span
+                                        v-if="mod.description"
+                                        class="text-muted-foreground text-xs"
+                                        >{{ mod.description }}</span
+                                    >
                                 </div>
                             </label>
                         </div>
-                        <p v-if="form.errors.modules" class="mt-1 text-sm text-destructive">{{ form.errors.modules }}</p>
+                        <p
+                            v-if="form.errors.modules"
+                            class="text-destructive mt-1 text-sm"
+                        >
+                            {{ form.errors.modules }}
+                        </p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
+                            class="text-foreground mb-1 block text-sm font-medium"
                             >Start Date
                             <span class="text-destructive">*</span></label
                         >
@@ -327,11 +426,11 @@ const title = computed(() => {
                             v-model="form.start_date"
                             type="date"
                             required
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                         />
                         <p
                             v-if="form.errors.start_date"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.start_date }}
                         </p>
@@ -339,8 +438,9 @@ const title = computed(() => {
 
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
-                            >Duration (Months) <span class="text-destructive">*</span></label
+                            class="text-foreground mb-1 block text-sm font-medium"
+                            >Duration (Months)
+                            <span class="text-destructive">*</span></label
                         >
                         <input
                             v-model="duration"
@@ -348,25 +448,26 @@ const title = computed(() => {
                             min="1"
                             step="1"
                             required
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                         />
                     </div>
-                    
+
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
-                            >End Date (last day) <span class="text-destructive">*</span></label
+                            class="text-foreground mb-1 block text-sm font-medium"
+                            >End Date (last day)
+                            <span class="text-destructive">*</span></label
                         >
                         <input
                             v-model="form.end_date"
                             type="date"
                             required
                             readonly
-                            class="w-full rounded-md border border-input bg-muted text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm opacity-80 cursor-not-allowed"
+                            class="border-input bg-muted text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full cursor-not-allowed rounded-md border px-3 py-2 opacity-80 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                         />
                         <p
                             v-if="form.errors.end_date"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.end_date }}
                         </p>
@@ -376,7 +477,7 @@ const title = computed(() => {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
+                            class="text-foreground mb-1 block text-sm font-medium"
                             >Amount (FCFA)
                             <span class="text-destructive">*</span></label
                         >
@@ -387,17 +488,29 @@ const title = computed(() => {
                             step="0.01"
                             required
                             :readonly="!!selectedPackage"
-                            :class="selectedPackage ? 'bg-muted opacity-80 cursor-not-allowed' : 'bg-background'"
-                            class="w-full rounded-md border border-input text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            :class="
+                                selectedPackage
+                                    ? 'bg-muted cursor-not-allowed opacity-80'
+                                    : 'bg-background'
+                            "
+                            class="border-input text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                         />
-                        <p class="mt-1 text-xs text-muted-foreground">
-                            <template v-if="!selectedPackage">Enter the agreed contract amount.</template>
-                            <template v-else-if="isPerStudent">Amount is auto-calculated: Enrolled Students × Rate per student.</template>
-                            <template v-else>Amount is auto-calculated based on package monthly price × duration.</template>
+                        <p class="text-muted-foreground mt-1 text-xs">
+                            <template v-if="!selectedPackage"
+                                >Enter the agreed contract amount.</template
+                            >
+                            <template v-else-if="isPerStudent"
+                                >Amount is auto-calculated: Enrolled Students ×
+                                Rate per student.</template
+                            >
+                            <template v-else
+                                >Amount is auto-calculated based on package
+                                monthly price × duration.</template
+                            >
                         </p>
                         <p
                             v-if="form.errors.amount"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.amount }}
                         </p>
@@ -405,17 +518,18 @@ const title = computed(() => {
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-foreground"
+                    <label
+                        class="text-foreground mb-1 block text-sm font-medium"
                         >Notes</label
                     >
                     <textarea
                         v-model="form.notes"
                         rows="3"
-                        class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                        class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                     ></textarea>
                     <p
                         v-if="form.errors.notes"
-                        class="mt-1 text-sm text-destructive"
+                        class="text-destructive mt-1 text-sm"
                     >
                         {{ form.errors.notes }}
                     </p>

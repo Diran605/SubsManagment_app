@@ -26,15 +26,15 @@ visibility tool for the company's internal team.
 
 ## 3. Core concepts
 
-| Term | Meaning |
-|---|---|
-| Service | A product the company offers (e.g. "POS System", "School Management System") |
-| Mode | How a service is delivered: `online`, `offline`, or `hybrid` |
-| Module | A single feature/building block of a service (e.g. "Payroll") |
-| Package | A reusable named bundle of modules for a service (e.g. "Standard"), with a reference price — a shortcut for the common case; a subscription can also skip it and use a fully custom module selection |
-| Service pricing | The company's fallback base/list price for a service + mode, used when quoting a custom (non-package) build |
-| Business | A client company that has subscribed to one or more services |
-| Subscription | A record linking one business to one service (in one mode), the actual set of modules included, an agreed amount, start date, and end date |
+| Term            | Meaning                                                                                                                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Service         | A product the company offers (e.g. "POS System", "School Management System")                                                                                                                         |
+| Mode            | How a service is delivered: `online`, `offline`, or `hybrid`                                                                                                                                         |
+| Module          | A single feature/building block of a service (e.g. "Payroll")                                                                                                                                        |
+| Package         | A reusable named bundle of modules for a service (e.g. "Standard"), with a reference price — a shortcut for the common case; a subscription can also skip it and use a fully custom module selection |
+| Service pricing | The company's fallback base/list price for a service + mode, used when quoting a custom (non-package) build                                                                                          |
+| Business        | A client company that has subscribed to one or more services                                                                                                                                         |
+| Subscription    | A record linking one business to one service (in one mode), the actual set of modules included, an agreed amount, start date, and end date                                                           |
 
 A single business **can** hold multiple simultaneous subscriptions (e.g.
 POS System offline + School Management System online).
@@ -42,14 +42,15 @@ POS System offline + School Management System online).
 ## 4. Data model
 
 ### staff_accounts
-| Field | Type | Notes |
-|---|---|---|
-| id | PK | |
-| name | string | required |
-| email | string | required, unique — used to log in |
-| password | string (hashed) | required |
-| is_active | boolean | default true — deactivating blocks login without deleting history |
-| created_at / updated_at | timestamps | |
+
+| Field                   | Type            | Notes                                                             |
+| ----------------------- | --------------- | ----------------------------------------------------------------- |
+| id                      | PK              |                                                                   |
+| name                    | string          | required                                                          |
+| email                   | string          | required, unique — used to log in                                 |
+| password                | string (hashed) | required                                                          |
+| is_active               | boolean         | default true — deactivating blocks login without deleting history |
+| created_at / updated_at | timestamps      |                                                                   |
 
 No role/permission field — every staff account has identical access in
 phase 1 (see §2). `is_active` exists so a departing staff member can be
@@ -57,47 +58,51 @@ locked out while everything they created (businesses, subscriptions, etc.)
 remains intact and correctly attributed.
 
 ### businesses
-| Field | Type | Notes |
-|---|---|---|
-| id | PK | |
-| name | string | required |
-| contact_person | string | optional |
-| phone | string | optional |
-| email | string | optional |
-| address | string | optional |
-| created_by | FK → staff_accounts | which staff member added this business |
-| created_at / updated_at | timestamps | |
+
+| Field                   | Type                | Notes                                  |
+| ----------------------- | ------------------- | -------------------------------------- |
+| id                      | PK                  |                                        |
+| name                    | string              | required                               |
+| contact_person          | string              | optional                               |
+| phone                   | string              | optional                               |
+| email                   | string              | optional                               |
+| address                 | string              | optional                               |
+| created_by              | FK → staff_accounts | which staff member added this business |
+| created_at / updated_at | timestamps          |                                        |
 
 ### services
-| Field | Type | Notes |
-|---|---|---|
-| id | PK | |
-| name | string | required, e.g. "POS System" |
-| description | text | optional |
-| created_by | FK → staff_accounts | |
-| created_at / updated_at | timestamps | |
+
+| Field                   | Type                | Notes                       |
+| ----------------------- | ------------------- | --------------------------- |
+| id                      | PK                  |                             |
+| name                    | string              | required, e.g. "POS System" |
+| description             | text                | optional                    |
+| created_by              | FK → staff_accounts |                             |
+| created_at / updated_at | timestamps          |                             |
 
 ### modules
-| Field | Type | Notes |
-|---|---|---|
-| id | PK | |
-| service_id | FK → services | which service this module belongs to |
-| name | string | required, e.g. "Inventory Management", "Payroll" |
-| description | text | optional |
-| created_at / updated_at | timestamps | |
+
+| Field                   | Type          | Notes                                            |
+| ----------------------- | ------------- | ------------------------------------------------ |
+| id                      | PK            |                                                  |
+| service_id              | FK → services | which service this module belongs to             |
+| name                    | string        | required, e.g. "Inventory Management", "Payroll" |
+| description             | text          | optional                                         |
+| created_at / updated_at | timestamps    |                                                  |
 
 A catalog of the building blocks staff can pick from when assembling a
 business's package for a given service. This does **not** define pricing.
 
 ### packages
-| Field | Type | Notes |
-|---|---|---|
-| id | PK | |
-| service_id | FK → services | which service this package belongs to |
-| name | string | required, e.g. "Standard", "Premium" |
-| description | text | optional |
-| reference_price | decimal | suggested/starting price for this package — a guideline, not what's necessarily charged |
-| created_at / updated_at | timestamps | |
+
+| Field                   | Type          | Notes                                                                                   |
+| ----------------------- | ------------- | --------------------------------------------------------------------------------------- |
+| id                      | PK            |                                                                                         |
+| service_id              | FK → services | which service this package belongs to                                                   |
+| name                    | string        | required, e.g. "Standard", "Premium"                                                    |
+| description             | text          | optional                                                                                |
+| reference_price         | decimal       | suggested/starting price for this package — a guideline, not what's necessarily charged |
+| created_at / updated_at | timestamps    |                                                                                         |
 
 A **reusable template** per service — the standard tiers most businesses
 choose from. Not every business has to use one (see `subscriptions.package_id`
@@ -114,50 +119,54 @@ below).
 > (or none) and let everything else stay custom indefinitely.
 
 ### package_modules (pivot)
-| Field | Type | Notes |
-|---|---|---|
-| id | PK | |
+
+| Field      | Type          | Notes    |
+| ---------- | ------------- | -------- |
+| id         | PK            |          |
 | package_id | FK → packages | required |
-| module_id | FK → modules | required |
+| module_id  | FK → modules  | required |
 
 Defines which modules belong to a given package template, e.g. "Standard"
 = Inventory + Reporting. Unique constraint on (package_id, module_id).
 
 ### service_pricing
-| Field | Type | Notes |
-|---|---|---|
-| id | PK | |
-| service_id | FK → services | required |
-| mode | enum(`online`,`offline`,`hybrid`) | required |
-| base_price | decimal | list/reference price for this service+mode |
-| created_at / updated_at | timestamps | |
+
+| Field                   | Type                              | Notes                                      |
+| ----------------------- | --------------------------------- | ------------------------------------------ |
+| id                      | PK                                |                                            |
+| service_id              | FK → services                     | required                                   |
+| mode                    | enum(`online`,`offline`,`hybrid`) | required                                   |
+| base_price              | decimal                           | list/reference price for this service+mode |
+| created_at / updated_at | timestamps                        |                                            |
 
 Unique constraint: one row per (service_id, mode). **Reference only** — a
 fallback guideline for staff quoting a fully custom (non-package) build.
 `subscriptions.amount` is always the real, final agreed price.
 
 ### subscriptions
-| Field | Type | Notes |
-|---|---|---|
-| id | PK | |
-| business_id | FK → businesses | required |
-| service_id | FK → services | required |
-| mode | enum(`online`,`offline`,`hybrid`) | required — which mode this business is on |
-| package_id | FK → packages, nullable | which template package this was based on, if any — `null` for a fully custom build |
-| amount | decimal | actual amount charged — may match the package's `reference_price` or be negotiated differently |
-| start_date | date | required |
-| end_date | date | required |
-| notes | text | optional (e.g. install details, negotiation notes) |
-| renewed_from_id | FK → subscriptions, nullable | set when this row is a renewal of an earlier subscription (see below) |
-| created_by | FK → staff_accounts | who recorded this subscription |
-| created_at / updated_at | timestamps | |
+
+| Field                   | Type                              | Notes                                                                                          |
+| ----------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| id                      | PK                                |                                                                                                |
+| business_id             | FK → businesses                   | required                                                                                       |
+| service_id              | FK → services                     | required                                                                                       |
+| mode                    | enum(`online`,`offline`,`hybrid`) | required — which mode this business is on                                                      |
+| package_id              | FK → packages, nullable           | which template package this was based on, if any — `null` for a fully custom build             |
+| amount                  | decimal                           | actual amount charged — may match the package's `reference_price` or be negotiated differently |
+| start_date              | date                              | required                                                                                       |
+| end_date                | date                              | required                                                                                       |
+| notes                   | text                              | optional (e.g. install details, negotiation notes)                                             |
+| renewed_from_id         | FK → subscriptions, nullable      | set when this row is a renewal of an earlier subscription (see below)                          |
+| created_by              | FK → staff_accounts               | who recorded this subscription                                                                 |
+| created_at / updated_at | timestamps                        |                                                                                                |
 
 ### subscription_modules (pivot)
-| Field | Type | Notes |
-|---|---|---|
-| id | PK | |
+
+| Field           | Type               | Notes    |
+| --------------- | ------------------ | -------- |
+| id              | PK                 |          |
 | subscription_id | FK → subscriptions | required |
-| module_id | FK → modules | required |
+| module_id       | FK → modules       | required |
 
 This pivot table holds the actual, final set of modules a business is
 paying for under this subscription — whether that set came from a
@@ -173,7 +182,7 @@ duplicates.
 vs. today (see §7). This keeps it from ever going stale.
 
 **Renewals are new rows, not edits.** When a business renews a service,
-staff create a *new* subscription record rather than editing the
+staff create a _new_ subscription record rather than editing the
 `end_date` of the old one. `renewed_from_id` links the new row back to the
 one it replaces, forming a chain per business+service. When renewing, both
 `package_id` and the module selection pre-fill from the previous
@@ -188,15 +197,15 @@ place would destroy that history. The old row simply becomes naturally
 Every entity needs its own management screens. This was missing from the
 first draft — spelled out here explicitly.
 
-| Entity | Create | Read | Update | Delete |
-|---|---|---|---|---|
-| **Staff accounts** | Any logged-in staff member can create a new staff account (no gatekeeping role in phase 1) | List all staff accounts | Edit name/email/password; toggle `is_active` | Not allowed — deactivate instead (`is_active = false`), to preserve `created_by` history everywhere |
-| **Businesses** | Form: name, contact, phone, email, address | List, search, per-business detail page (§6 item 8) | Edit any field | Soft delete only (keep for historical subscriptions); block if it has subscriptions unless soft-deleted |
-| **Services** | Form: name, description | List, per-service detail page (§6 item 9) | Edit name/description | Soft delete only if it has subscriptions; hard delete allowed if never used |
-| **Modules** | Add a module under a service (name, description) | List modules per service | Edit name/description | Remove if not currently selected in any active subscription |
-| **Packages** | Define a package under a service: name, description, reference_price, and which modules it includes | List packages per service, with their included modules | Edit name/description/price; add/remove included modules (does not retroactively affect existing subscribers, see §4) | Soft delete only if any subscription references it; hard delete if never used |
-| **Service pricing** | Add a (mode, base_price) reference row per service | View per service | Edit base_price per mode | Remove a mode if unused by any subscription |
-| **Subscriptions** | Form: business, service, mode, **either pick a package (auto-fills modules + suggested price) or build custom (pick modules individually)**, amount, start_date, end_date, notes | Master dashboard list (§6 item 6), filtered/sorted | Edit amount, dates, module selection, notes on an existing row (for correcting mistakes — **not** for renewals) | Soft delete only (for data-entry errors); never hard-delete a real historical record |
+| Entity              | Create                                                                                                                                                                           | Read                                                   | Update                                                                                                                | Delete                                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Staff accounts**  | Any logged-in staff member can create a new staff account (no gatekeeping role in phase 1)                                                                                       | List all staff accounts                                | Edit name/email/password; toggle `is_active`                                                                          | Not allowed — deactivate instead (`is_active = false`), to preserve `created_by` history everywhere     |
+| **Businesses**      | Form: name, contact, phone, email, address                                                                                                                                       | List, search, per-business detail page (§6 item 8)     | Edit any field                                                                                                        | Soft delete only (keep for historical subscriptions); block if it has subscriptions unless soft-deleted |
+| **Services**        | Form: name, description                                                                                                                                                          | List, per-service detail page (§6 item 9)              | Edit name/description                                                                                                 | Soft delete only if it has subscriptions; hard delete allowed if never used                             |
+| **Modules**         | Add a module under a service (name, description)                                                                                                                                 | List modules per service                               | Edit name/description                                                                                                 | Remove if not currently selected in any active subscription                                             |
+| **Packages**        | Define a package under a service: name, description, reference_price, and which modules it includes                                                                              | List packages per service, with their included modules | Edit name/description/price; add/remove included modules (does not retroactively affect existing subscribers, see §4) | Soft delete only if any subscription references it; hard delete if never used                           |
+| **Service pricing** | Add a (mode, base_price) reference row per service                                                                                                                               | View per service                                       | Edit base_price per mode                                                                                              | Remove a mode if unused by any subscription                                                             |
+| **Subscriptions**   | Form: business, service, mode, **either pick a package (auto-fills modules + suggested price) or build custom (pick modules individually)**, amount, start_date, end_date, notes | Master dashboard list (§6 item 6), filtered/sorted     | Edit amount, dates, module selection, notes on an existing row (for correcting mistakes — **not** for renewals)       | Soft delete only (for data-entry errors); never hard-delete a real historical record                    |
 
 **Renewal is its own action**, distinct from "edit": a "Renew" button on
 an existing subscription pre-fills a new subscription form (same business,
@@ -227,9 +236,9 @@ save, rather than opening the old row for editing.
    badge.
 7. **Expiry visibility** — sortable/filterable by status, with visual
    flags:
-   - Active (comfortably within term)
-   - Expiring soon (e.g. within 30 days of end_date — threshold configurable)
-   - Expired (past end_date)
+    - Active (comfortably within term)
+    - Expiring soon (e.g. within 30 days of end_date — threshold configurable)
+    - Expired (past end_date)
 8. **Per-business view** — drill into a business to see all its
    subscriptions (past and current, including full renewal chain and each
    subscription's module selection).

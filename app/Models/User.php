@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivity;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -33,7 +34,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, RecordsActivity, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -63,5 +64,15 @@ class User extends Authenticatable implements PasskeyUser
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class, 'created_by');
+    }
+
+    /**
+     * Only these fields are logged; passwords and 2FA secrets never are.
+     *
+     * @return array<int, string>
+     */
+    protected function activityLogAttributes(): ?array
+    {
+        return ['name', 'email', 'is_active'];
     }
 }

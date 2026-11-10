@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { route } from 'ziggy-js';
+import servicesRoutes from '@/routes/services';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import { buttonVariants } from '@/components/ui/button';
@@ -16,12 +16,11 @@ const form = useForm({
     description: props.service?.description || '',
 });
 
-
 const submit = () => {
     if (isEditing) {
-        form.put(route('services.update', props.service.id));
+        form.put(servicesRoutes.update.url(props.service.id));
     } else {
-        form.post(route('services.store'));
+        form.post(servicesRoutes.store.url());
     }
 };
 </script>
@@ -30,27 +29,31 @@ const submit = () => {
     <Head :title="isEditing ? 'Edit Service' : 'Create Service'" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4 md:p-8">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">
+                <h1
+                    class="text-foreground text-2xl font-semibold tracking-tight md:text-3xl"
+                >
                     {{ isEditing ? 'Edit Service' : 'Create Service' }}
                 </h1>
             </div>
             <Link
-                :href="route('services.index')"
-                class="text-sm font-medium text-muted-foreground hover:text-foreground"
+                :href="servicesRoutes.index.url()"
+                class="text-muted-foreground hover:text-foreground text-sm font-medium"
             >
                 &larr; Back to List
             </Link>
         </div>
 
-        <div class="rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
+        <div
+            class="border-border bg-card rounded-xl border p-6 shadow-sm md:p-8"
+        >
             <form @submit.prevent="submit" class="space-y-6">
                 <!-- Basic Info -->
                 <div class="space-y-4">
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
+                            class="text-foreground mb-1 block text-sm font-medium"
                             >Service Name
                             <span class="text-destructive">*</span></label
                         >
@@ -58,11 +61,11 @@ const submit = () => {
                             v-model="form.name"
                             type="text"
                             required
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                         />
                         <p
                             v-if="form.errors.name"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.name }}
                         </p>
@@ -70,20 +73,25 @@ const submit = () => {
 
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
+                            class="text-foreground mb-1 block text-sm font-medium"
                             >Service Category
                             <span class="text-destructive">*</span></label
                         >
                         <select
                             v-model="form.category"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                         >
-                            <option value="standard">Standard Business SaaS (Flat Rate / Month)</option>
-                            <option value="education">🎓 School / Educational System (Student-Based Tiers & MoMo Collections)</option>
+                            <option value="standard">
+                                Standard Business SaaS (Flat Rate / Month)
+                            </option>
+                            <option value="education">
+                                🎓 School / Educational System (Student-Based
+                                Tiers & MoMo Collections)
+                            </option>
                         </select>
                         <p
                             v-if="form.errors.category"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.category }}
                         </p>
@@ -91,26 +99,32 @@ const submit = () => {
 
                     <div>
                         <label
-                            class="mb-1 block text-sm font-medium text-foreground"
+                            class="text-foreground mb-1 block text-sm font-medium"
                             >Description</label
                         >
                         <textarea
                             v-model="form.description"
                             rows="3"
-                            class="w-full rounded-md border border-input bg-background text-foreground px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                            class="border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 shadow-xs outline-none focus-visible:ring-[3px] sm:text-sm"
                         ></textarea>
                         <p
                             v-if="form.errors.description"
-                            class="mt-1 text-sm text-destructive"
+                            class="text-destructive mt-1 text-sm"
                         >
                             {{ form.errors.description }}
                         </p>
                     </div>
                 </div>
 
-                <div v-if="!isEditing" class="rounded-xl border border-primary/20 bg-primary/10 p-4">
-                    <p class="text-sm text-primary">
-                        <strong>Tip:</strong> After saving this service, you'll be taken to the service detail page where you can add <strong>Modules</strong> (features) and bundle them into <strong>Packages</strong>.
+                <div
+                    v-if="!isEditing"
+                    class="border-primary/20 bg-primary/10 rounded-xl border p-4"
+                >
+                    <p class="text-primary text-sm">
+                        <strong>Tip:</strong> After saving this service, you'll
+                        be taken to the service detail page where you can add
+                        <strong>Modules</strong> (features) and bundle them into
+                        <strong>Packages</strong>.
                     </p>
                 </div>
 

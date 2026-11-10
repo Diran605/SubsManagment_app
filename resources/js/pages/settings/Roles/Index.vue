@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { table } from '@/lib/ui';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
@@ -6,11 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ref } from 'vue';
-import { route } from 'ziggy-js';
+import rolesRoutes from '@/routes/roles';
 
 const props = defineProps<{
-    roles: Array<{ id: number, name: string, permissions: Array<{ id: number, name: string }> }>;
-    permissions: Array<{ id: number, name: string }>;
+    roles: Array<{
+        id: number;
+        name: string;
+        permissions: Array<{ id: number; name: string }>;
+    }>;
+    permissions: Array<{ id: number; name: string }>;
 }>();
 
 const form = useForm({
@@ -19,11 +24,27 @@ const form = useForm({
 });
 
 const resources = [
-    { name: 'Businesses', slug: 'businesses', actions: ['view', 'create', 'edit', 'delete'] },
-    { name: 'Services', slug: 'services', actions: ['view', 'create', 'edit', 'delete'] },
-    { name: 'Packages', slug: 'packages', actions: ['create', 'edit', 'delete'] },
+    {
+        name: 'Businesses',
+        slug: 'businesses',
+        actions: ['view', 'create', 'edit', 'delete'],
+    },
+    {
+        name: 'Services',
+        slug: 'services',
+        actions: ['view', 'create', 'edit', 'delete'],
+    },
+    {
+        name: 'Packages',
+        slug: 'packages',
+        actions: ['create', 'edit', 'delete'],
+    },
     { name: 'Modules', slug: 'modules', actions: ['create', 'edit', 'delete'] },
-    { name: 'Subscriptions', slug: 'subscriptions', actions: ['view', 'create', 'edit', 'delete', 'restore'] },
+    {
+        name: 'Subscriptions',
+        slug: 'subscriptions',
+        actions: ['view', 'create', 'edit', 'delete', 'restore'],
+    },
     { name: 'Reports', slug: 'reports', actions: ['view'] },
     { name: 'Staff Accounts', slug: 'staff', actions: ['manage'] },
     { name: 'Roles', slug: 'roles', actions: ['manage'] },
@@ -32,7 +53,7 @@ const resources = [
 
 const getPermissionId = (action: string, slug: string) => {
     const permName = `${action} ${slug}`;
-    const p = props.permissions.find(p => p.name === permName);
+    const p = props.permissions.find((p) => p.name === permName);
     return p ? p.id : null;
 };
 
@@ -51,11 +72,11 @@ const cancelEdit = () => {
 
 const submit = () => {
     if (editingRole.value) {
-        form.put(route('roles.update', editingRole.value), {
+        form.put(rolesRoutes.update.url(editingRole.value), {
             onSuccess: () => cancelEdit(),
         });
     } else {
-        form.post(route('roles.store'), {
+        form.post(rolesRoutes.store.url(), {
             onSuccess: () => form.reset(),
         });
     }
@@ -63,7 +84,7 @@ const submit = () => {
 
 const deleteRole = (id: number) => {
     if (confirm('Are you sure you want to delete this role?')) {
-        router.delete(route('roles.destroy', id));
+        router.delete(rolesRoutes.destroy.url(id));
     }
 };
 </script>
@@ -78,48 +99,139 @@ const deleteRole = (id: number) => {
             description="Manage roles and their permissions."
         />
 
-        <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h3 class="text-lg font-medium mb-4">{{ editingRole ? 'Edit Role' : 'Create New Role' }}</h3>
+        <div class="border-border bg-card rounded-xl border p-6 shadow-sm">
+            <h3 class="mb-4 text-lg font-medium">
+                {{ editingRole ? 'Edit Role' : 'Create New Role' }}
+            </h3>
             <form @submit.prevent="submit" class="space-y-4">
                 <div>
                     <Label for="name">Role Name</Label>
-                    <Input id="name" v-model="form.name" required class="mt-1 block w-full" />
-                    <div v-if="form.errors.name" class="text-sm text-red-600 mt-1">{{ form.errors.name }}</div>
+                    <Input
+                        id="name"
+                        v-model="form.name"
+                        required
+                        class="mt-1 block w-full"
+                    />
+                    <div
+                        v-if="form.errors.name"
+                        class="text-destructive mt-1 text-sm"
+                    >
+                        {{ form.errors.name }}
+                    </div>
                 </div>
-                
+
                 <div>
                     <Label class="mb-2 block">Permissions Matrix</Label>
-                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                        <table class="w-full text-left text-sm whitespace-nowrap">
-                            <thead class="border-b border-border bg-orange-500 text-white">
+                    <div
+                        class="border-border overflow-x-auto rounded-lg border"
+                    >
+                        <table
+                            class="w-full text-left text-sm whitespace-nowrap"
+                        >
+                            <thead :class="table.head">
                                 <tr>
-                                    <th class="px-4 py-3 font-medium">Resource</th>
-                                    <th class="px-4 py-3 font-medium text-center">View</th>
-                                    <th class="px-4 py-3 font-medium text-center">Create</th>
-                                    <th class="px-4 py-3 font-medium text-center">Edit</th>
-                                    <th class="px-4 py-3 font-medium text-center">Delete</th>
-                                    <th class="px-4 py-3 font-medium text-center">Restore</th>
-                                    <th class="px-4 py-3 font-medium text-center">Manage</th>
+                                    <th class="px-4 py-3 font-medium">
+                                        Resource
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-center font-medium"
+                                    >
+                                        View
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-center font-medium"
+                                    >
+                                        Create
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-center font-medium"
+                                    >
+                                        Edit
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-center font-medium"
+                                    >
+                                        Delete
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-center font-medium"
+                                    >
+                                        Restore
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-center font-medium"
+                                    >
+                                        Manage
+                                    </th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-border divide-y">
                                 <tr v-for="res in resources" :key="res.slug">
-                                    <td class="px-4 py-3 font-medium text-gray-900">{{ res.name }}</td>
-                                    
+                                    <td
+                                        class="text-foreground px-4 py-3 font-medium"
+                                    >
+                                        {{ res.name }}
+                                    </td>
+
                                     <!-- Dynamic Checkboxes -->
-                                    <td v-for="action in ['view', 'create', 'edit', 'delete', 'restore', 'manage']" :key="action" class="px-4 py-3 text-center">
-                                        <template v-if="res.actions.includes(action) && getPermissionId(action, res.slug)">
+                                    <td
+                                        v-for="action in [
+                                            'view',
+                                            'create',
+                                            'edit',
+                                            'delete',
+                                            'restore',
+                                            'manage',
+                                        ]"
+                                        :key="action"
+                                        class="px-4 py-3 text-center"
+                                    >
+                                        <template
+                                            v-if="
+                                                res.actions.includes(action) &&
+                                                getPermissionId(
+                                                    action,
+                                                    res.slug,
+                                                )
+                                            "
+                                        >
                                             <Checkbox
-                                                :checked="form.permissions.includes(getPermissionId(action, res.slug) as number)"
-                                                @update:checked="(checked: boolean) => {
-                                                    const pid = getPermissionId(action, res.slug);
-                                                    if (!pid) return;
-                                                    if (checked) form.permissions.push(pid);
-                                                    else form.permissions = form.permissions.filter(p => p !== pid);
-                                                }"
+                                                :checked="
+                                                    form.permissions.includes(
+                                                        getPermissionId(
+                                                            action,
+                                                            res.slug,
+                                                        ) as number,
+                                                    )
+                                                "
+                                                @update:checked="
+                                                    (checked: boolean) => {
+                                                        const pid =
+                                                            getPermissionId(
+                                                                action,
+                                                                res.slug,
+                                                            );
+                                                        if (!pid) return;
+                                                        if (checked)
+                                                            form.permissions.push(
+                                                                pid,
+                                                            );
+                                                        else
+                                                            form.permissions =
+                                                                form.permissions.filter(
+                                                                    (p) =>
+                                                                        p !==
+                                                                        pid,
+                                                                );
+                                                    }
+                                                "
                                             />
                                         </template>
-                                        <span v-else class="text-gray-300">-</span>
+                                        <span
+                                            v-else
+                                            class="text-muted-foreground/60"
+                                            >—</span
+                                        >
                                     </td>
                                 </tr>
                             </tbody>
@@ -131,29 +243,56 @@ const deleteRole = (id: number) => {
                     <Button type="submit" :disabled="form.processing">
                         {{ editingRole ? 'Update Role' : 'Create Role' }}
                     </Button>
-                    <Button v-if="editingRole" type="button" variant="outline" @click="cancelEdit">
+                    <Button
+                        v-if="editingRole"
+                        type="button"
+                        variant="outline"
+                        @click="cancelEdit"
+                    >
                         Cancel
                     </Button>
                 </div>
             </form>
         </div>
 
-        <div class="rounded-xl border border-gray-100 bg-white shadow-sm mt-8">
-            <div class="border-b border-gray-100 p-4">
-                <h3 class="font-semibold text-gray-900">Existing Roles</h3>
+        <div class="border-border bg-card mt-8 rounded-xl border shadow-sm">
+            <div class="border-border border-b p-4">
+                <h3 class="text-foreground font-semibold">Existing Roles</h3>
             </div>
             <div class="p-4">
                 <ul class="space-y-4">
-                    <li v-for="role in roles" :key="role.id" class="flex flex-col space-y-2 border-b pb-4 last:border-0 last:pb-0">
+                    <li
+                        v-for="role in roles"
+                        :key="role.id"
+                        class="flex flex-col space-y-2 border-b pb-4 last:border-0 last:pb-0"
+                    >
                         <div class="flex items-center justify-between">
-                            <span class="font-medium text-gray-900">{{ role.name }}</span>
+                            <span class="text-foreground font-medium">{{
+                                role.name
+                            }}</span>
                             <div class="space-x-2">
-                                <Button size="sm" variant="outline" @click="startEdit(role)">Edit</Button>
-                                <Button size="sm" variant="destructive" @click="deleteRole(role.id)" v-if="role.name !== 'Admin'">Delete</Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    @click="startEdit(role)"
+                                    >Edit</Button
+                                >
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    @click="deleteRole(role.id)"
+                                    v-if="role.name !== 'Admin'"
+                                    >Delete</Button
+                                >
                             </div>
                         </div>
-                        <div class="text-sm text-gray-500">
-                            Permissions: {{ role.permissions.map(p => p.name).join(', ') || 'None' }}
+                        <div class="text-muted-foreground text-sm">
+                            Permissions:
+                            {{
+                                role.permissions
+                                    .map((p) => p.name)
+                                    .join(', ') || 'None'
+                            }}
                         </div>
                     </li>
                 </ul>
