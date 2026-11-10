@@ -7,15 +7,17 @@ use App\Models\BudgetPackage;
 use App\Models\Package;
 use App\Models\Service;
 use App\Services\BudgetReportService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class BudgetController extends Controller
 {
     public function __construct(protected BudgetReportService $reportService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $currentYear = now()->year;
         $fiscalYear = (int) $request->input('year', $currentYear);
@@ -32,7 +34,7 @@ class BudgetController extends Controller
         ]);
     }
 
-    public function create(Request $request)
+    public function create(Request $request): Response
     {
         $fiscalYear = (int) $request->input('year', now()->year);
 
@@ -64,7 +66,7 @@ class BudgetController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'fiscal_year' => 'required|integer|min:2000|max:2100',

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Package;
 use App\Models\Service;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -19,7 +20,7 @@ class PackageController extends Controller implements HasMiddleware
         ];
     }
 
-    public function store(Request $request, Service $service)
+    public function store(Request $request, Service $service): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -49,7 +50,7 @@ class PackageController extends Controller implements HasMiddleware
         return back()->with('success', 'Package added successfully.');
     }
 
-    public function update(Request $request, Package $package)
+    public function update(Request $request, Package $package): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -79,7 +80,7 @@ class PackageController extends Controller implements HasMiddleware
         return back()->with('success', 'Package updated successfully.');
     }
 
-    public function destroy(Package $package)
+    public function destroy(Package $package): RedirectResponse
     {
         if ($package->subscriptions()->exists()) {
             return back()->withErrors(['package' => 'Cannot permanently delete this package because subscriptions reference it.']);

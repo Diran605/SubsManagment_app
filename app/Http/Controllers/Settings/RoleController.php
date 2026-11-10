@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
         return Inertia::render('settings/Roles/Index', [
             'roles' => Role::with('permissions')->get(),
@@ -18,7 +20,7 @@ class RoleController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:roles,name',
@@ -26,7 +28,7 @@ class RoleController extends Controller
             'permissions.*' => 'exists:permissions,id',
         ]);
 
-        $role = Role::create(['name' => $validated['name']]);
+        $role = Role::query()->create(['name' => $validated['name']]);
         if (isset($validated['permissions'])) {
             $role->syncPermissions($validated['permissions']);
         }
@@ -39,7 +41,7 @@ class RoleController extends Controller
         return back()->with('success', 'Role created successfully.');
     }
 
-    public function update(Request $request, Role $role)
+    public function update(Request $request, Role $role): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
@@ -81,7 +83,7 @@ class RoleController extends Controller
         return back()->with('success', 'Role updated successfully.');
     }
 
-    public function destroy(Role $role)
+    public function destroy(Role $role): RedirectResponse
     {
         if ($role->name === 'Admin') {
             return back()->withErrors(['name' => 'Cannot delete the Admin role.']);

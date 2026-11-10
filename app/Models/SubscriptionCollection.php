@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SubscriptionCollection extends Model
 {
@@ -22,12 +23,18 @@ class SubscriptionCollection extends Model
         'collection_date' => 'date:Y-m-d',
     ];
 
-    public function subscription()
+    /**
+     * @return BelongsTo<Subscription, $this>
+     */
+    public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
     }
 
-    public function recorder()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function recorder(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');
     }

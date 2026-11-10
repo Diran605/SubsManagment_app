@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Business;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class BusinessController extends Controller implements HasMiddleware
 {
@@ -20,7 +22,7 @@ class BusinessController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $search = $request->input('search');
         $businesses = Business::when($search, function ($query, $search) {
@@ -33,12 +35,12 @@ class BusinessController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Businesses/Form');
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -54,7 +56,7 @@ class BusinessController extends Controller implements HasMiddleware
         return redirect()->route('businesses.index')->with('success', 'Business created successfully.');
     }
 
-    public function show(Business $business)
+    public function show(Business $business): Response
     {
         $business->load(['subscriptions.service', 'subscriptions.package', 'subscriptions.modules', 'creator']);
 
@@ -63,14 +65,14 @@ class BusinessController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function edit(Business $business)
+    public function edit(Business $business): Response
     {
         return Inertia::render('Businesses/Form', [
             'business' => $business,
         ]);
     }
 
-    public function update(Request $request, Business $business)
+    public function update(Request $request, Business $business): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -85,7 +87,7 @@ class BusinessController extends Controller implements HasMiddleware
         return redirect()->route('businesses.index')->with('success', 'Business updated successfully.');
     }
 
-    public function destroy(Business $business)
+    public function destroy(Business $business): RedirectResponse
     {
         $business->delete();
 

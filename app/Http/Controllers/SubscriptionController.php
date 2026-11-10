@@ -6,6 +6,7 @@ use App\Models\Business;
 use App\Models\Package;
 use App\Models\Service;
 use App\Models\Subscription;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class SubscriptionController extends Controller implements HasMiddleware
 {
@@ -27,7 +29,7 @@ class SubscriptionController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $search = $request->input('search');
         $statusFilter = $request->input('status');
@@ -53,7 +55,7 @@ class SubscriptionController extends Controller implements HasMiddleware
             ->paginate(10)
             ->withQueryString()
             ->through(function (Subscription $sub) {
-                $sub->status_badge = $sub->statusBadge();
+                $sub->setAttribute('status_badge', $sub->statusBadge());
 
                 return $sub;
             });
@@ -69,7 +71,7 @@ class SubscriptionController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function create(Request $request)
+    public function create(Request $request): Response
     {
         $businessId = $request->input('business_id');
 
@@ -80,7 +82,7 @@ class SubscriptionController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateSubscription($request);
 
@@ -96,7 +98,7 @@ class SubscriptionController extends Controller implements HasMiddleware
         return redirect()->route('subscriptions.index')->with('success', 'Subscription recorded successfully.');
     }
 
-    public function createRenewal(Subscription $subscription)
+    public function createRenewal(Subscription $subscription): Response|RedirectResponse
     {
         if ($subscription->renewals()->exists()) {
             return redirect()->route('subscriptions.show', $subscription)
@@ -112,7 +114,7 @@ class SubscriptionController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function renew(Request $request, Subscription $subscription)
+    public function renew(Request $request, Subscription $subscription): RedirectResponse
     {
         // Business, service and mode carry over from the original subscription.
         $request->merge([
@@ -159,7 +161,7 @@ class SubscriptionController extends Controller implements HasMiddleware
         return redirect()->route('subscriptions.index')->with('success', 'Subscription renewed successfully.');
     }
 
-    public function show($id)
+    public function show(int|string $id): Response
     {
         $subscription = Subscription::withTrashed()->with([
             'business',
@@ -172,14 +174,14 @@ class SubscriptionController extends Controller implements HasMiddleware
             'collections.recorder' => fn ($query) => $query->select('id', 'name', 'email'),
         ])->findOrFail($id);
 
-        $subscription->status_badge = $subscription->statusBadge();
+        $subscription->setAttribute('status_badge', $subscription->statusBadge());
 
         return Inertia::render('Subscriptions/Show', [
             'subscription' => $subscription,
         ]);
     }
 
-    public function edit(Subscription $subscription)
+    public function edit(Subscription $subscription): Response
     {
         $subscription->load('modules');
 
@@ -190,7 +192,7 @@ class SubscriptionController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function update(Request $request, Subscription $subscription)
+    public function update(Request $request, Subscription $subscription): RedirectResponse
     {
         $validated = $this->validateSubscription($request);
 
@@ -202,14 +204,14 @@ class SubscriptionController extends Controller implements HasMiddleware
         return redirect()->route('subscriptions.index')->with('success', 'Subscription updated successfully.');
     }
 
-    public function destroy(Subscription $subscription)
+    public function destroy(Subscription $subscription): RedirectResponse
     {
         $subscription->delete();
 
         return redirect()->back()->with('success', 'Subscription deleted successfully.');
     }
 
-    public function restore($id)
+    public function restore(int|string $id): RedirectResponse
     {
         $subscription = Subscription::withTrashed()->findOrFail($id);
         $subscription->restore();
@@ -249,7 +251,7 @@ class SubscriptionController extends Controller implements HasMiddleware
             'modules.*.exists' => 'One of the selected modules does not belong to this service.',
         ]);
 
-        $package = isset($validated['package_id']) ? Package::find($validated['package_id']) : null;
+        $package = isset($validated['package_id']) ? Package::whereKey($validated['package_id'])->first() : null;
 
         if ($package) {
             $modes = $package->supported_modes ?? [];

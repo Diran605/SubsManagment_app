@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Subscription;
 use App\Models\SubscriptionCollection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -17,7 +18,7 @@ class SubscriptionCollectionController extends Controller implements HasMiddlewa
         ];
     }
 
-    public function store(Request $request, Subscription $subscription)
+    public function store(Request $request, Subscription $subscription): RedirectResponse
     {
         $subscription->loadMissing('package');
 
@@ -41,7 +42,7 @@ class SubscriptionCollectionController extends Controller implements HasMiddlewa
         return back()->with('success', 'Mobile Money collection recorded successfully.');
     }
 
-    public function destroy(SubscriptionCollection $collection)
+    public function destroy(SubscriptionCollection $collection): RedirectResponse
     {
         $collection->delete();
 

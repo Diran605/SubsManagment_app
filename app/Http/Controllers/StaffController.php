@@ -3,29 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
 class StaffController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
         return Inertia::render('Staff/Index', [
             'staff' => User::with('roles')->latest()->get(),
         ]);
     }
 
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Staff/Form', [
             'roles' => Role::all(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -54,7 +56,7 @@ class StaffController extends Controller
         return redirect()->route('staff.index')->with('success', 'Staff account created successfully.');
     }
 
-    public function edit(User $staff)
+    public function edit(User $staff): Response
     {
         $staff->load('roles');
 
@@ -64,7 +66,7 @@ class StaffController extends Controller
         ]);
     }
 
-    public function update(Request $request, User $staff)
+    public function update(Request $request, User $staff): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -106,7 +108,7 @@ class StaffController extends Controller
         return redirect()->route('staff.index')->with('success', 'Staff account updated successfully.');
     }
 
-    public function show(User $staff)
+    public function show(User $staff): Response
     {
         $staff->load(['businesses', 'services', 'subscriptions']);
 
@@ -115,7 +117,7 @@ class StaffController extends Controller
         ]);
     }
 
-    public function toggleActive(Request $request, User $staff)
+    public function toggleActive(Request $request, User $staff): RedirectResponse
     {
         if ($request->user()->is($staff)) {
             return back()->with('error', 'You cannot deactivate your own account.');
